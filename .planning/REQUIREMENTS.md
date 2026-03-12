@@ -68,33 +68,33 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SHL-01 | TBD | Pending |
-| SHL-02 | TBD | Pending |
-| SHL-03 | TBD | Pending |
-| SHL-04 | TBD | Pending |
-| REG-01 | TBD | Pending |
-| REG-02 | TBD | Pending |
-| REG-03 | TBD | Pending |
-| REG-04 | TBD | Pending |
-| REG-05 | TBD | Pending |
-| REG-06 | TBD | Pending |
-| PICK-01 | TBD | Pending |
-| PICK-02 | TBD | Pending |
-| PICK-03 | TBD | Pending |
-| PICK-04 | TBD | Pending |
-| PICK-05 | TBD | Pending |
-| PICK-06 | TBD | Pending |
-| INST-01 | TBD | Pending |
-| INST-02 | TBD | Pending |
-| INST-03 | TBD | Pending |
-| UI-01 | TBD | Pending |
-| UI-02 | TBD | Pending |
+| SHL-01 | Phase 2 | Pending |
+| SHL-02 | Phase 2 | Pending |
+| SHL-03 | Phase 2 | Pending |
+| SHL-04 | Phase 2 | Pending |
+| REG-01 | Phase 1 | Pending |
+| REG-02 | Phase 1 | Pending |
+| REG-03 | Phase 1 | Pending |
+| REG-04 | Phase 1 | Pending |
+| REG-05 | Phase 1 | Pending |
+| REG-06 | Phase 1 | Pending |
+| PICK-01 | Phase 2 | Pending |
+| PICK-02 | Phase 2 | Pending |
+| PICK-03 | Phase 2 | Pending |
+| PICK-04 | Phase 2 | Pending |
+| PICK-05 | Phase 2 | Pending |
+| PICK-06 | Phase 2 | Pending |
+| INST-01 | Phase 1 | Pending |
+| INST-02 | Phase 3 | Pending |
+| INST-03 | Phase 3 | Pending |
+| UI-01 | Phase 3 | Pending |
+| UI-02 | Phase 3 | Pending |
 
 **Coverage:**
 - v1 requirements: 21 total
-- Mapped to phases: 0
-- Unmapped: 21 ⚠️
+- Mapped to phases: 21
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-12*
-*Last updated: 2026-03-12 after initialization*
+*Last updated: 2026-03-12 after roadmap creation*
