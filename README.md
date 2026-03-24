@@ -49,6 +49,7 @@ For the first packaged release (`0.0.1`):
 
 If Apple signing/notarization secrets are unavailable, the GitHub workflow falls back to an **unsigned prerelease** package: `goto-<version>-unsigned.pkg`.
 Users can still install it, but macOS will require manual approval in **Privacy & Security → Open Anyway**.
+The signed/notarized public-release path is deferred until an Apple Developer Program account is available.
 
 See [docs/github-release.md](docs/github-release.md) for the release workflow and required GitHub secrets.
 

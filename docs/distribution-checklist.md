@@ -53,13 +53,13 @@ References:
 - `.github/workflows/release.yml` now defines a GitHub-tag-driven release flow.
 - `docs/github-release.md` documents the GitHub release path and required secrets.
 
-### Current blockers for packaged distribution
+### Current status
 
-| Area | Current state | Why it still blocks release |
-|------|---------------|-----------------------------|
-| Apple code signing | CI still needs Developer ID Application / Installer certificates configured as GitHub secrets | Without them, the workflow falls back to an unsigned prerelease instead of a public-ready signed artifact |
-| Apple notarization | CI still needs App Store Connect API key secrets | Without them, the package cannot be notarized and stapled |
-| First release execution | The GitHub tag workflow has not been exercised end-to-end yet | We still need to push `v0.0.1` and validate the full pipeline |
+| Area | Current state | Notes |
+|------|---------------|-------|
+| GitHub prerelease lane | `v0.0.1` unsigned beta release has already shipped | This is the active distribution path right now |
+| Apple code signing | Deferred until a paid Apple Developer Program account exists | Not required for the current unsigned beta lane |
+| Apple notarization | Deferred until a paid Apple Developer Program account exists | Not required for the current unsigned beta lane |
 | Local macOS tooling | Native verification requires full Xcode (`DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` in this environment) | Command Line Tools alone are insufficient for native build/test packaging steps |
 
 ## Recommended packaging shape
@@ -123,10 +123,10 @@ One `.pkg` installs all of the following:
   - [ ] optionally opens Extensions settings
   - [x] prints the shell setup next step clearly
 
-### Phase 3 — Signing and notarization
+### Phase 3 — Deferred public-release track (signing and notarization)
 
-- [ ] Obtain Apple Developer Program access (skip only if staying on unsigned beta releases)
-- [ ] Create / configure signing identities:
+- [ ] Obtain Apple Developer Program access (Deferred)
+- [ ] Create / configure signing identities (Deferred):
   - [ ] **Developer ID Application**
   - [ ] **Developer ID Installer**
 - [ ] Sign `GotoMenuBar.app`
@@ -186,6 +186,6 @@ If the constraint is:
 
 then choose:
 
-> **If you stay on the free account, publish `goto-<version>-unsigned.pkg` as a GitHub prerelease. Once you have the paid Apple program, switch to the notarized `goto-<version>.pkg` path.**
+> **Current plan: keep shipping `goto-<version>-unsigned.pkg` as a GitHub prerelease. The signed/notarized `goto-<version>.pkg` path is deferred until a paid Apple Developer Program account is available.**
 
 That is the cleanest compromise between “one package” and “least engineering work.”

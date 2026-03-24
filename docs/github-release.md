@@ -26,6 +26,8 @@ So the practical fallback is:
 This is fine for early testers, internal distribution, and pre-release validation.
 It is **not** ideal for broad public distribution.
 
+**Current decision:** stay on the unsigned GitHub prerelease lane for now, and defer the signed/notarized lane until the paid Apple account exists.
+
 ## What the workflow does
 
 The GitHub Actions release workflow:
@@ -45,6 +47,7 @@ The GitHub Actions release workflow:
 ## Required GitHub repository secrets
 
 If these secrets are **missing**, the workflow falls back to an **unsigned prerelease** automatically.
+That fallback is now the intended short-term plan.
 
 ### Apple signing certificates
 
