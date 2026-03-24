@@ -1,0 +1,16 @@
+{
+  "name": "goto",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A tiny shell-integrated project jumper",
+  "bin": {
+    "goto": "./bin/goto.js"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
