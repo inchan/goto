@@ -22,13 +22,6 @@ From anywhere in macOS, get to the right project directory in one quick, low-fri
 - [x] A native macOS menu bar surface can show saved projects and open them in Terminal.
 - [x] A Finder-triggered action can open Terminal directly at the selected project folder.
 
-### Active (v1.1 — hardening)
-
-- [ ] Critical code paths (FinderLaunchBridge, IPC layer) have unit test coverage.
-- [ ] Registry operations remain robust at scale (1000+ entries) without resource exhaustion.
-- [ ] Error handling is consistent and user-facing across all surfaces.
-- [ ] Edge-case paths (long, special chars, broken symlinks) are verified and handled gracefully.
-
 ### Out of Scope
 
 - Shared team sync of project lists — v1 is for a single developer's local machine.
@@ -67,6 +60,8 @@ The expected visual reference is the terminal UI feel of `skills.sh` installatio
 | Style the TUI after `skills.sh` terminal presentation | UI quality matters even though the tool itself is intentionally small | ✅ Shipped |
 | Keep `~/.goto` as the single shared registry across shell and native surfaces | Avoids drift between the CLI, menu bar, and Finder entry points | ✅ Shipped |
 | Use a native macOS host for menu bar and Finder surfaces | These capabilities are platform-native and should not depend on brittle terminal-only hacks | ✅ Shipped |
+| Split into three independent packages (goto, goto-menubar, goto-finder) | Eliminates code duplication, enables independent installation | ✅ Shipped |
+| Make goto-finder a headless background agent | Clean separation — menu bar UI belongs in goto-menubar only | ✅ Shipped |
 
 ---
-*Last updated: 2026-03-22 — v1.0 complete, starting v1.1 hardening milestone*
+*Last updated: 2026-03-24 — v1.0 complete, three-package refactoring shipped*

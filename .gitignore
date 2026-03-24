@@ -1,0 +1,11 @@
+# Build artifacts
+build/
+macos/Goto.xcodeproj/
+
+# Node
+node_modules/
+
+# SPM (handled by native/.gitignore)
+
+# macOS
+.DS_Store

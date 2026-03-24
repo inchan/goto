@@ -2,7 +2,9 @@
 
 ## Overview
 
-`goto` is a multi-surface macOS project launcher: CLI picker, menu bar app, and Finder toolbar extension — all sharing a single `~/.goto` registry. v1.0 shipped all features; v1.1 hardens test coverage, error handling, and robustness at scale.
+`goto` is a multi-surface macOS project launcher: CLI picker, menu bar app, and Finder toolbar extension — each installable separately, all sharing a single `~/.goto` registry.
+
+v1.0 shipped all features (Phases 1–5). The codebase was then refactored into three independent packages (ADR-006).
 
 ## Phases
 
@@ -16,144 +18,46 @@
 - [x] **Phase 4: Native macOS Host And Menu Bar** - Add a native menu bar launcher that reuses the project registry and Terminal handoff
 - [x] **Phase 5: Finder Launch Surface** - Add a Finder-triggered project handoff into Terminal using the native macOS host
 
-### v1.1 — Hardening
-
-- [ ] **Phase 6: Test Coverage For Critical Paths** - Add unit tests for FinderLaunchBridge, large-registry scenarios, and AppleScript error paths
-- [ ] **Phase 7: Error Handling Consistency** - Normalize error classification, messaging, and edge-case path handling across all surfaces
-- [ ] **Phase 8: Scale And Robustness** - Batch registry I/O, handle broken symlinks, and report permission-denied directories
-
 ## Phase Details
 
 ### Phase 1: Registry And Command Core
 **Goal:** Deliver a stable internal command contract and trustworthy local registry behavior for saved projects.
 **Depends on:** Nothing (first phase)
 **Requirements:** [REG-01, REG-02, REG-03, REG-04, REG-05, REG-06, INST-01]
-**Success Criteria** (what must be TRUE):
-  1. User can add the current directory or an explicit path to the registry without manual file edits.
-  2. User can remove the current directory or an explicit path from the registry with clear feedback.
-  3. Duplicate registrations are prevented through canonical path handling.
-  4. Invalid or missing paths are rejected with clear messaging.
-  5. The tool can be run locally from this repository through the chosen install path.
-**Plans:** 3 plans
-
-Plans:
-- [x] 01-01: Create the CLI entrypoint and define command/output semantics
-- [x] 01-02: Implement registry storage, canonical path handling, and add/remove behavior
-- [x] 01-03: Wire the local install path and smoke-test command execution from the repo
+**Plans:** 3/3 complete
 
 ### Phase 2: Picker And Jump Flow
 **Goal:** Deliver the main `goto` interaction where a user selects a saved project and lands in it from the current shell.
 **Depends on:** Phase 1
 **Requirements:** [SHL-01, SHL-02, SHL-03, SHL-04, PICK-01, PICK-02, PICK-03, PICK-04, PICK-05, PICK-06]
-**Success Criteria** (what must be TRUE):
-  1. User can open a project picker from `goto` and move through saved entries with the keyboard.
-  2. Pressing `Enter` returns exactly one valid target path and changes directories in both `zsh` and `bash`.
-  3. Pressing `Esc` cancels cleanly without changing directories.
-  4. Missing paths are visible or safely handled instead of causing a broken jump.
-  5. The picker consistently shows project name and full path in a stable order.
-**Plans:** 3 plans
-
-Plans:
-- [x] 02-01: Add thin `zsh` and `bash` wrappers for parent-shell `cd`
-- [x] 02-02: Build the picker UI and selection/cancel flow
-- [x] 02-03: Handle missing entries, stable ordering, and jump error cases
+**Plans:** 3/3 complete
 
 ### Phase 3: Install And Polish
 **Goal:** Make `goto` durable across fresh shells and raise the terminal experience to the intended quality bar.
 **Depends on:** Phase 2
 **Requirements:** [INST-02, INST-03, UI-01, UI-02]
-**Success Criteria** (what must be TRUE):
-  1. User can follow documented setup steps to enable `goto` in both `zsh` and `bash`.
-  2. A fresh shell session can run `goto` successfully after setup.
-  3. The picker, empty state, and add/remove feedback feel intentionally designed rather than raw.
-  4. Terminal cleanup remains correct on success, cancel, and interruption paths.
-**Plans:** 3 plans
-
-Plans:
-- [x] 03-01: Finalize shell setup snippets and installation documentation
-- [x] 03-02: Polish visual hierarchy, empty states, and feedback copy
-- [x] 03-03: Harden terminal cleanup and run release verification in fresh shells
+**Plans:** 3/3 complete
 
 ### Phase 4: Native macOS Host And Menu Bar
 **Goal:** Deliver a native macOS launcher that exposes the saved project list from the menu bar and hands the selected project to Terminal.
 **Depends on:** Phase 3
 **Requirements:** [APP-01, MB-01, MB-02, MB-03, MB-04]
-**Success Criteria** (what must be TRUE):
-  1. User can open a `goto` menu bar entry point and see the saved project list without opening a shell first.
-  2. Choosing a project opens Terminal at the correct directory.
-  3. If Terminal is already open, the launch flow reuses that active Terminal context instead of creating a disconnected dead-end flow.
-  4. Missing project paths are visible or safely disabled in the menu bar surface.
-  5. The native surface reads the same `~/.goto` registry used by the CLI.
-**Plans:** 3 plans
-
-Plans:
-- [x] 04-01: Scaffold the native macOS host app and shared registry bridge
-- [x] 04-02: Build the menu bar project list, refresh behavior, and missing-path states
-- [x] 04-03: Implement Terminal open/reuse handoff and native verification
+**Plans:** 3/3 complete
 
 ### Phase 5: Finder Launch Surface
 **Goal:** Let a user trigger `goto` from Finder on a selected folder and land in Terminal at that directory.
 **Depends on:** Phase 4
 **Requirements:** [FDR-01, FDR-02, FDR-03, FDR-04]
-**Success Criteria** (what must be TRUE):
-  1. Finder exposes a `goto` toolbar icon for selected folders.
-  2. Clicking the Finder toolbar entry opens Terminal at the selected directory.
-  3. Paths with spaces or non-ASCII characters are handed off correctly.
-  4. Invalid or missing selections fail with clear feedback.
-  5. Finder uses the same Terminal handoff behavior already proven in Phase 4.
-**Plans:** 3 plans
-
-Plans:
-- [x] 05-01: Choose and scaffold the Finder Sync toolbar target and permission model
-- [x] 05-02: Implement Finder toolbar handoff into the Terminal launch bridge
-- [x] 05-03: Validate Finder toolbar UX, failure states, and path edge cases
-
-### Phase 6: Test Coverage For Critical Paths
-**Goal:** Ensure the most complex and least-tested code paths have automated verification.
-**Depends on:** Phase 5
-**Requirements:** [TST-01, TST-02, TST-04]
-**Success Criteria** (what must be TRUE):
-  1. FinderLaunchBridge has unit tests for notification routing, Terminal launch dispatch, and error fallback.
-  2. Registry operations with 1000+ entries complete without file descriptor exhaustion.
-  3. AppleScript error paths are covered with normalized detection tests.
-**Plans:** TBD
-
-### Phase 7: Error Handling Consistency
-**Goal:** Make error handling predictable and user-friendly across every surface.
-**Depends on:** Phase 6
-**Requirements:** [TST-03, ERR-01, ERR-02, ERR-03, ERR-04]
-**Success Criteria** (what must be TRUE):
-  1. Edge-case paths (long, control chars, broken symlinks) are tested and handled gracefully.
-  2. MRU promotion failures are logged, not silently swallowed.
-  3. Registry I/O errors distinguish EACCES, ENOENT, ENOTDIR with clear user messages.
-  4. TerminalScriptBuilder throws instead of crashing on unsupported terminals.
-  5. All surfaces use a consistent error message format.
-**Plans:** TBD
-
-### Phase 8: Scale And Robustness
-**Goal:** Make the system reliable under large registries and unusual filesystem states.
-**Depends on:** Phase 7
-**Requirements:** [ROB-01, ROB-02, ROB-03]
-**Success Criteria** (what must be TRUE):
-  1. Registry stat() calls are batched with concurrency limits to avoid FD exhaustion.
-  2. addChildRegistryEntries reports permission-denied directories to the user.
-  3. Broken symlink paths in the registry are detected and handled without crashes.
-**Plans:** TBD
+**Plans:** 3/3 complete
 
 ## Progress
 
-**Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
+| Phase | Status | Completed |
+|-------|--------|-----------|
+| 1. Registry And Command Core | Complete | 2026-03-15 |
+| 2. Picker And Jump Flow | Complete | 2026-03-15 |
+| 3. Install And Polish | Complete | 2026-03-15 |
+| 4. Native macOS Host And Menu Bar | Complete | 2026-03-18 |
+| 5. Finder Launch Surface | Complete | 2026-03-22 |
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Registry And Command Core | 3/3 | Audited complete | 2026-03-15 |
-| 2. Picker And Jump Flow | 3/3 | Audited complete | 2026-03-15 |
-| 3. Install And Polish | 3/3 | Audited complete | 2026-03-15 |
-| 4. Native macOS Host And Menu Bar | 3/3 | Complete | 2026-03-18 |
-| 5. Finder Launch Surface | 3/3 | Complete | 2026-03-22 |
-| 6. Test Coverage For Critical Paths | 0/0 | Pending | - |
-| 7. Error Handling Consistency | 0/0 | Pending | - |
-| 8. Scale And Robustness | 0/0 | Pending | - |
-
-*v1.0 milestone archived to `.planning/milestones/`. v1.1 hardening begins at Phase 6.*
+*All phases complete. Three-package refactoring shipped 2026-03-24 (ADR-006).*
