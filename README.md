@@ -37,6 +37,21 @@ This appends a `source` line to your `~/.zshrc` (or `~/.bashrc`). You can target
 
 Reload your shell afterward (`source ~/.zshrc` or `source ~/.bashrc`).
 
+## Packaged Release
+
+GitHub Releases are intended to publish a single installer package: `goto-<version>.pkg`.
+
+For the first packaged release (`0.0.1`):
+
+- the packaged CLI still expects **Node 20+** on the target Mac
+- the installer lays down the CLI payload plus both apps
+- after installation, run `goto-install-shell` to enable shell `cd` integration
+
+If Apple signing/notarization secrets are unavailable, the GitHub workflow falls back to an **unsigned prerelease** package: `goto-<version>-unsigned.pkg`.
+Users can still install it, but macOS will require manual approval in **Privacy & Security → Open Anyway**.
+
+See [docs/github-release.md](docs/github-release.md) for the release workflow and required GitHub secrets.
+
 ## CLI Usage
 
 Once the shell wrapper is sourced, `goto` is a shell function that `cd`s into the selected project.
@@ -74,20 +89,20 @@ The app watches `~/.goto` for changes and reloads automatically.
 
 ## Finder Integration
 
-`GotoHost.app` is an Xcode-built host app with an embedded Finder Sync extension. It adds a toolbar button to Finder that opens directories in your terminal.
+`GotoFinder.app` is an Xcode-built headless agent with an embedded Finder Sync extension. It adds a toolbar button to Finder that opens directories in your terminal.
 
 Install:
 
 ```sh
-./scripts/install-finder-toolbar-host.sh
+./scripts/install-finder.sh
 ```
 
-This builds the host app, copies it to `~/Applications/GotoHost.app`, registers the Finder Sync extension, restarts Finder, and opens the Extensions preference pane so you can verify the extension is enabled.
+This builds the Finder app, copies it to `~/Applications/GotoFinder.app`, registers the Finder Sync extension, restarts Finder, and opens the Extensions preference pane so you can verify the extension is enabled.
 
 Uninstall:
 
 ```sh
-./scripts/uninstall-finder-toolbar-host.sh
+./scripts/uninstall-finder.sh
 ```
 
 ### Toolbar customization
@@ -110,7 +125,7 @@ The Finder Sync extension runs in a sandbox and communicates with the host app v
 
 ## Registry
 
-`~/.goto` -- one absolute path per line. Shared by the CLI, menu bar app, and Finder host. Safe to edit by hand.
+`~/.goto` -- one absolute path per line. Shared by the CLI, menu bar app, and Finder agent. Safe to edit by hand.
 
 `~/.goto-settings` -- JSON file for native-side preferences. Current shape:
 
@@ -130,18 +145,17 @@ The Finder Sync extension runs in a sandbox and communicates with the host app v
 | `install-shell.sh` | Append shell integration to `~/.zshrc` / `~/.bashrc` |
 | `build-menu-bar-app.sh` | Build `GotoMenuBar.app` via `swift build` |
 | `run-native-menu-bar.sh` | Build and run the menu bar app in one step |
-| `build-finder-toolbar-host.sh` | Build `GotoHost.app` via `xcodebuild` |
-| `install-finder-toolbar-host.sh` | Build, install to `~/Applications`, register extension |
-| `uninstall-finder-toolbar-host.sh` | Remove `~/Applications/GotoHost.app` and unregister extension |
-| `test-finder-toolbar-host.sh` | Install and smoke-test the Finder toolbar host |
+| `build-finder.sh` | Build `GotoFinder.app` via `xcodebuild` |
+| `build-pkg.sh` | Build a single installer package containing CLI + menu bar + Finder |
+| `install-finder.sh` | Build, install to `~/Applications`, register extension |
+| `uninstall-finder.sh` | Remove `~/Applications/GotoFinder.app` and unregister extension |
+| `test-finder.sh` | Install and smoke-test the Finder app |
 | `run-native-launch.sh` | Build and run `GotoNativeLaunch` with a given path |
 | `typecheck-native.sh` | Type-check the Swift package without building |
 | `test-native.sh` | Run Swift package tests |
-| `generate_macos_project.rb` | Generate the `macos/Goto.xcodeproj` for the Finder host |
-| `render-finder-workflow.sh` | Render the Finder Quick Action workflow |
-| `install-finder-action.sh` | Install the Finder Quick Action |
-| `uninstall-finder-action.sh` | Remove the Finder Quick Action |
-| `test-finder-action.sh` | Smoke-test the Finder Quick Action |
+| `current-version.sh` | Print the current project version from `package.json` |
+| `generate_macos_project.rb` | Generate the `macos/Goto.xcodeproj` for the Finder app and extension |
+| `notarize-pkg.sh` | Submit a built package to Apple notarization and staple it |
 
 ## Architecture
 
@@ -156,13 +170,13 @@ goto/
       GotoMenuBar/       SwiftUI menu bar executable
       GotoNativeLaunch/  CLI for Finder-triggered folder handoff
     Tests/               XCTest suites for core and menu bar
-  macos/                 Xcode project for GotoHost + GotoFinderSync extension
-    GotoHost/            Host app (SwiftUI menu bar + FinderLaunchBridge)
+  macos/                 Xcode project for GotoFinder + GotoFinderSync extension
+    GotoFinder/          Headless Finder agent / launch bridge
     GotoFinderSync/      Finder Sync extension (FIFinderSync subclass)
   scripts/               Build, install, and test scripts
 ```
 
-The Node CLI and the Swift native apps share `~/.goto` as the single source of truth. The menu bar app and Finder host both use `RegistryWatcher` (GCD file-system events) to reload when the registry changes.
+The Node CLI and the Swift native apps share `~/.goto` as the single source of truth. The menu bar app and Finder agent both use `RegistryWatcher` (GCD file-system events) to reload when the registry changes.
 
 Terminal launches use AppleScript for Terminal.app and iTerm2, and fall back to `open -a` for terminals that do not support AppleScript (Warp, Ghostty, Alacritty, Kitty).
 
@@ -186,13 +200,15 @@ Type-check Swift without a full build:
 ./scripts/typecheck-native.sh
 ```
 
-Build the Finder toolbar host (requires Xcode):
+Build the Finder app (requires Xcode):
 
 ```sh
-./scripts/build-finder-toolbar-host.sh
+./scripts/build-finder.sh
 ```
 
 ## Documentation
 
 - [CLAUDE.md](CLAUDE.md) — AI context file (loaded by Claude Code on every session)
+- [docs/distribution-checklist.md](docs/distribution-checklist.md) — distribution packaging checklist and recommended single-package path
+- [docs/github-release.md](docs/github-release.md) — GitHub Actions release flow, required secrets, and `v0.0.1` release steps
 - [docs/adr/](docs/adr/) — Architecture Decision Records

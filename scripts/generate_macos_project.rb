@@ -2,12 +2,14 @@
 
 require "fileutils"
 require "rubygems"
+require "json"
 
 gem "xcodeproj", ">= 1.27.0"
 require "xcodeproj"
 
 ROOT = File.expand_path("..", __dir__)
 PROJECT_PATH = File.join(ROOT, "macos", "Goto.xcodeproj")
+PACKAGE_VERSION = JSON.parse(File.read(File.join(ROOT, "package.json"))).fetch("version").split(/[+-]/).first
 
 def add_file(target, group, path)
   file = group.new_file(path)
@@ -80,6 +82,8 @@ app_target.build_configurations.each do |config|
   config.build_settings["CODE_SIGN_STYLE"] = "Manual"
   config.build_settings["CODE_SIGN_IDENTITY"] = "-"
   config.build_settings["GENERATE_INFOPLIST_FILE"] = "NO"
+  config.build_settings["MARKETING_VERSION"] = PACKAGE_VERSION
+  config.build_settings["CURRENT_PROJECT_VERSION"] = PACKAGE_VERSION
   config.build_settings["LD_RUNPATH_SEARCH_PATHS"] = "$(inherited) @executable_path/../Frameworks @executable_path/../PlugIns"
   config.build_settings["ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES"] = "YES"
 end
@@ -93,6 +97,8 @@ extension_target.build_configurations.each do |config|
   config.build_settings["CODE_SIGN_STYLE"] = "Manual"
   config.build_settings["CODE_SIGN_IDENTITY"] = "-"
   config.build_settings["GENERATE_INFOPLIST_FILE"] = "NO"
+  config.build_settings["MARKETING_VERSION"] = PACKAGE_VERSION
+  config.build_settings["CURRENT_PROJECT_VERSION"] = PACKAGE_VERSION
   config.build_settings["CODE_SIGN_ENTITLEMENTS"] = "GotoFinderSync/GotoFinderSync.entitlements"
   config.build_settings["APPLICATION_EXTENSION_API_ONLY"] = "YES"
   config.build_settings["SKIP_INSTALL"] = "YES"

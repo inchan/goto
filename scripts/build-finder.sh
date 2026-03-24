@@ -32,9 +32,9 @@ env DEVELOPER_DIR="$developer_dir" \
   xcodebuild \
   -project "$REPO_ROOT/macos/Goto.xcodeproj" \
   -target GotoFinder \
-  -configuration Debug \
+  -configuration Release \
   SYMROOT="$products_path" \
   OBJROOT="$intermediates_path" \
   build
 
-printf '%s\n' "$products_path/Debug/GotoFinder.app"
+printf '%s\n' "$products_path/Release/GotoFinder.app"

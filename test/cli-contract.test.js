@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { createTempDir, runCli } from './helpers.js';
+import { VERSION } from '../src/version.js';
 
 test('help prints usage to stdout and exits successfully', async () => {
   const homeDir = await createTempDir();
@@ -28,7 +29,7 @@ test('version prints to stdout', async () => {
   });
 
   assert.equal(result.code, 0);
-  assert.match(result.stdout, /^0\.1\.0/m);
+  assert.equal(result.stdout.trim(), VERSION);
   assert.equal(result.stderr, '');
 });
 

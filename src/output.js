@@ -1,5 +1,7 @@
 import process from 'node:process';
 
+import { VERSION } from './version.js';
+
 export const EXIT_CODES = {
   OK: 0,
   CANCELLED: 1,
@@ -38,7 +40,7 @@ export function printHelp(stream = process.stdout) {
 }
 
 export function printVersion(stream = process.stdout) {
-  stream.write('0.1.0\n');
+  stream.write(`${VERSION}\n`);
 }
 
 export function printInfo(message, stream = process.stdout) {

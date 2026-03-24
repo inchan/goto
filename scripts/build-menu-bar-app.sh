@@ -23,10 +23,13 @@ resolve_developer_dir() {
 }
 
 destination="${1:-$REPO_ROOT/build/GotoMenuBar.app}"
+package_version="$($SCRIPT_DIR/current-version.sh --bundle)"
 developer_dir="$(resolve_developer_dir)"
+env DEVELOPER_DIR="$developer_dir" \
+  swift build -c release --package-path "$REPO_ROOT/native" --product GotoMenuBar >/dev/null
 bin_path="$(
   env DEVELOPER_DIR="$developer_dir" \
-    swift build --package-path "$REPO_ROOT/native" --product GotoMenuBar --show-bin-path
+    swift build -c release --package-path "$REPO_ROOT/native" --product GotoMenuBar --show-bin-path
 )"
 binary="$bin_path/GotoMenuBar"
 
@@ -35,7 +38,7 @@ mkdir -p -- "$destination/Contents/MacOS"
 
 cp "$binary" "$destination/Contents/MacOS/GotoMenuBar"
 
-cat >"$destination/Contents/Info.plist" <<'EOF'
+cat >"$destination/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -53,9 +56,9 @@ cat >"$destination/Contents/Info.plist" <<'EOF'
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.0</string>
+  <string>${package_version}</string>
   <key>CFBundleVersion</key>
-  <string>1</string>
+  <string>${package_version}</string>
   <key>LSMinimumSystemVersion</key>
   <string>13.0</string>
   <key>LSUIElement</key>
