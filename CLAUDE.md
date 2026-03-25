@@ -28,7 +28,7 @@ Three independent packages for macOS project jumping — each installable separa
 ## Build & test commands
 
 ```bash
-node --test                          # 24 JS tests — must pass before changes
+node --test                          # 26 JS tests — must pass before changes
 swift test -c debug                  # 38 Swift tests — must pass before changes
 swift build -c release               # Build SPM targets
 scripts/build-menu-bar-app.sh        # Build goto-menubar (.app)

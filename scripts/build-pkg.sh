@@ -39,10 +39,12 @@ cp -R "$REPO_ROOT/bin" "$cli_root/"
 cp -R "$REPO_ROOT/src" "$cli_root/"
 cp -R "$REPO_ROOT/shell" "$cli_root/"
 cp "$REPO_ROOT/scripts/install-shell.sh" "$cli_root/scripts/install-shell.sh"
-chmod +x "$cli_root/bin/goto.js" "$cli_root/scripts/install-shell.sh"
+cp "$REPO_ROOT/scripts/uninstall.sh" "$cli_root/scripts/uninstall.sh"
+chmod +x "$cli_root/bin/goto.js" "$cli_root/scripts/install-shell.sh" "$cli_root/scripts/uninstall.sh"
 
 ln -sfn "$install_prefix/bin/goto.js" "$cli_bin_root/goto"
 ln -sfn "$install_prefix/scripts/install-shell.sh" "$cli_bin_root/goto-install-shell"
+ln -sfn "$install_prefix/scripts/uninstall.sh" "$cli_bin_root/goto-uninstall"
 
 if [[ -n "${GOTO_CODESIGN_IDENTITY:-}" ]]; then
   printf '==> Signing app bundles\n' >&2
