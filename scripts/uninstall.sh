@@ -14,9 +14,8 @@ EOF
 
 INSTALL_PREFIX="${GOTO_INSTALL_PREFIX:-/usr/local/lib/goto}"
 BIN_PREFIX="${GOTO_BIN_PREFIX:-/usr/local/bin}"
-MENU_APP_PATH="${GOTO_MENU_APP_PATH:-/Applications/GotoMenuBar.app}"
-FINDER_APP_PATH="${GOTO_FINDER_APP_PATH:-/Applications/GotoFinder.app}"
-EXTENSION_PATH="$FINDER_APP_PATH/Contents/PlugIns/GotoFinderSync.appex"
+APP_PATH="${GOTO_APP_PATH:-/Applications/Goto.app}"
+EXTENSION_PATH="$APP_PATH/Contents/PlugIns/GotoFinderSync.appex"
 EXTENSION_ID="${GOTO_EXTENSION_ID:-dev.goto.finder.findersync}"
 INSTALL_RECEIPT_ID="${GOTO_INSTALL_RECEIPT_ID:-dev.goto.installer}"
 PLUGINKIT_BIN="${GOTO_PLUGINKIT_BIN:-/usr/bin/pluginkit}"
@@ -141,15 +140,14 @@ if [[ -n "$target_home" ]]; then
   remove_shell_integration "$target_home/.bashrc"
 fi
 
-"$PKILL_BIN" -f "$MENU_APP_PATH/Contents/MacOS/" >/dev/null 2>&1 || true
-"$PKILL_BIN" -f "$FINDER_APP_PATH/Contents/MacOS/" >/dev/null 2>&1 || true
+"$PKILL_BIN" -f "$APP_PATH/Contents/MacOS/" >/dev/null 2>&1 || true
 
 "$PLUGINKIT_BIN" -e ignore -i "$EXTENSION_ID" >/dev/null 2>&1 || true
 if [[ -d "$EXTENSION_PATH" ]]; then
   "$PLUGINKIT_BIN" -r "$EXTENSION_PATH" >/dev/null 2>&1 || true
 fi
 
-rm -rf -- "$MENU_APP_PATH" "$FINDER_APP_PATH" "$INSTALL_PREFIX"
+rm -rf -- "$APP_PATH" "$INSTALL_PREFIX"
 rm -f -- "$BIN_PREFIX/goto" "$BIN_PREFIX/goto-install-shell" "$BIN_PREFIX/goto-uninstall"
 
 "$PKGUTIL_BIN" --forget "$INSTALL_RECEIPT_ID" >/dev/null 2>&1 || true

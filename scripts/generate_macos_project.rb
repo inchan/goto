@@ -27,10 +27,11 @@ project = Xcodeproj::Project.new(PROJECT_PATH)
 project.root_object.attributes["LastUpgradeCheck"] = "1520"
 project.root_object.attributes["TargetAttributes"] ||= {}
 
-app_target = project.new_target(:application, "GotoFinder", :osx, "13.0")
+app_target = project.new_target(:application, "Goto", :osx, "13.0")
 extension_target = project.new_target(:app_extension, "GotoFinderSync", :osx, "13.0")
 
 groups = {
+  "Goto" => project.main_group.find_subpath("Goto", true),
   "GotoFinder" => project.main_group.find_subpath("GotoFinder", true),
   "GotoFinderSync" => project.main_group.find_subpath("GotoFinderSync", true),
   "Shared" => project.main_group.find_subpath("Shared", true),
@@ -38,7 +39,9 @@ groups = {
 }
 
 app_sources = %w[
-  GotoFinder/GotoFinderApp.swift
+  Goto/GotoApp.swift
+  Goto/MenuBarViewModel.swift
+  Goto/SettingsWindow.swift
   GotoFinder/FinderLaunchBridge.swift
   Shared/FinderLaunchNotifications.swift
   ../native/Sources/GotoNativeCore/ProjectEntry.swift
@@ -64,7 +67,16 @@ extension_sources = %w[
 ].freeze
 
 app_sources.each do |path|
-  group = path.include?("GotoFinder/") ? groups["GotoFinder"] : (path.include?("Shared/") ? groups["Shared"] : groups["NativeCore"])
+  group =
+    if path.include?("Goto/")
+      groups["Goto"]
+    elsif path.include?("GotoFinder/")
+      groups["GotoFinder"]
+    elsif path.include?("Shared/")
+      groups["Shared"]
+    else
+      groups["NativeCore"]
+    end
   add_file(app_target, group, path)
 end
 
@@ -74,9 +86,9 @@ extension_sources.each do |path|
 end
 
 app_target.build_configurations.each do |config|
-  config.build_settings["INFOPLIST_FILE"] = "GotoFinder/Info.plist"
+  config.build_settings["INFOPLIST_FILE"] = "Goto/Info.plist"
   config.build_settings["PRODUCT_BUNDLE_IDENTIFIER"] = "dev.goto.finder"
-  config.build_settings["PRODUCT_NAME"] = "GotoFinder"
+  config.build_settings["PRODUCT_NAME"] = "Goto"
   config.build_settings["SWIFT_VERSION"] = "5.0"
   config.build_settings["MACOSX_DEPLOYMENT_TARGET"] = "13.0"
   config.build_settings["CODE_SIGN_STYLE"] = "Manual"
