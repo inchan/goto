@@ -5,7 +5,7 @@ SCRIPT_DIR="$(
   cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P
 )"
 
-destination="${1:-$HOME/Applications/GotoFinder.app}"
+destination="${1:-$HOME/Applications/Goto.app}"
 installed_app="$("$SCRIPT_DIR/install-finder.sh" "$destination")"
 extension_path="$installed_app/Contents/PlugIns/GotoFinderSync.appex"
 probe_dir="$(mktemp -d "/tmp/goto finder toolbar.XXXXXX")"
@@ -33,7 +33,7 @@ trap cleanup EXIT
 test -d "$installed_app"
 test -d "$extension_path"
 pluginkit -m -A -D -v -i "dev.goto.finder.findersync" | grep -F -- "$extension_path" >/dev/null
-wait_for_process "$installed_app/Contents/MacOS/GotoFinder"
+wait_for_process "$installed_app/Contents/MacOS/Goto"
 sleep 1
 
 pkill -x Terminal >/dev/null 2>&1 || true
@@ -47,4 +47,4 @@ open "$probe_url"
 sleep 1
 pgrep -x Terminal >/dev/null
 
-printf 'Finder agent verified at %s\n' "$installed_app"
+printf 'Goto app verified at %s\n' "$installed_app"

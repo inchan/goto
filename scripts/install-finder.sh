@@ -8,7 +8,7 @@ REPO_ROOT="$(
   cd -- "$SCRIPT_DIR/.." >/dev/null 2>&1 && pwd -P
 )"
 
-destination="${1:-$HOME/Applications/GotoFinder.app}"
+destination="${1:-$HOME/Applications/Goto.app}"
 products_path="$(mktemp -d "$REPO_ROOT/build/install-products.XXXXXX")"
 
 cleanup() {
@@ -19,7 +19,7 @@ trap cleanup EXIT
 
 build_app="$("$SCRIPT_DIR/build-finder.sh" "$products_path" | tail -n 1)"
 
-pkill -f "$destination/Contents/MacOS/GotoFinder" >/dev/null 2>&1 || true
+pkill -f "$destination/Contents/MacOS/Goto" >/dev/null 2>&1 || true
 pkill -f "$destination/Contents/PlugIns/GotoFinderSync.appex/Contents/MacOS/GotoFinderSync" >/dev/null 2>&1 || true
 
 mkdir -p -- "$(dirname -- "$destination")"

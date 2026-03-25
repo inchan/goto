@@ -78,6 +78,92 @@ test('install-shell script writes the bash source block exactly once', async () 
   assert.match(contents, /goto\.bash/);
 });
 
+test('pkg postinstall runs shell integration for the logged-in user and registers Goto.app extension', async () => {
+  const homeDir = await createTempDir('goto-postinstall-home-');
+  const fakeBinDir = await createTempDir('goto-postinstall-bin-');
+  const scriptPath = path.join(projectRoot, 'scripts/pkg-postinstall.sh');
+  const installScriptPath = path.join(projectRoot, 'scripts/install-shell.sh');
+  const rcFile = path.join(homeDir, '.zshrc');
+  const statPath = path.join(fakeBinDir, 'stat');
+  const suPath = path.join(fakeBinDir, 'su');
+  const pluginkitPath = path.join(fakeBinDir, 'pluginkit');
+  const killallPath = path.join(fakeBinDir, 'killall');
+  const suLogPath = path.join(fakeBinDir, 'su.log');
+  const pluginkitLogPath = path.join(fakeBinDir, 'pluginkit.log');
+  const appDir = path.join(await createTempDir('goto-app-'), 'Goto.app');
+  const extensionPath = path.join(appDir, 'Contents', 'PlugIns', 'GotoFinderSync.appex');
+
+  await fs.mkdir(extensionPath, { recursive: true });
+
+  await writeExecutable(
+    statPath,
+    `#!/bin/sh
+printf '%s\\n' "test-user"
+`
+  );
+  await writeExecutable(
+    suPath,
+    `#!/bin/sh
+printf '%s\\n' "$*" >> "${suLogPath}"
+user=""
+command=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -l)
+      user="$2"
+      shift 2
+      ;;
+    -c)
+      command="$2"
+      shift 2
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+HOME="${homeDir}" SHELL="/bin/zsh" USER="$user" LOGNAME="$user" /bin/sh -c "$command"
+`
+  );
+  await writeExecutable(
+    pluginkitPath,
+    `#!/bin/sh
+printf '%s\\n' "$*" >> "${pluginkitLogPath}"
+exit 0
+`
+  );
+  await writeExecutable(
+    killallPath,
+    `#!/bin/sh
+exit 0
+`
+  );
+
+  const result = await runProcess('sh', [scriptPath], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      GOTO_FINDER_APP: appDir,
+      GOTO_INSTALL_SHELL_BIN: installScriptPath,
+      GOTO_PLUGINKIT_BIN: pluginkitPath,
+      GOTO_KILLALL_BIN: killallPath,
+      GOTO_STAT_BIN: statPath,
+      GOTO_SU_BIN: suPath,
+    },
+  });
+
+  const contents = await fs.readFile(rcFile, 'utf8');
+  const matches = contents.match(/source ".*goto\.zsh"/g) || [];
+  const suLog = await fs.readFile(suLogPath, 'utf8');
+  const pluginkitLog = await fs.readFile(pluginkitLogPath, 'utf8');
+
+  assert.equal(result.code, 0);
+  assert.equal(matches.length, 1);
+  assert.match(result.stdout, /Shell integration was installed for test-user/);
+  assert.match(suLog, /-l test-user -c/);
+  assert.match(pluginkitLog, /-a .*GotoFinderSync\.appex/);
+});
+
 test('uninstall script removes packaged files and preserves user data by default', async () => {
   const homeDir = await createTempDir('goto-uninstall-home-');
   const installRoot = await createTempDir('goto-uninstall-install-');
@@ -85,9 +171,8 @@ test('uninstall script removes packaged files and preserves user data by default
   const binRoot = await createTempDir('goto-uninstall-bin-');
   const fakeBinDir = await createTempDir('goto-uninstall-fakebin-');
   const scriptPath = path.join(projectRoot, 'scripts/uninstall.sh');
-  const menuAppPath = path.join(appsRoot, 'GotoMenuBar.app');
-  const finderAppPath = path.join(appsRoot, 'GotoFinder.app');
-  const extensionPath = path.join(finderAppPath, 'Contents', 'PlugIns', 'GotoFinderSync.appex');
+  const appPath = path.join(appsRoot, 'Goto.app');
+  const extensionPath = path.join(appPath, 'Contents', 'PlugIns', 'GotoFinderSync.appex');
   const installPrefix = path.join(installRoot, 'goto');
   const gotoSymlink = path.join(binRoot, 'goto');
   const installShellSymlink = path.join(binRoot, 'goto-install-shell');
@@ -129,8 +214,7 @@ test('uninstall script removes packaged files and preserves user data by default
       GOTO_UNINSTALL_ALLOW_NON_ROOT: '1',
       GOTO_INSTALL_PREFIX: installPrefix,
       GOTO_BIN_PREFIX: binRoot,
-      GOTO_MENU_APP_PATH: menuAppPath,
-      GOTO_FINDER_APP_PATH: finderAppPath,
+      GOTO_APP_PATH: appPath,
       GOTO_PLUGINKIT_BIN: path.join(fakeBinDir, 'pluginkit'),
       GOTO_PKGUTIL_BIN: path.join(fakeBinDir, 'pkgutil'),
       GOTO_PKILL_BIN: path.join(fakeBinDir, 'pkill'),
@@ -147,8 +231,7 @@ test('uninstall script removes packaged files and preserves user data by default
   const pkgutilLog = await fs.readFile(pkgutilLogPath, 'utf8');
 
   assert.equal(result.code, 0);
-  await assert.rejects(fs.access(menuAppPath));
-  await assert.rejects(fs.access(finderAppPath));
+  await assert.rejects(fs.access(appPath));
   await assert.rejects(fs.access(installPrefix));
   await assert.rejects(fs.access(gotoSymlink));
   await assert.rejects(fs.access(installShellSymlink));
@@ -193,8 +276,7 @@ test('uninstall script removes user data with --purge', async () => {
       GOTO_UNINSTALL_ALLOW_NON_ROOT: '1',
       GOTO_INSTALL_PREFIX: installPrefix,
       GOTO_BIN_PREFIX: binRoot,
-      GOTO_MENU_APP_PATH: path.join(appsRoot, 'GotoMenuBar.app'),
-      GOTO_FINDER_APP_PATH: path.join(appsRoot, 'GotoFinder.app'),
+      GOTO_APP_PATH: path.join(appsRoot, 'Goto.app'),
       GOTO_PLUGINKIT_BIN: path.join(fakeBinDir, 'pluginkit'),
       GOTO_PKGUTIL_BIN: path.join(fakeBinDir, 'pkgutil'),
       GOTO_PKILL_BIN: path.join(fakeBinDir, 'pkill'),

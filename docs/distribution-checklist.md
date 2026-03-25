@@ -2,7 +2,7 @@
 
 ## Goal
 
-Ship all three surfaces (`goto`, `goto-menubar`, `goto-finder`) as a **single downloadable artifact** from GitHub Releases with the least engineering churn.
+Ship the CLI plus unified `Goto.app` as a **single downloadable artifact** from GitHub Releases with the least engineering churn.
 
 ## Recommendation
 
@@ -44,7 +44,7 @@ References:
 
 ### Already in place
 
-- Three independent install targets are already defined in the architecture.
+- The CLI and unified `Goto.app` are the install targets that matter for distribution.
 - `package.json` is now the version source of truth (`0.0.1` for the first release target).
 - The CLI, menu bar app, Finder app, and Xcode project now pull version information from that single source.
 - The Finder shipping build now targets **Release**.
@@ -72,11 +72,9 @@ One `.pkg` installs all of the following:
      - `/opt/goto/`
    - Keep `bin/`, `shell/`, and any runtime JS files together so the existing shell wrappers still resolve paths correctly.
 
-2. **Menu bar app**
-   - Install `GotoMenuBar.app` into `/Applications`.
-
-3. **Finder app + Finder Sync extension**
-   - Install `GotoFinder.app` into `/Applications`.
+2. **Unified native app**
+   - Install `Goto.app` into `/Applications`.
+   - Bundle `GotoFinderSync.appex` inside `Goto.app/Contents/PlugIns/`.
    - Register the embedded extension in a postinstall step.
 
 4. **Shell setup helper**
@@ -93,8 +91,8 @@ One `.pkg` installs all of the following:
 - [x] Choose the permanent CLI install prefix (`/usr/local/lib/goto`)
 - [x] Keep **Node 20+** as the v1 packaged-distribution prerequisite
 - [ ] Decide whether the installer will:
-  - [x] only install assets, then ask the user to run shell setup
-  - [ ] or also perform shell setup automatically for the current user
+  - [ ] only install assets, then ask the user to run shell setup
+  - [x] or also perform shell setup automatically for the current user
 
 **Recommendation:** keep Node 20+ as a documented prerequisite for the first packaged release. It is the lowest-effort path for this developer-focused tool.
 
@@ -105,7 +103,7 @@ One `.pkg` installs all of the following:
 - [x] Make CLI `--version` come from the same source of truth
 - [x] Update shell installation so it targets the installed package path, not the repository path
 - [x] Update README to reflect current names:
-  - [x] `GotoFinder.app`
+  - [x] `Goto.app`
   - [x] `scripts/install-finder.sh`
   - [x] `scripts/uninstall-finder.sh`
 - [x] Document packaged-install prerequisites separately from repo-local setup
@@ -114,14 +112,14 @@ One `.pkg` installs all of the following:
 
 - [x] Add a release staging directory, for example `build/release-root/`
 - [x] Stage CLI files into the chosen install prefix inside the staging root
-- [x] Stage `GotoMenuBar.app` into `/Applications`
-- [x] Stage `GotoFinder.app` into `/Applications`
+- [x] Stage `Goto.app` into `/Applications`
 - [x] Stage helper scripts (`goto-install-shell`, `goto-uninstall`)
 - [x] Add a postinstall script that:
   - [x] registers the Finder Sync extension with `pluginkit`
   - [x] restarts Finder if needed
   - [ ] optionally opens Extensions settings
-  - [x] prints the shell setup next step clearly
+  - [x] runs shell setup automatically for the logged-in user when possible
+  - [x] prints a manual shell setup fallback clearly
 
 ### Phase 3 — Deferred public-release track (signing and notarization)
 
@@ -129,8 +127,7 @@ One `.pkg` installs all of the following:
 - [ ] Create / configure signing identities (Deferred):
   - [ ] **Developer ID Application**
   - [ ] **Developer ID Installer**
-- [ ] Sign `GotoMenuBar.app`
-- [ ] Sign `GotoFinder.app` and the embedded Finder Sync extension correctly
+- [ ] Sign `Goto.app` and the embedded Finder Sync extension correctly
 - [ ] Build the flat installer package
 - [ ] Sign the `.pkg` with **Developer ID Installer**
 - [ ] Submit the `.pkg` with `notarytool`

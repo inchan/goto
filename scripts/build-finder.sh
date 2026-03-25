@@ -31,10 +31,10 @@ ruby "$SCRIPT_DIR/generate_macos_project.rb"
 env DEVELOPER_DIR="$developer_dir" \
   xcodebuild \
   -project "$REPO_ROOT/macos/Goto.xcodeproj" \
-  -target GotoFinder \
+  -target Goto \
   -configuration Release \
   SYMROOT="$products_path" \
   OBJROOT="$intermediates_path" \
   build
 
-printf '%s\n' "$products_path/Release/GotoFinder.app"
+printf '%s\n' "$products_path/Release/Goto.app"

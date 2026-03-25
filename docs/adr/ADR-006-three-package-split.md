@@ -1,6 +1,6 @@
 # ADR-006: Three-Package Split (goto, goto-menubar, goto-finder)
 
-**Status:** Accepted
+**Status:** Superseded by ADR-007
 **Date:** 2026-03-24
 
 ## Context

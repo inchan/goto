@@ -1,17 +1,17 @@
 # goto
 
-A macOS developer utility for jumping to project directories. Three surfaces, one registry: a terminal TUI picker, a menu bar app, and a Finder toolbar button.
+A macOS developer utility for jumping to project directories. One registry, two surfaces: a terminal TUI picker and a unified `Goto.app` that combines the menu bar UI with the Finder toolbar integration host.
 
 ## Features
 
 - Interactive terminal picker with keyboard navigation and MRU ordering
 - Bulk-register every child directory under a workspace root
-- SwiftUI menu bar app that lists saved projects and opens them in your terminal
+- Unified `Goto.app` with a menu bar project list, settings window, and embedded Finder Sync host
 - Finder Sync toolbar button that opens folders in terminal directly from Finder
 - Auto-detects installed terminal: Terminal, iTerm2, Warp, Ghostty, Alacritty, Kitty
 - Configurable Finder click modes: direct open, project list, or both
 - File-watch on `~/.goto` keeps every surface in sync without polling
-- Zero runtime dependencies (Node side); single SPM package (Swift side)
+- Zero runtime dependencies (Node side); Xcode-built native app with embedded Finder Sync extension
 
 ## Setup
 
@@ -44,8 +44,9 @@ GitHub Releases are intended to publish a single installer package: `goto-<versi
 For the first packaged release (`0.0.1`):
 
 - the packaged CLI still expects **Node 20+** on the target Mac
-- the installer lays down the CLI payload plus both apps
-- after installation, run `goto-install-shell` to enable shell `cd` integration
+- the installer lays down the CLI payload plus `Goto.app`
+- the installer attempts shell integration automatically for the logged-in user
+- if shell integration is skipped, run `goto-install-shell` manually
 - remove the packaged install later with `sudo goto-uninstall` (`--purge` also deletes `~/.goto` and `~/.goto-settings`)
 
 If Apple signing/notarization secrets are unavailable, the GitHub workflow falls back to an **unsigned prerelease** package: `goto-<version>-unsigned.pkg`.
@@ -71,37 +72,26 @@ goto --version               # print version
 
 The picker renders in an alternate screen buffer. Use arrow keys to navigate, Enter to confirm, Esc to cancel. The most recently opened project is promoted to the top of the list.
 
-## Menu Bar App
+## Goto App
 
-The menu bar app (`GotoMenuBar`) is a standalone SwiftUI app that reads `~/.goto`, displays your saved projects, and opens them in a terminal window on click.
+`Goto.app` is the native host app. It stays in the menu bar, shows the shared project list, exposes Finder-related settings, and embeds the Finder Sync extension host process.
 
 Build and run:
 
 ```sh
-./scripts/build-menu-bar-app.sh        # produces build/GotoMenuBar.app
-open build/GotoMenuBar.app
+./scripts/build-finder.sh             # produces build/macos-products/Release/Goto.app
+open build/macos-products/Release/Goto.app
 ```
 
-Settings (accessible from the menu bar dropdown):
-
-- **Terminal picker** -- choose which terminal app to open projects in, or leave on Auto to use whichever is detected
-- **Launch at Login** -- register with `SMAppService` so the app starts on boot
-
-The app watches `~/.goto` for changes and reloads automatically.
-
-## Finder Integration
-
-`GotoFinder.app` is an Xcode-built headless agent with an embedded Finder Sync extension. It adds a toolbar button to Finder that opens directories in your terminal.
-
-Install:
+Install to `~/Applications` for local development:
 
 ```sh
 ./scripts/install-finder.sh
 ```
 
-This builds the Finder app, copies it to `~/Applications/GotoFinder.app`, registers the Finder Sync extension, restarts Finder, and opens the Extensions preference pane so you can verify the extension is enabled.
+This builds `Goto.app`, copies it to `~/Applications/Goto.app`, registers the Finder Sync extension, restarts Finder, and opens the Extensions preference pane so you can verify the extension is enabled.
 
-Uninstall:
+Uninstall the local app build:
 
 ```sh
 ./scripts/uninstall-finder.sh
@@ -123,11 +113,11 @@ The Finder toolbar button behavior is controlled by the click mode setting in `~
 
 ### IPC
 
-The Finder Sync extension runs in a sandbox and communicates with the host app via `DistributedNotificationCenter`. The host broadcasts the project list and preferences to the extension. The extension posts launch requests back to the host, which performs the actual terminal open.
+The Finder Sync extension runs in a sandbox and communicates with `Goto.app` via `DistributedNotificationCenter`. The host app broadcasts the project list and preferences to the extension. The extension posts launch requests back to the host, which performs the actual terminal open.
 
 ## Registry
 
-`~/.goto` -- one absolute path per line. Shared by the CLI, menu bar app, and Finder agent. Safe to edit by hand.
+`~/.goto` -- one absolute path per line. Shared by the CLI and `Goto.app`. Safe to edit by hand.
 
 `~/.goto-settings` -- JSON file for native-side preferences. Current shape:
 
@@ -145,14 +135,14 @@ The Finder Sync extension runs in a sandbox and communicates with the host app v
 | Script | Purpose |
 |--------|---------|
 | `install-shell.sh` | Append shell integration to `~/.zshrc` / `~/.bashrc` |
-| `build-menu-bar-app.sh` | Build `GotoMenuBar.app` via `swift build` |
-| `run-native-menu-bar.sh` | Build and run the menu bar app in one step |
-| `build-finder.sh` | Build `GotoFinder.app` via `xcodebuild` |
-| `build-pkg.sh` | Build a single installer package containing CLI + menu bar + Finder |
+| `build-menu-bar-app.sh` | Legacy standalone `GotoMenuBar.app` build path |
+| `run-native-menu-bar.sh` | Legacy menu bar-only runner |
+| `build-finder.sh` | Build `Goto.app` via `xcodebuild` |
+| `build-pkg.sh` | Build a single installer package containing CLI + `Goto.app` |
 | `uninstall.sh` | Remove the packaged install from `/Applications` and `/usr/local` |
-| `install-finder.sh` | Build, install to `~/Applications`, register extension |
-| `uninstall-finder.sh` | Remove `~/Applications/GotoFinder.app` and unregister extension |
-| `test-finder.sh` | Install and smoke-test the Finder app |
+| `install-finder.sh` | Build `Goto.app`, install to `~/Applications`, register extension |
+| `uninstall-finder.sh` | Remove `~/Applications/Goto.app` and unregister extension |
+| `test-finder.sh` | Install and smoke-test `Goto.app` |
 | `run-native-launch.sh` | Build and run `GotoNativeLaunch` with a given path |
 | `typecheck-native.sh` | Type-check the Swift package without building |
 | `test-native.sh` | Run Swift package tests |
@@ -167,19 +157,20 @@ goto/
   bin/goto.js            CLI entry point (Node)
   src/                   CLI logic: registry, picker, commands
   shell/                 Shell wrappers (zsh, bash) that source into the parent shell
-  native/                Swift package (SPM, swift-tools-version 5.8)
+  native/                Swift package (shared core + legacy menu bar target)
     Sources/
       GotoNativeCore/    Shared library: registry, terminal launch, settings, Finder types
-      GotoMenuBar/       SwiftUI menu bar executable
       GotoNativeLaunch/  CLI for Finder-triggered folder handoff
-    Tests/               XCTest suites for core and menu bar
-  macos/                 Xcode project for GotoFinder + GotoFinderSync extension
-    GotoFinder/          Headless Finder agent / launch bridge
+      GotoMenuBar/       Legacy standalone menu bar executable
+    Tests/               XCTest suites for core and legacy menu bar logic
+  macos/                 Xcode project for Goto + GotoFinderSync extension
+    Goto/                Unified app host (menu bar UI + settings window)
+    GotoFinder/          Finder launch bridge implementation used by the host app
     GotoFinderSync/      Finder Sync extension (FIFinderSync subclass)
   scripts/               Build, install, and test scripts
 ```
 
-The Node CLI and the Swift native apps share `~/.goto` as the single source of truth. The menu bar app and Finder agent both use `RegistryWatcher` (GCD file-system events) to reload when the registry changes.
+The Node CLI and `Goto.app` share `~/.goto` as the single source of truth. `Goto.app` watches both `~/.goto` and `~/.goto-settings` to keep the menu bar UI and Finder Sync extension in sync.
 
 Terminal launches use AppleScript for Terminal.app and iTerm2, and fall back to `open -a` for terminals that do not support AppleScript (Warp, Ghostty, Alacritty, Kitty).
 
@@ -203,7 +194,7 @@ Type-check Swift without a full build:
 ./scripts/typecheck-native.sh
 ```
 
-Build the Finder app (requires Xcode):
+Build `Goto.app` (requires Xcode):
 
 ```sh
 ./scripts/build-finder.sh
