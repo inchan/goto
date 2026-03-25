@@ -16,6 +16,11 @@ def add_file(target, group, path)
   target.add_file_references([file])
 end
 
+def add_resource(target, group, path)
+  file = group.new_file(path)
+  target.resources_build_phase.add_file_reference(file, true)
+end
+
 def add_framework(project, target, framework_name)
   path = "System/Library/Frameworks/#{framework_name}"
   file = project.frameworks_group.files.find { |ref| ref.path == path } || project.frameworks_group.new_file(path)
@@ -36,6 +41,7 @@ groups = {
   "GotoFinderSync" => project.main_group.find_subpath("GotoFinderSync", true),
   "Shared" => project.main_group.find_subpath("Shared", true),
   "NativeCore" => project.main_group.find_subpath("NativeCore", true),
+  "Resources" => project.main_group.find_subpath("Resources", true),
 }
 
 app_sources = %w[
@@ -84,6 +90,8 @@ extension_sources.each do |path|
   group = path.include?("GotoFinderSync/") ? groups["GotoFinderSync"] : (path.include?("Shared/") ? groups["Shared"] : groups["NativeCore"])
   add_file(extension_target, group, path)
 end
+
+add_resource(app_target, groups["Resources"], "Resources/Goto.icns")
 
 app_target.build_configurations.each do |config|
   config.build_settings["INFOPLIST_FILE"] = "Goto/Info.plist"

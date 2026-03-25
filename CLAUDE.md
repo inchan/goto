@@ -19,6 +19,7 @@ Two install surfaces for macOS project jumping:
 | `macos/Goto/` | Xcode — unified app host (menu bar UI + settings window) |
 | `macos/GotoFinder/` | Xcode — Finder launch bridge used by `Goto.app` |
 | `macos/GotoFinderSync/` | Xcode — Finder Sync extension (sandboxed) |
+| `macos/Resources/` | Native app resources such as `Goto.icns` |
 | `macos/Shared/` | IPC notification definitions shared by agent + extension |
 | `shell/` | Shell integration (sourced by user's shell profile) |
 | `scripts/` | Build & codegen scripts |

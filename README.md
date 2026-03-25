@@ -136,6 +136,7 @@ The Finder Sync extension runs in a sandbox and communicates with `Goto.app` via
 |--------|---------|
 | `install-shell.sh` | Append shell integration to `~/.zshrc` / `~/.bashrc` |
 | `build-menu-bar-app.sh` | Legacy standalone `GotoMenuBar.app` build path |
+| `generate-app-icon.sh` | Generate `macos/Resources/Goto.icns` from the SVG source |
 | `run-native-menu-bar.sh` | Legacy menu bar-only runner |
 | `build-finder.sh` | Build `Goto.app` via `xcodebuild` |
 | `build-pkg.sh` | Build a single installer package containing CLI + `Goto.app` |
