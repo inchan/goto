@@ -46,6 +46,7 @@ For the first packaged release (`0.0.1`):
 - the packaged CLI still expects **Node 20+** on the target Mac
 - the installer lays down the CLI payload plus both apps
 - after installation, run `goto-install-shell` to enable shell `cd` integration
+- remove the packaged install later with `sudo goto-uninstall` (`--purge` also deletes `~/.goto` and `~/.goto-settings`)
 
 If Apple signing/notarization secrets are unavailable, the GitHub workflow falls back to an **unsigned prerelease** package: `goto-<version>-unsigned.pkg`.
 Users can still install it, but macOS will require manual approval in **Privacy & Security → Open Anyway**.
@@ -148,6 +149,7 @@ The Finder Sync extension runs in a sandbox and communicates with the host app v
 | `run-native-menu-bar.sh` | Build and run the menu bar app in one step |
 | `build-finder.sh` | Build `GotoFinder.app` via `xcodebuild` |
 | `build-pkg.sh` | Build a single installer package containing CLI + menu bar + Finder |
+| `uninstall.sh` | Remove the packaged install from `/Applications` and `/usr/local` |
 | `install-finder.sh` | Build, install to `~/Applications`, register extension |
 | `uninstall-finder.sh` | Remove `~/Applications/GotoFinder.app` and unregister extension |
 | `test-finder.sh` | Install and smoke-test the Finder app |

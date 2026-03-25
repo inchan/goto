@@ -78,6 +78,139 @@ test('install-shell script writes the bash source block exactly once', async () 
   assert.match(contents, /goto\.bash/);
 });
 
+test('uninstall script removes packaged files and preserves user data by default', async () => {
+  const homeDir = await createTempDir('goto-uninstall-home-');
+  const installRoot = await createTempDir('goto-uninstall-install-');
+  const appsRoot = await createTempDir('goto-uninstall-apps-');
+  const binRoot = await createTempDir('goto-uninstall-bin-');
+  const fakeBinDir = await createTempDir('goto-uninstall-fakebin-');
+  const scriptPath = path.join(projectRoot, 'scripts/uninstall.sh');
+  const menuAppPath = path.join(appsRoot, 'GotoMenuBar.app');
+  const finderAppPath = path.join(appsRoot, 'GotoFinder.app');
+  const extensionPath = path.join(finderAppPath, 'Contents', 'PlugIns', 'GotoFinderSync.appex');
+  const installPrefix = path.join(installRoot, 'goto');
+  const gotoSymlink = path.join(binRoot, 'goto');
+  const installShellSymlink = path.join(binRoot, 'goto-install-shell');
+  const uninstallSymlink = path.join(binRoot, 'goto-uninstall');
+  const registryPath = path.join(homeDir, '.goto');
+  const settingsPath = path.join(homeDir, '.goto-settings');
+  const zshrcPath = path.join(homeDir, '.zshrc');
+  const bashrcPath = path.join(homeDir, '.bashrc');
+  const pluginkitLogPath = path.join(fakeBinDir, 'pluginkit.log');
+  const pkgutilLogPath = path.join(fakeBinDir, 'pkgutil.log');
+
+  await fs.mkdir(path.join(installPrefix, 'scripts'), { recursive: true });
+  await fs.mkdir(extensionPath, { recursive: true });
+  await fs.writeFile(path.join(installPrefix, 'scripts', 'install-shell.sh'), '#!/bin/sh\n');
+  await writeExecutable(path.join(fakeBinDir, 'pluginkit'), `#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"${pluginkitLogPath}\"\n`);
+  await writeExecutable(path.join(fakeBinDir, 'pkgutil'), `#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"${pkgutilLogPath}\"\n`);
+  await writeExecutable(path.join(fakeBinDir, 'pkill'), '#!/bin/sh\nexit 0\n');
+  await writeExecutable(path.join(fakeBinDir, 'killall'), '#!/bin/sh\nexit 0\n');
+  await writeExecutable(path.join(fakeBinDir, 'dscl'), `#!/bin/sh\nprintf 'NFSHomeDirectory: %s\\n' \"${homeDir}\"\n`);
+  await writeExecutable(path.join(fakeBinDir, 'stat'), '#!/bin/sh\nprintf \'%s\\n\' test-user\n');
+  await fs.symlink(path.join(installPrefix, 'bin', 'goto.js'), gotoSymlink).catch(() => {});
+  await fs.symlink(path.join(installPrefix, 'scripts', 'install-shell.sh'), installShellSymlink).catch(() => {});
+  await fs.symlink(scriptPath, uninstallSymlink).catch(() => {});
+  await fs.writeFile(registryPath, '/tmp/project\n');
+  await fs.writeFile(settingsPath, '{"finder":{"enabled":true}}\n');
+  await fs.writeFile(
+    zshrcPath,
+    `# >>> goto >>>\nsource "${installPrefix}/shell/goto.zsh"\n# <<< goto <<<\n# keep me\n# >>> goto >>>\nsource "${projectRoot}/shell/goto.zsh"\n# <<< goto <<<\n`
+  );
+  await fs.writeFile(
+    bashrcPath,
+    `# >>> goto >>>\nsource "${installPrefix}/shell/goto.bash"\n# <<< goto <<<\nexport PATH="$PATH:/tmp"\n`
+  );
+
+  const result = await runProcess('bash', [scriptPath], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      GOTO_UNINSTALL_ALLOW_NON_ROOT: '1',
+      GOTO_INSTALL_PREFIX: installPrefix,
+      GOTO_BIN_PREFIX: binRoot,
+      GOTO_MENU_APP_PATH: menuAppPath,
+      GOTO_FINDER_APP_PATH: finderAppPath,
+      GOTO_PLUGINKIT_BIN: path.join(fakeBinDir, 'pluginkit'),
+      GOTO_PKGUTIL_BIN: path.join(fakeBinDir, 'pkgutil'),
+      GOTO_PKILL_BIN: path.join(fakeBinDir, 'pkill'),
+      GOTO_KILLALL_BIN: path.join(fakeBinDir, 'killall'),
+      GOTO_DSCL_BIN: path.join(fakeBinDir, 'dscl'),
+      GOTO_STAT_BIN: path.join(fakeBinDir, 'stat'),
+      GOTO_TARGET_USER: 'test-user',
+    },
+  });
+
+  const zshContents = await fs.readFile(zshrcPath, 'utf8');
+  const bashContents = await fs.readFile(bashrcPath, 'utf8');
+  const pluginkitLog = await fs.readFile(pluginkitLogPath, 'utf8');
+  const pkgutilLog = await fs.readFile(pkgutilLogPath, 'utf8');
+
+  assert.equal(result.code, 0);
+  await assert.rejects(fs.access(menuAppPath));
+  await assert.rejects(fs.access(finderAppPath));
+  await assert.rejects(fs.access(installPrefix));
+  await assert.rejects(fs.access(gotoSymlink));
+  await assert.rejects(fs.access(installShellSymlink));
+  await assert.rejects(fs.access(uninstallSymlink));
+  assert.match(zshContents, /# keep me/);
+  assert.doesNotMatch(zshContents, new RegExp(`${installPrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/shell/goto\\.zsh`));
+  assert.match(zshContents, new RegExp(`${projectRoot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/shell/goto\\.zsh`));
+  assert.match(bashContents, /export PATH/);
+  assert.doesNotMatch(bashContents, new RegExp(`${installPrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/shell/goto\\.bash`));
+  await fs.access(registryPath);
+  await fs.access(settingsPath);
+  assert.match(pluginkitLog, /-e ignore -i dev\.goto\.finder\.findersync/);
+  assert.match(pkgutilLog, /--forget dev\.goto\.installer/);
+  assert.match(result.stdout, /Preserved user data files/);
+});
+
+test('uninstall script removes user data with --purge', async () => {
+  const homeDir = await createTempDir('goto-uninstall-purge-home-');
+  const installRoot = await createTempDir('goto-uninstall-purge-install-');
+  const appsRoot = await createTempDir('goto-uninstall-purge-apps-');
+  const binRoot = await createTempDir('goto-uninstall-purge-bin-');
+  const fakeBinDir = await createTempDir('goto-uninstall-purge-fakebin-');
+  const scriptPath = path.join(projectRoot, 'scripts/uninstall.sh');
+  const installPrefix = path.join(installRoot, 'goto');
+  const registryPath = path.join(homeDir, '.goto');
+  const settingsPath = path.join(homeDir, '.goto-settings');
+
+  await fs.mkdir(installPrefix, { recursive: true });
+  await writeExecutable(path.join(fakeBinDir, 'pluginkit'), '#!/bin/sh\nexit 0\n');
+  await writeExecutable(path.join(fakeBinDir, 'pkgutil'), '#!/bin/sh\nexit 0\n');
+  await writeExecutable(path.join(fakeBinDir, 'pkill'), '#!/bin/sh\nexit 0\n');
+  await writeExecutable(path.join(fakeBinDir, 'killall'), '#!/bin/sh\nexit 0\n');
+  await writeExecutable(path.join(fakeBinDir, 'dscl'), `#!/bin/sh\nprintf 'NFSHomeDirectory: %s\\n' \"${homeDir}\"\n`);
+  await writeExecutable(path.join(fakeBinDir, 'stat'), '#!/bin/sh\nprintf \'%s\\n\' test-user\n');
+  await fs.writeFile(registryPath, '/tmp/project\n');
+  await fs.writeFile(settingsPath, '{"finder":{"enabled":true}}\n');
+
+  const result = await runProcess('bash', [scriptPath, '--purge'], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      GOTO_UNINSTALL_ALLOW_NON_ROOT: '1',
+      GOTO_INSTALL_PREFIX: installPrefix,
+      GOTO_BIN_PREFIX: binRoot,
+      GOTO_MENU_APP_PATH: path.join(appsRoot, 'GotoMenuBar.app'),
+      GOTO_FINDER_APP_PATH: path.join(appsRoot, 'GotoFinder.app'),
+      GOTO_PLUGINKIT_BIN: path.join(fakeBinDir, 'pluginkit'),
+      GOTO_PKGUTIL_BIN: path.join(fakeBinDir, 'pkgutil'),
+      GOTO_PKILL_BIN: path.join(fakeBinDir, 'pkill'),
+      GOTO_KILLALL_BIN: path.join(fakeBinDir, 'killall'),
+      GOTO_DSCL_BIN: path.join(fakeBinDir, 'dscl'),
+      GOTO_STAT_BIN: path.join(fakeBinDir, 'stat'),
+      GOTO_TARGET_USER: 'test-user',
+    },
+  });
+
+  assert.equal(result.code, 0);
+  await assert.rejects(fs.access(registryPath));
+  await assert.rejects(fs.access(settingsPath));
+  assert.match(result.stdout, /Removed user data files/);
+});
+
 test('bash and zsh wrappers pass through registry management commands', async () => {
   const homeDir = await createTempDir();
   const projectDir = await createTempDir();

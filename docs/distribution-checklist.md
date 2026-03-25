@@ -116,7 +116,7 @@ One `.pkg` installs all of the following:
 - [x] Stage CLI files into the chosen install prefix inside the staging root
 - [x] Stage `GotoMenuBar.app` into `/Applications`
 - [x] Stage `GotoFinder.app` into `/Applications`
-- [x] Stage helper scripts (`goto-install-shell`, optional uninstall helper)
+- [x] Stage helper scripts (`goto-install-shell`, `goto-uninstall`)
 - [x] Add a postinstall script that:
   - [x] registers the Finder Sync extension with `pluginkit`
   - [x] restarts Finder if needed
