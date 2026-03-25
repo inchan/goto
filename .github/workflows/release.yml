@@ -2,8 +2,9 @@ name: release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -84,14 +85,10 @@ jobs:
             echo "prerelease=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Validate tag matches package version
+      - name: Determine release tag
+        id: release_tag
         shell: bash
-        run: |
-          expected_tag="v${{ steps.version.outputs.version }}"
-          if [[ "$expected_tag" != "$GITHUB_REF_NAME" ]]; then
-            printf 'Tag %s does not match package.json version %s\n' "$GITHUB_REF_NAME" "$expected_tag" >&2
-            exit 1
-          fi
+        run: echo "tag=v${{ steps.version.outputs.version }}" >> "$GITHUB_OUTPUT"
 
       - name: Run verification
         shell: bash
@@ -203,6 +200,16 @@ jobs:
           fi
           gh --version
 
+      - name: Ensure release tag does not already exist
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${{ steps.release_tag.outputs.tag }}" >/dev/null 2>&1; then
+            printf 'Release %s already exists\n' "${{ steps.release_tag.outputs.tag }}" >&2
+            exit 1
+          fi
+
       - name: Publish GitHub Release
         shell: bash
         env:
@@ -213,7 +220,7 @@ jobs:
             release_args+=(--prerelease)
           fi
 
-          gh release create "$GITHUB_REF_NAME" \
+          gh release create "${{ steps.release_tag.outputs.tag }}" \
             "${{ steps.package.outputs.pkg_path }}" \
             "${{ steps.checksum.outputs.checksum_path }}" \
             --title "goto ${{ steps.version.outputs.version }}${{ steps.release_mode.outputs.title_suffix }}" \

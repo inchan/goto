@@ -43,6 +43,13 @@ scripts/generate_macos_project.rb    # Regenerate Xcode project
 - Finder settings stored in `~/.goto-settings` (JSON).
   - `Goto.app` writes settings, watches the file, and broadcasts to the extension.
 
+## Git branching
+
+- `develop` is the default branch for day-to-day work.
+- Open worktrees and PRs from `develop`, not `main`, unless explicitly told otherwise.
+- `develop` pushes/PRs should go through the gate runner workflow.
+- Merge `develop` into `main` only when you want to cut a deployment/release.
+
 ## Architecture rules
 
 1. **Native app consolidation** — `goto` stays separate, while `Goto.app` owns both menu bar UX and Finder host duties.

@@ -1,0 +1,38 @@
+name: gate-runner
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  verify:
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Ruby xcodeproj dependency
+        shell: bash
+        run: gem install xcodeproj --no-document
+
+      - name: Export active developer directory
+        shell: bash
+        run: echo "DEVELOPER_DIR=$(xcode-select -p)" >> "$GITHUB_ENV"
+
+      - name: Run gate checks
+        shell: bash
+        run: |
+          node --test
+          swift test --package-path native
+          ./scripts/typecheck-native.sh
+          ./scripts/build-finder.sh
