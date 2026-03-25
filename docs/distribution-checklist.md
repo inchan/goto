@@ -83,7 +83,7 @@ One `.pkg` installs all of the following:
    - Install an easy command such as:
      - `/usr/local/bin/goto-install-shell`
    - That helper should call the packaged `install-shell.sh` against the installed prefix.
-   - Prefer this over silently mutating dotfiles from a root installer process.
+   - Use the pkg `postinstall` step to invoke that helper as the logged-in macOS user so shell dotfiles keep the correct ownership.
 
 ## Distribution checklist
 
@@ -93,8 +93,8 @@ One `.pkg` installs all of the following:
 - [x] Choose the permanent CLI install prefix (`/usr/local/lib/goto`)
 - [x] Keep **Node 20+** as the v1 packaged-distribution prerequisite
 - [ ] Decide whether the installer will:
-  - [x] only install assets, then ask the user to run shell setup
-  - [ ] or also perform shell setup automatically for the current user
+  - [ ] only install assets, then ask the user to run shell setup
+  - [x] or also perform shell setup automatically for the current user
 
 **Recommendation:** keep Node 20+ as a documented prerequisite for the first packaged release. It is the lowest-effort path for this developer-focused tool.
 
@@ -121,7 +121,8 @@ One `.pkg` installs all of the following:
   - [x] registers the Finder Sync extension with `pluginkit`
   - [x] restarts Finder if needed
   - [ ] optionally opens Extensions settings
-  - [x] prints the shell setup next step clearly
+  - [x] runs shell setup automatically for the logged-in user when possible
+  - [x] prints a manual shell setup fallback clearly
 
 ### Phase 3 — Deferred public-release track (signing and notarization)
 

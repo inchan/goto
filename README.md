@@ -45,7 +45,8 @@ For the first packaged release (`0.0.1`):
 
 - the packaged CLI still expects **Node 20+** on the target Mac
 - the installer lays down the CLI payload plus both apps
-- after installation, run `goto-install-shell` to enable shell `cd` integration
+- the installer attempts shell integration automatically for the logged-in macOS user
+- if that step is skipped, run `goto-install-shell` manually
 - remove the packaged install later with `sudo goto-uninstall` (`--purge` also deletes `~/.goto` and `~/.goto-settings`)
 
 If Apple signing/notarization secrets are unavailable, the GitHub workflow falls back to an **unsigned prerelease** package: `goto-<version>-unsigned.pkg`.

@@ -58,25 +58,7 @@ if [[ -n "${GOTO_CODESIGN_IDENTITY:-}" ]]; then
   codesign --verify --strict --verbose=2 "$menu_app_path"
 fi
 
-cat > "$scripts_root/postinstall" <<'POSTINSTALL'
-#!/bin/sh
-set -e
-
-FINDER_APP="/Applications/GotoFinder.app"
-EXTENSION_PATH="$FINDER_APP/Contents/PlugIns/GotoFinderSync.appex"
-
-if [ -d "$EXTENSION_PATH" ]; then
-  /usr/bin/pluginkit -a "$EXTENSION_PATH" >/dev/null || true
-  /usr/bin/pluginkit -e use -i "dev.goto.finder.findersync" >/dev/null 2>&1 || true
-fi
-
-/usr/bin/killall Finder >/dev/null 2>&1 || true
-
-echo
-echo "goto installed."
-echo "Run 'goto-install-shell' to enable shell cd integration."
-echo "If Finder Sync is disabled, re-enable goto in System Settings > Extensions > Finder Extensions."
-POSTINSTALL
+cp "$REPO_ROOT/scripts/pkg-postinstall.sh" "$scripts_root/postinstall"
 chmod +x "$scripts_root/postinstall"
 
 pkgbuild_cmd=(

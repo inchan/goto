@@ -78,6 +78,101 @@ test('install-shell script writes the bash source block exactly once', async () 
   assert.match(contents, /goto\.bash/);
 });
 
+test('pkg postinstall runs shell integration as the logged-in user', async () => {
+  const homeDir = await createTempDir('goto-postinstall-home-');
+  const fakeBinDir = await createTempDir('goto-postinstall-bin-');
+  const scriptPath = path.join(projectRoot, 'scripts/pkg-postinstall.sh');
+  const installScriptPath = path.join(projectRoot, 'scripts/install-shell.sh');
+  const rcFile = path.join(homeDir, '.zshrc');
+  const statPath = path.join(fakeBinDir, 'stat');
+  const suPath = path.join(fakeBinDir, 'su');
+  const pluginkitPath = path.join(fakeBinDir, 'pluginkit');
+  const killallPath = path.join(fakeBinDir, 'killall');
+  const suLogPath = path.join(fakeBinDir, 'su.log');
+  const finderAppDir = path.join(await createTempDir('goto-finder-app-'), 'GotoFinder.app');
+  const extensionPath = path.join(finderAppDir, 'Contents', 'PlugIns', 'GotoFinderSync.appex');
+
+  await fs.mkdir(extensionPath, { recursive: true });
+
+  await writeExecutable(
+    statPath,
+    `#!/bin/sh
+printf '%s\\n' "test-user"
+`
+  );
+  await writeExecutable(
+    suPath,
+    `#!/bin/sh
+printf '%s\\n' "$*" >> "${suLogPath}"
+user=""
+command=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -l)
+      user="$2"
+      shift 2
+      ;;
+    -c)
+      command="$2"
+      shift 2
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+HOME="${homeDir}" SHELL="/bin/zsh" USER="$user" LOGNAME="$user" /bin/sh -c "$command"
+`
+  );
+  await writeExecutable(
+    pluginkitPath,
+    `#!/bin/sh
+exit 0
+`
+  );
+  await writeExecutable(
+    killallPath,
+    `#!/bin/sh
+exit 0
+`
+  );
+
+  const firstRun = await runProcess('sh', [scriptPath], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      GOTO_FINDER_APP: finderAppDir,
+      GOTO_INSTALL_SHELL_BIN: installScriptPath,
+      GOTO_PLUGINKIT_BIN: pluginkitPath,
+      GOTO_KILLALL_BIN: killallPath,
+      GOTO_STAT_BIN: statPath,
+      GOTO_SU_BIN: suPath,
+    },
+  });
+  const secondRun = await runProcess('sh', [scriptPath], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      GOTO_FINDER_APP: finderAppDir,
+      GOTO_INSTALL_SHELL_BIN: installScriptPath,
+      GOTO_PLUGINKIT_BIN: pluginkitPath,
+      GOTO_KILLALL_BIN: killallPath,
+      GOTO_STAT_BIN: statPath,
+      GOTO_SU_BIN: suPath,
+    },
+  });
+
+  const contents = await fs.readFile(rcFile, 'utf8');
+  const matches = contents.match(/source ".*goto\.zsh"/g) || [];
+  const suLog = await fs.readFile(suLogPath, 'utf8');
+
+  assert.equal(firstRun.code, 0);
+  assert.equal(secondRun.code, 0);
+  assert.equal(matches.length, 1);
+  assert.match(firstRun.stdout, /Shell integration was installed for test-user/);
+  assert.match(suLog, /-l test-user -c/);
+});
+
 test('uninstall script removes packaged files and preserves user data by default', async () => {
   const homeDir = await createTempDir('goto-uninstall-home-');
   const installRoot = await createTempDir('goto-uninstall-install-');
