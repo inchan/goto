@@ -32,7 +32,7 @@ export function printHelp(stream = process.stdout) {
       '  goto --version           Show the current version',
       '',
       'Notes:',
-      '  Source shell/goto.zsh or shell/goto.bash to make `goto` change',
+      '  Source the goto shell integration script to make `goto` change',
       '  the current shell directory after selection.',
       '',
     ].join('\n')

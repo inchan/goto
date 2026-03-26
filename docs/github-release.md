@@ -5,8 +5,7 @@
 Publish a single notarized installer package from GitHub Releases.
 
 - Artifact: `goto-<version>.pkg`
-- Initial release target: `0.0.1`
-- Release trigger: push the matching Git tag (`v0.0.1` for version `0.0.1`)
+- Release trigger: push the matching Git tag (`v<version>` for version `<version>`)
 
 ## If you don’t have a paid Apple Developer account
 
@@ -33,7 +32,7 @@ It is **not** ideal for broad public distribution.
 The GitHub Actions release workflow:
 
 1. checks out the repo
-2. validates that the Git tag matches `package.json`
+2. validates that the Git tag matches `product/cli/package.json`
 3. runs JS + Swift verification
 4. decides whether the release is **signed** or **unsigned**
 5. if signing secrets exist, imports Apple signing certificates
@@ -73,34 +72,35 @@ That fallback is now the intended short-term plan.
 
 ## Versioning rule
 
-`package.json` is the release source of truth.
+`product/cli/package.json` is the release source of truth.
 
-For the first GitHub release:
+For any GitHub release:
 
-- package version: `0.0.1`
-- git tag: `v0.0.1`
-- release title: `goto 0.0.1`
+- package version: `<version>`
+- git tag: `v<version>`
+- release title: `goto <version>`
 
 If Apple signing/notarization secrets are missing, the release becomes:
 
-- artifact: `goto-0.0.1-unsigned.pkg`
-- release title: `goto 0.0.1 (unsigned beta)`
+- artifact: `goto-<version>-unsigned.pkg`
+- release title: `goto <version> (unsigned beta)`
 - GitHub release type: **prerelease**
 
 ## How to cut a release
 
-1. Commit the version change in `package.json`
+1. Commit the version change in `product/cli/package.json`
 2. Push the commit to GitHub
 3. Create and push the tag:
 
 ```sh
-git tag v0.0.1
-git push origin v0.0.1
+version="$(./scripts/current-version.sh --raw)"
+git tag "v$version"
+git push origin "v$version"
 ```
 
 4. Wait for `.github/workflows/release.yml` to finish
 5. Verify the GitHub Release contains:
-   - either `goto-0.0.1.pkg` or `goto-0.0.1-unsigned.pkg`
+   - either `goto-<version>.pkg` or `goto-<version>-unsigned.pkg`
    - the matching `.sha256` file
 
 ## Local dry run
@@ -125,7 +125,7 @@ Then notarize it:
 APPLE_API_KEY_ID="..." \
 APPLE_API_ISSUER_ID="..." \
 APPLE_API_PRIVATE_KEY_PATH="/path/to/AuthKey_XXXX.p8" \
-./scripts/notarize-pkg.sh build/goto-0.0.1.pkg
+./scripts/notarize-pkg.sh "build/goto-$(./scripts/current-version.sh --raw).pkg"
 ```
 
 ## User-facing note for unsigned releases

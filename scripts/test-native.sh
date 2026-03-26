@@ -23,4 +23,4 @@ resolve_developer_dir() {
 }
 
 DEVELOPER_DIR="$(resolve_developer_dir)" \
-  swift test --package-path "$REPO_ROOT/native"
+  swift test --package-path "$REPO_ROOT/product/core"

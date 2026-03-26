@@ -5,9 +5,9 @@ usage() {
   cat <<'EOF'
 Usage: scripts/generate-app-icon.sh
 
-Generate macOS app icon assets from artwork/goto-app-icon.svg.
+Generate macOS app icon assets from product/macos/artwork/goto-app-icon.svg.
 Outputs:
-  - macos/Resources/Goto.icns
+  - product/macos/Resources/Goto.icns
   - build/iconset/
 EOF
 }
@@ -18,12 +18,12 @@ SCRIPT_DIR="$(
 REPO_ROOT="$(
   cd -- "$SCRIPT_DIR/.." >/dev/null 2>&1 && pwd -P
 )"
-SOURCE_SVG="$REPO_ROOT/artwork/goto-app-icon.svg"
+SOURCE_SVG="$REPO_ROOT/product/macos/artwork/goto-app-icon.svg"
 BUILD_ROOT="$REPO_ROOT/build/iconset"
 ICONSET_DIR="$BUILD_ROOT/Goto.iconset"
 MASTER_DIR="$BUILD_ROOT/master"
 MASTER_PNG="$MASTER_DIR/goto-app-icon.png"
-OUTPUT_ICNS="$REPO_ROOT/macos/Resources/Goto.icns"
+OUTPUT_ICNS="$REPO_ROOT/product/macos/Resources/Goto.icns"
 
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   usage

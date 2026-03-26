@@ -7,14 +7,15 @@ SCRIPT_DIR="$({
 REPO_ROOT="$({
   cd -- "$SCRIPT_DIR/.." >/dev/null 2>&1 && pwd -P
 })"
+CLI_PACKAGE_JSON="$REPO_ROOT/product/cli/package.json"
 mode="${1:-raw}"
 
 case "$mode" in
   raw|--raw)
-    node -p "JSON.parse(require('node:fs').readFileSync(process.argv[1], 'utf8')).version" "$REPO_ROOT/package.json"
+    node -p "JSON.parse(require('node:fs').readFileSync(process.argv[1], 'utf8')).version" "$CLI_PACKAGE_JSON"
     ;;
   bundle|--bundle)
-    node -p "JSON.parse(require('node:fs').readFileSync(process.argv[1], 'utf8')).version.split('-')[0].split('+')[0]" "$REPO_ROOT/package.json"
+    node -p "JSON.parse(require('node:fs').readFileSync(process.argv[1], 'utf8')).version.split('-')[0].split('+')[0]" "$CLI_PACKAGE_JSON"
     ;;
   *)
     printf 'Usage: %s [--raw|--bundle]\n' "$0" >&2

@@ -45,7 +45,7 @@ References:
 ### Already in place
 
 - The CLI and unified `Goto.app` are the install targets that matter for distribution.
-- `package.json` is now the version source of truth (`0.0.1` for the first release target).
+- `product/cli/package.json` is the version source of truth for packaged releases.
 - The CLI, menu bar app, Finder app, and Xcode project now pull version information from that single source.
 - The Finder shipping build now targets **Release**.
 - README naming drift has been corrected to `Goto.app` / `install-app.sh`.
@@ -57,7 +57,7 @@ References:
 
 | Area | Current state | Notes |
 |------|---------------|-------|
-| GitHub prerelease lane | `v0.0.1` unsigned beta release has already shipped | This is the active distribution path right now |
+| GitHub prerelease lane | Unsigned prerelease path is available when Apple signing secrets are absent | This remains the fallback distribution path |
 | Apple code signing | Deferred until a paid Apple Developer Program account exists | Not required for the current unsigned beta lane |
 | Apple notarization | Deferred until a paid Apple Developer Program account exists | Not required for the current unsigned beta lane |
 | Local macOS tooling | Native verification requires full Xcode (`DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` in this environment) | Command Line Tools alone are insufficient for native build/test packaging steps |

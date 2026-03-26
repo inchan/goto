@@ -41,7 +41,7 @@ Reload your shell afterward (`source ~/.zshrc` or `source ~/.bashrc`).
 
 GitHub Releases are intended to publish a single installer package: `goto-<version>.pkg`.
 
-For the first packaged release (`0.0.1`):
+For the current packaged release flow:
 
 - the packaged CLI still expects **Node 20+** on the target Mac
 - the installer lays down the CLI payload plus `Goto.app`
@@ -135,7 +135,7 @@ The Finder Sync extension runs in a sandbox and communicates with `Goto.app` via
 | Script | Purpose |
 |--------|---------|
 | `install-shell.sh` | Append shell integration to `~/.zshrc` / `~/.bashrc` |
-| `generate-app-icon.sh` | Generate `macos/Resources/Goto.icns` from the SVG source |
+| `generate-app-icon.sh` | Generate `product/macos/Resources/Goto.icns` from `product/macos/artwork/` sources |
 | `build-app.sh` | Build `Goto.app` via `xcodebuild` |
 | `build-pkg.sh` | Build a single installer package containing CLI + `Goto.app` |
 | `uninstall.sh` | Remove the packaged install from `/Applications` and `/usr/local` |
@@ -145,26 +145,30 @@ The Finder Sync extension runs in a sandbox and communicates with `Goto.app` via
 | `run-native-launch.sh` | Build and run `GotoNativeLaunch` with a given path |
 | `typecheck-native.sh` | Type-check the Swift package without building |
 | `test-native.sh` | Run Swift package tests |
-| `current-version.sh` | Print the current project version from `package.json` |
-| `generate_macos_project.rb` | Generate the `macos/Goto.xcodeproj` for the Finder app and extension |
+| `current-version.sh` | Print the current project version from `product/cli/package.json` |
+| `generate_macos_project.rb` | Generate the `product/macos/Goto.xcodeproj` for the Finder app and extension |
 | `notarize-pkg.sh` | Submit a built package to Apple notarization and staple it |
 
 ## Architecture
 
 ```
 goto/
-  bin/goto.js            CLI entry point (Node)
-  src/                   CLI logic: registry, picker, commands
-  shell/                 Shell wrappers (zsh, bash) that source into the parent shell
-  native/                Swift package (shared native core + launch helper)
-    Sources/
-      GotoNativeCore/    Shared library: registry, terminal launch, settings, Finder types
-      GotoNativeLaunch/  CLI for Finder-triggered folder handoff
-    Tests/               XCTest suites for shared core logic
-  macos/                 Xcode project for Goto + GotoFinderSync extension
-    Goto/                Unified app host (menu bar UI + settings window)
-    FinderBridge/        Finder launch bridge implementation used by the host app
-    GotoFinderSync/      Finder Sync extension (FIFinderSync subclass)
+  product/
+    cli/                 CLI app
+      bin/goto.js        CLI entry point (Node)
+      src/               CLI logic: registry, picker, commands
+      shell/             Shell wrappers (zsh, bash) sourced into the parent shell
+      test/              Node test suite
+    macos/               Xcode project for Goto + GotoFinderSync extension
+      artwork/           Source artwork such as the SVG app icon
+      Goto/              Unified app host (menu bar UI + settings window)
+      FinderBridge/      Finder launch bridge implementation used by the host app
+      GotoFinderSync/    Finder Sync extension (FIFinderSync subclass)
+    core/                Swift package (shared native core + launch helper)
+      Sources/
+        GotoNativeCore/  Shared library: registry, terminal launch, settings, Finder types
+        GotoNativeLaunch/ CLI for Finder-triggered folder handoff
+      Tests/             XCTest suites for shared core logic
   scripts/               Build, install, and test scripts
 ```
 
@@ -177,13 +181,13 @@ Terminal launches use AppleScript for Terminal.app and iTerm2, and fall back to 
 Run Node tests:
 
 ```sh
-node --test
+node --test product/cli/test/*.test.js
 ```
 
 Run Swift tests:
 
 ```sh
-swift test --package-path native
+swift test --package-path product/core
 ```
 
 Type-check Swift without a full build:
@@ -202,5 +206,6 @@ Build `Goto.app` (requires Xcode):
 
 - [CLAUDE.md](CLAUDE.md) — AI context file (loaded by Claude Code on every session)
 - [docs/distribution-checklist.md](docs/distribution-checklist.md) — distribution packaging checklist and recommended single-package path
-- [docs/github-release.md](docs/github-release.md) — GitHub Actions release flow, required secrets, and `v0.0.1` release steps
+- [docs/github-release.md](docs/github-release.md) — GitHub Actions release flow and required secrets
+- [docs/planning/STRUCTURE.md](docs/planning/STRUCTURE.md) — current `product/` layout summary
 - [docs/adr/](docs/adr/) — Architecture Decision Records

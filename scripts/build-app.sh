@@ -30,7 +30,7 @@ ruby "$SCRIPT_DIR/generate_macos_project.rb"
 
 env DEVELOPER_DIR="$developer_dir" \
   xcodebuild \
-  -project "$REPO_ROOT/macos/Goto.xcodeproj" \
+  -project "$REPO_ROOT/product/macos/Goto.xcodeproj" \
   -target Goto \
   -configuration Release \
   SYMROOT="$products_path" \

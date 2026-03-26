@@ -93,8 +93,8 @@ jobs:
       - name: Run verification
         shell: bash
         run: |
-          node --test
-          swift test --package-path native
+          node --test product/cli/test/*.test.js
+          swift test --package-path product/core
           ./scripts/typecheck-native.sh
 
       - name: Import Apple signing assets

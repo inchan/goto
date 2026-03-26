@@ -8,8 +8,8 @@ gem "xcodeproj", ">= 1.27.0"
 require "xcodeproj"
 
 ROOT = File.expand_path("..", __dir__)
-PROJECT_PATH = File.join(ROOT, "macos", "Goto.xcodeproj")
-PACKAGE_VERSION = JSON.parse(File.read(File.join(ROOT, "package.json"))).fetch("version").split(/[+-]/).first
+PROJECT_PATH = File.join(ROOT, "product", "macos", "Goto.xcodeproj")
+PACKAGE_VERSION = JSON.parse(File.read(File.join(ROOT, "product", "cli", "package.json"))).fetch("version").split(/[+-]/).first
 
 def add_file(target, group, path)
   file = group.new_file(path)
@@ -50,26 +50,26 @@ app_sources = %w[
   Goto/SettingsWindow.swift
   FinderBridge/FinderLaunchBridge.swift
   Shared/FinderLaunchNotifications.swift
-  ../native/Sources/GotoNativeCore/ProjectEntry.swift
-  ../native/Sources/GotoNativeCore/RegistryStore.swift
-  ../native/Sources/GotoNativeCore/ValidatedDirectory.swift
-  ../native/Sources/GotoNativeCore/FinderSelection.swift
-  ../native/Sources/GotoNativeCore/FinderErrorPresenter.swift
-  ../native/Sources/GotoNativeCore/TerminalScriptBuilder.swift
-  ../native/Sources/GotoNativeCore/TerminalLaunchError.swift
-  ../native/Sources/GotoNativeCore/TerminalLaunchRequest.swift
-  ../native/Sources/GotoNativeCore/TerminalLauncher.swift
-  ../native/Sources/GotoNativeCore/TerminalApp.swift
-  ../native/Sources/GotoNativeCore/TerminalAppDetector.swift
-  ../native/Sources/GotoNativeCore/RegistryWatcher.swift
-  ../native/Sources/GotoNativeCore/FinderClickMode.swift
-  ../native/Sources/GotoNativeCore/SharedSettings.swift
+  ../core/Sources/GotoNativeCore/ProjectEntry.swift
+  ../core/Sources/GotoNativeCore/RegistryStore.swift
+  ../core/Sources/GotoNativeCore/ValidatedDirectory.swift
+  ../core/Sources/GotoNativeCore/FinderSelection.swift
+  ../core/Sources/GotoNativeCore/FinderErrorPresenter.swift
+  ../core/Sources/GotoNativeCore/TerminalScriptBuilder.swift
+  ../core/Sources/GotoNativeCore/TerminalLaunchError.swift
+  ../core/Sources/GotoNativeCore/TerminalLaunchRequest.swift
+  ../core/Sources/GotoNativeCore/TerminalLauncher.swift
+  ../core/Sources/GotoNativeCore/TerminalApp.swift
+  ../core/Sources/GotoNativeCore/TerminalAppDetector.swift
+  ../core/Sources/GotoNativeCore/RegistryWatcher.swift
+  ../core/Sources/GotoNativeCore/FinderClickMode.swift
+  ../core/Sources/GotoNativeCore/SharedSettings.swift
 ].freeze
 
 extension_sources = %w[
   GotoFinderSync/GotoFinderSyncExtension.swift
   Shared/FinderLaunchNotifications.swift
-  ../native/Sources/GotoNativeCore/FinderClickMode.swift
+  ../core/Sources/GotoNativeCore/FinderClickMode.swift
 ].freeze
 
 app_sources.each do |path|

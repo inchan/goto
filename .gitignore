@@ -1,6 +1,6 @@
 # Build artifacts
 build/
-macos/Goto.xcodeproj/
+product/macos/Goto.xcodeproj/
 
 # Node
 node_modules/
@@ -9,3 +9,8 @@ node_modules/
 
 # macOS
 .DS_Store
+
+# Local agent/runtime state
+.claude/
+.omx/
+skills-lock.json

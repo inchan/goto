@@ -26,9 +26,9 @@ developer_dir="$(resolve_developer_dir)"
 binary_path=""
 
 for candidate in \
-  "$REPO_ROOT/native/.build/debug/GotoNativeLaunch" \
-  "$REPO_ROOT/native/.build/x86_64-apple-macosx/debug/GotoNativeLaunch" \
-  "$REPO_ROOT/native/.build/arm64-apple-macosx/debug/GotoNativeLaunch"; do
+  "$REPO_ROOT/product/core/.build/debug/GotoNativeLaunch" \
+  "$REPO_ROOT/product/core/.build/x86_64-apple-macosx/debug/GotoNativeLaunch" \
+  "$REPO_ROOT/product/core/.build/arm64-apple-macosx/debug/GotoNativeLaunch"; do
   if [[ -x "$candidate" ]]; then
     binary_path="$candidate"
     break
@@ -38,7 +38,7 @@ done
 if [[ -z "$binary_path" ]]; then
   bin_path="$(
     env DEVELOPER_DIR="$developer_dir" \
-      swift build --package-path "$REPO_ROOT/native" --product GotoNativeLaunch --show-bin-path
+      swift build --package-path "$REPO_ROOT/product/core" --product GotoNativeLaunch --show-bin-path
   )"
   binary_path="$bin_path/GotoNativeLaunch"
 fi

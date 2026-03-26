@@ -136,7 +136,7 @@ export async function runSelect({ env = process.env, stdout = process.stdout } =
   if (!ui) {
     return {
       exitCode: 1,
-      stderr: 'Interactive picker requires a TTY. Source shell/goto.zsh or shell/goto.bash for jump mode.',
+      stderr: 'Interactive picker requires a TTY. Source the goto shell integration script for jump mode.',
     };
   }
 
