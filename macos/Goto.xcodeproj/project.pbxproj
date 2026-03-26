@@ -7,54 +7,54 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0A8678939B3E532D01D164E3 /* FinderErrorPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89198AFFFFF3CD3800D5E3A1 /* FinderErrorPresenter.swift */; };
-		145D0E64298C6EE7CEE37189 /* FinderSync.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 05069A4EE120DF9CCDBEFC79 /* FinderSync.framework */; };
-		216C051B7FEB3FEE17357087 /* ValidatedDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2752E275B50370A419050F60 /* ValidatedDirectory.swift */; };
-		264AF964950B608D93C277F4 /* TerminalLaunchRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4651B66BCFE675B6C495287C /* TerminalLaunchRequest.swift */; };
-		268113EDDA25E76811862E4F /* FinderLaunchNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = B503D795D596E96BB08B0B5A /* FinderLaunchNotifications.swift */; };
-		2F7511DCCEBAC2D01B8574C5 /* MenuBarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17E3CC8720AB217AEAAA6A4 /* MenuBarViewModel.swift */; };
-		4A9968B2DC9259FE7F02FCAC /* GotoFinderSyncExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273547F0FC0AA96F84E13C5D /* GotoFinderSyncExtension.swift */; };
-		5F18D8BA53D14C844D522703 /* FinderClickMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D72135A1C82EB1F4FDD68F4 /* FinderClickMode.swift */; };
-		6086D808F330A95AF0180A0A /* FinderSync.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 05069A4EE120DF9CCDBEFC79 /* FinderSync.framework */; };
-		6F7DA7B4FB8F18387AB24086 /* GotoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F66A8B893532A976F45C7C39 /* GotoApp.swift */; };
-		70613E24F653F05EA19D3171 /* TerminalScriptBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B0041BDC5DDD7A723D9BE42 /* TerminalScriptBuilder.swift */; };
-		70F14841E1607DAB3322E0D7 /* SharedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6DD05A20F125B955F010C5 /* SharedSettings.swift */; };
-		8F8030658FD893CA9C81D482 /* RegistryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0768E81FEE577AA8A79AAF61 /* RegistryStore.swift */; };
-		99A69026A37E9A9D022CC2FE /* GotoFinderSync.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 40D4E6E728239A194B71D986 /* GotoFinderSync.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, CodeSignOnCopy, ); }; };
-		A4A4FCE34E688A65CDAB88FF /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1007455AF6F97184F6643E4C /* Cocoa.framework */; };
-		A7F815A3039B8A46DF281290 /* Goto.icns in Resources */ = {isa = PBXBuildFile; fileRef = FBA7E3B903B4FB0BBBCA415C /* Goto.icns */; };
-		A90719425A5A33D447D7CE3D /* FinderLaunchNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2336382937181BDD96F231D9 /* FinderLaunchNotifications.swift */; };
-		AC776BFEF5DAB4A5821BB133 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1007455AF6F97184F6643E4C /* Cocoa.framework */; };
-		B23EFAF290A2636F01A97BD6 /* RegistryWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE41A1E34969BCD1C6127F75 /* RegistryWatcher.swift */; };
-		BDC48EEE02BF22F0E3713DC0 /* SettingsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E2E5D80C5A353CDCAEC13CA /* SettingsWindow.swift */; };
-		C2F5490EC0102C26F2796178 /* TerminalApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6EE5D14D48C922F62F8BD60 /* TerminalApp.swift */; };
-		C64228FF8E632F9F73C48C9E /* ProjectEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA20C404C4D84520058112D /* ProjectEntry.swift */; };
-		CCDF62B61762F88EC7848400 /* FinderLaunchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA11AC8DF057C6E12B4CEC3 /* FinderLaunchBridge.swift */; };
-		D60B0773B6600A8EA81C6914 /* FinderClickMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD286016BCFC2023A6235F54 /* FinderClickMode.swift */; };
-		E26B453515BEFF70ACE709EC /* TerminalAppDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6277FB601E20A875D25FC58 /* TerminalAppDetector.swift */; };
-		E69ABEB9C136B22B62F23B25 /* FinderSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97B9F06F42EB6D222E31DAE7 /* FinderSelection.swift */; };
-		E70EA35978D10109D88C215E /* TerminalLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 548E79DDCCDEE0CDA7FE95AA /* TerminalLauncher.swift */; };
-		EAF1901279F073FA180A083D /* TerminalLaunchError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C8DE8EB3B0F485E71C5C720 /* TerminalLaunchError.swift */; };
+		0CE0548D33D503281F9F061B /* GotoFinderSync.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = EB22476559B276E7E2A8F555 /* GotoFinderSync.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, CodeSignOnCopy, ); }; };
+		14C32AFD0063EFCCC4261023 /* GotoFinderSyncExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9318D58815408E2F8518E8 /* GotoFinderSyncExtension.swift */; };
+		162233702AC2C5DAE3F8AEA9 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8C7D6FEE0BB2E3F31340D54E /* Cocoa.framework */; };
+		18EF4B2DCC28A9F2773642F7 /* FinderErrorPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF7872F8AA09B3DF5E3F2ED /* FinderErrorPresenter.swift */; };
+		36AC6F5403934DC973348E15 /* TerminalApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA489EF79A0EE43CBF9EDB8A /* TerminalApp.swift */; };
+		3C816EF38F2D9EE275909AD1 /* FinderSync.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBED81C24052E058940344B0 /* FinderSync.framework */; };
+		4BAAB0FCD2F3E6E429083978 /* Goto.icns in Resources */ = {isa = PBXBuildFile; fileRef = D69F288927316A5E559D2171 /* Goto.icns */; };
+		4F4D74951AF6F6BB5010CC0C /* FinderClickMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBCFACB0C473E2AC2D7F0C62 /* FinderClickMode.swift */; };
+		50227A286A73468B39A9E9CE /* RegistryWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F466EDFDA863BCCC6368663 /* RegistryWatcher.swift */; };
+		5146DEACA45DE43640C390AA /* FinderLaunchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 213E746E1B2699F597B50BC6 /* FinderLaunchBridge.swift */; };
+		51AB8A4147116004076B1E2E /* FinderSync.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBED81C24052E058940344B0 /* FinderSync.framework */; };
+		643FE05C8FB77C4FA2F8924D /* FinderLaunchNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC62854EA247DF0D0A5C1A8B /* FinderLaunchNotifications.swift */; };
+		6B7D51EC583D2EDD27F950AF /* ProjectEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDD12B6E0D8666EFE2614DF0 /* ProjectEntry.swift */; };
+		7253A7A22ED6D20CF0E9AC61 /* TerminalLaunchRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E3A32355163E4A0660E92F5 /* TerminalLaunchRequest.swift */; };
+		734046AACBC75FE02CC4C5CE /* RegistryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE50DBA0ACF3072B740E8FD /* RegistryStore.swift */; };
+		83944BF2F2DCCB4BBFE7D1FE /* TerminalLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = A715F9A7057D2DE9C471E49E /* TerminalLauncher.swift */; };
+		86DF3C85D5B9A5DF58004A44 /* TerminalScriptBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 862C35641AF93C23B08464EA /* TerminalScriptBuilder.swift */; };
+		A5EF839F85A8C245F0284A5F /* TerminalLaunchError.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAF47B4E44B0A978D4F4FAEC /* TerminalLaunchError.swift */; };
+		A761EFCED7FEED751D602E18 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8C7D6FEE0BB2E3F31340D54E /* Cocoa.framework */; };
+		A8FE2EDADC7E704FF7D618CD /* FinderSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6FC3B9BB38C15190C9605E0 /* FinderSelection.swift */; };
+		B23CB04A9FE30C5CE9228233 /* SettingsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 175F670D8D30A99E89DE67F9 /* SettingsWindow.swift */; };
+		B2D7787ABA0A721025BBAADF /* FinderClickMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2E3B631FBAD6CF6CC8FCEDE /* FinderClickMode.swift */; };
+		BA8312251112BB08DD4B2E08 /* TerminalAppDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68BD67147DD913391931BAC9 /* TerminalAppDetector.swift */; };
+		C0BBADB583AF3AA18DD1DF78 /* SharedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3968C9D11E0157E3683A8615 /* SharedSettings.swift */; };
+		C5A02DC42264616C568A85B3 /* GotoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E4A5FFACD4A36C58BBF5CF /* GotoApp.swift */; };
+		D40CA715B8AC273A02C13565 /* FinderLaunchNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D3397DE1A7D2966C94254A1 /* FinderLaunchNotifications.swift */; };
+		F150DB5B8422580E04643ABF /* ValidatedDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134BAC98C51E7FD669CE548F /* ValidatedDirectory.swift */; };
+		F832A2E346DA86DE9CEC7E1B /* MenuBarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC20AEA1FE6FE4822E2BA87C /* MenuBarViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		816889B47FB597A8DB0E89ED /* PBXContainerItemProxy */ = {
+		5CB8A41F99329E1ECD322B22 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = FBF2174A0CFE00B4C76D805B /* Project object */;
+			containerPortal = E7852C20C28F137E4518FD1C /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 5A9028024641696094311428;
+			remoteGlobalIDString = 052D0E9706D23C410A59E9A6;
 			remoteInfo = GotoFinderSync;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		A58FA9C73E10D1C982773CC1 /* Embed App Extensions */ = {
+		7E6B27F2700C26527439A327 /* Embed App Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				99A69026A37E9A9D022CC2FE /* GotoFinderSync.appex in Embed App Extensions */,
+				0CE0548D33D503281F9F061B /* GotoFinderSync.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -62,191 +62,172 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		05069A4EE120DF9CCDBEFC79 /* FinderSync.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FinderSync.framework; path = System/Library/Frameworks/FinderSync.framework; sourceTree = "<group>"; };
-		0768E81FEE577AA8A79AAF61 /* RegistryStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RegistryStore.swift; path = ../native/Sources/GotoNativeCore/RegistryStore.swift; sourceTree = "<group>"; };
-		1007455AF6F97184F6643E4C /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
-		2336382937181BDD96F231D9 /* FinderLaunchNotifications.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FinderLaunchNotifications.swift; path = Shared/FinderLaunchNotifications.swift; sourceTree = "<group>"; };
-		273547F0FC0AA96F84E13C5D /* GotoFinderSyncExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GotoFinderSyncExtension.swift; path = GotoFinderSync/GotoFinderSyncExtension.swift; sourceTree = "<group>"; };
-		2752E275B50370A419050F60 /* ValidatedDirectory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ValidatedDirectory.swift; path = ../native/Sources/GotoNativeCore/ValidatedDirectory.swift; sourceTree = "<group>"; };
-		2FA11AC8DF057C6E12B4CEC3 /* FinderLaunchBridge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FinderLaunchBridge.swift; path = FinderBridge/FinderLaunchBridge.swift; sourceTree = "<group>"; };
-		40D4E6E728239A194B71D986 /* GotoFinderSync.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GotoFinderSync.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		4651B66BCFE675B6C495287C /* TerminalLaunchRequest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TerminalLaunchRequest.swift; path = ../native/Sources/GotoNativeCore/TerminalLaunchRequest.swift; sourceTree = "<group>"; };
-		548E79DDCCDEE0CDA7FE95AA /* TerminalLauncher.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TerminalLauncher.swift; path = ../native/Sources/GotoNativeCore/TerminalLauncher.swift; sourceTree = "<group>"; };
-		6D72135A1C82EB1F4FDD68F4 /* FinderClickMode.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FinderClickMode.swift; path = ../native/Sources/GotoNativeCore/FinderClickMode.swift; sourceTree = "<group>"; };
-		6E2E5D80C5A353CDCAEC13CA /* SettingsWindow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SettingsWindow.swift; path = Goto/SettingsWindow.swift; sourceTree = "<group>"; };
-		726589AE05C6F54612FC78F1 /* Goto.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Goto.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		89198AFFFFF3CD3800D5E3A1 /* FinderErrorPresenter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FinderErrorPresenter.swift; path = ../native/Sources/GotoNativeCore/FinderErrorPresenter.swift; sourceTree = "<group>"; };
-		8B0041BDC5DDD7A723D9BE42 /* TerminalScriptBuilder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TerminalScriptBuilder.swift; path = ../native/Sources/GotoNativeCore/TerminalScriptBuilder.swift; sourceTree = "<group>"; };
-		97B9F06F42EB6D222E31DAE7 /* FinderSelection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FinderSelection.swift; path = ../native/Sources/GotoNativeCore/FinderSelection.swift; sourceTree = "<group>"; };
-		9C8DE8EB3B0F485E71C5C720 /* TerminalLaunchError.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TerminalLaunchError.swift; path = ../native/Sources/GotoNativeCore/TerminalLaunchError.swift; sourceTree = "<group>"; };
-		AA6DD05A20F125B955F010C5 /* SharedSettings.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SharedSettings.swift; path = ../native/Sources/GotoNativeCore/SharedSettings.swift; sourceTree = "<group>"; };
-		AD286016BCFC2023A6235F54 /* FinderClickMode.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FinderClickMode.swift; path = ../native/Sources/GotoNativeCore/FinderClickMode.swift; sourceTree = "<group>"; };
-		AE41A1E34969BCD1C6127F75 /* RegistryWatcher.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RegistryWatcher.swift; path = ../native/Sources/GotoNativeCore/RegistryWatcher.swift; sourceTree = "<group>"; };
-		B503D795D596E96BB08B0B5A /* FinderLaunchNotifications.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FinderLaunchNotifications.swift; path = Shared/FinderLaunchNotifications.swift; sourceTree = "<group>"; };
-		CEA20C404C4D84520058112D /* ProjectEntry.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProjectEntry.swift; path = ../native/Sources/GotoNativeCore/ProjectEntry.swift; sourceTree = "<group>"; };
-		D17E3CC8720AB217AEAAA6A4 /* MenuBarViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MenuBarViewModel.swift; path = Goto/MenuBarViewModel.swift; sourceTree = "<group>"; };
-		F6277FB601E20A875D25FC58 /* TerminalAppDetector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TerminalAppDetector.swift; path = ../native/Sources/GotoNativeCore/TerminalAppDetector.swift; sourceTree = "<group>"; };
-		F66A8B893532A976F45C7C39 /* GotoApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GotoApp.swift; path = Goto/GotoApp.swift; sourceTree = "<group>"; };
-		F6EE5D14D48C922F62F8BD60 /* TerminalApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TerminalApp.swift; path = ../native/Sources/GotoNativeCore/TerminalApp.swift; sourceTree = "<group>"; };
-		FBA7E3B903B4FB0BBBCA415C /* Goto.icns */ = {isa = PBXFileReference; includeInIndex = 1; name = Goto.icns; path = Resources/Goto.icns; sourceTree = "<group>"; };
+		134BAC98C51E7FD669CE548F /* ValidatedDirectory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ValidatedDirectory.swift; path = ../native/Sources/GotoNativeCore/ValidatedDirectory.swift; sourceTree = "<group>"; };
+		175F670D8D30A99E89DE67F9 /* SettingsWindow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SettingsWindow.swift; path = Goto/SettingsWindow.swift; sourceTree = "<group>"; };
+		213E746E1B2699F597B50BC6 /* FinderLaunchBridge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FinderLaunchBridge.swift; path = FinderBridge/FinderLaunchBridge.swift; sourceTree = "<group>"; };
+		2E9318D58815408E2F8518E8 /* GotoFinderSyncExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GotoFinderSyncExtension.swift; path = GotoFinderSync/GotoFinderSyncExtension.swift; sourceTree = "<group>"; };
+		2F466EDFDA863BCCC6368663 /* RegistryWatcher.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RegistryWatcher.swift; path = ../native/Sources/GotoNativeCore/RegistryWatcher.swift; sourceTree = "<group>"; };
+		3968C9D11E0157E3683A8615 /* SharedSettings.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SharedSettings.swift; path = ../native/Sources/GotoNativeCore/SharedSettings.swift; sourceTree = "<group>"; };
+		68245F50831E1F36BFA54837 /* Goto.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Goto.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		68BD67147DD913391931BAC9 /* TerminalAppDetector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TerminalAppDetector.swift; path = ../native/Sources/GotoNativeCore/TerminalAppDetector.swift; sourceTree = "<group>"; };
+		862C35641AF93C23B08464EA /* TerminalScriptBuilder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TerminalScriptBuilder.swift; path = ../native/Sources/GotoNativeCore/TerminalScriptBuilder.swift; sourceTree = "<group>"; };
+		8C7D6FEE0BB2E3F31340D54E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
+		8FE50DBA0ACF3072B740E8FD /* RegistryStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RegistryStore.swift; path = ../native/Sources/GotoNativeCore/RegistryStore.swift; sourceTree = "<group>"; };
+		9D3397DE1A7D2966C94254A1 /* FinderLaunchNotifications.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FinderLaunchNotifications.swift; path = Shared/FinderLaunchNotifications.swift; sourceTree = "<group>"; };
+		9E3A32355163E4A0660E92F5 /* TerminalLaunchRequest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TerminalLaunchRequest.swift; path = ../native/Sources/GotoNativeCore/TerminalLaunchRequest.swift; sourceTree = "<group>"; };
+		A2E3B631FBAD6CF6CC8FCEDE /* FinderClickMode.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FinderClickMode.swift; path = ../native/Sources/GotoNativeCore/FinderClickMode.swift; sourceTree = "<group>"; };
+		A715F9A7057D2DE9C471E49E /* TerminalLauncher.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TerminalLauncher.swift; path = ../native/Sources/GotoNativeCore/TerminalLauncher.swift; sourceTree = "<group>"; };
+		AA489EF79A0EE43CBF9EDB8A /* TerminalApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TerminalApp.swift; path = ../native/Sources/GotoNativeCore/TerminalApp.swift; sourceTree = "<group>"; };
+		ABF7872F8AA09B3DF5E3F2ED /* FinderErrorPresenter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FinderErrorPresenter.swift; path = ../native/Sources/GotoNativeCore/FinderErrorPresenter.swift; sourceTree = "<group>"; };
+		B6FC3B9BB38C15190C9605E0 /* FinderSelection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FinderSelection.swift; path = ../native/Sources/GotoNativeCore/FinderSelection.swift; sourceTree = "<group>"; };
+		BC20AEA1FE6FE4822E2BA87C /* MenuBarViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MenuBarViewModel.swift; path = Goto/MenuBarViewModel.swift; sourceTree = "<group>"; };
+		D0E4A5FFACD4A36C58BBF5CF /* GotoApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GotoApp.swift; path = Goto/GotoApp.swift; sourceTree = "<group>"; };
+		D69F288927316A5E559D2171 /* Goto.icns */ = {isa = PBXFileReference; includeInIndex = 1; name = Goto.icns; path = Resources/Goto.icns; sourceTree = "<group>"; };
+		DC62854EA247DF0D0A5C1A8B /* FinderLaunchNotifications.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FinderLaunchNotifications.swift; path = Shared/FinderLaunchNotifications.swift; sourceTree = "<group>"; };
+		EB22476559B276E7E2A8F555 /* GotoFinderSync.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GotoFinderSync.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		EBCFACB0C473E2AC2D7F0C62 /* FinderClickMode.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FinderClickMode.swift; path = ../native/Sources/GotoNativeCore/FinderClickMode.swift; sourceTree = "<group>"; };
+		EDD12B6E0D8666EFE2614DF0 /* ProjectEntry.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProjectEntry.swift; path = ../native/Sources/GotoNativeCore/ProjectEntry.swift; sourceTree = "<group>"; };
+		FAF47B4E44B0A978D4F4FAEC /* TerminalLaunchError.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TerminalLaunchError.swift; path = ../native/Sources/GotoNativeCore/TerminalLaunchError.swift; sourceTree = "<group>"; };
+		FBED81C24052E058940344B0 /* FinderSync.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FinderSync.framework; path = System/Library/Frameworks/FinderSync.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		C072ADBBFAB740A80F624041 /* Frameworks */ = {
+		09CC88BA4550388E45A95719 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A4A4FCE34E688A65CDAB88FF /* Cocoa.framework in Frameworks */,
-				145D0E64298C6EE7CEE37189 /* FinderSync.framework in Frameworks */,
+				162233702AC2C5DAE3F8AEA9 /* Cocoa.framework in Frameworks */,
+				51AB8A4147116004076B1E2E /* FinderSync.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		EE57C416D2820FB4A9AB3938 /* Frameworks */ = {
+		997F40110E97EA1B36F9F76E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AC776BFEF5DAB4A5821BB133 /* Cocoa.framework in Frameworks */,
-				6086D808F330A95AF0180A0A /* FinderSync.framework in Frameworks */,
+				A761EFCED7FEED751D602E18 /* Cocoa.framework in Frameworks */,
+				3C816EF38F2D9EE275909AD1 /* FinderSync.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		386A11F157A224D0D0F0C7A6 /* Frameworks */ = {
+		2EF555774FA44FAD200E275E /* NativeCore */ = {
 			isa = PBXGroup;
 			children = (
-				92BA02BDB0F2A6C19D87F123 /* OS X */,
-				05069A4EE120DF9CCDBEFC79 /* FinderSync.framework */,
+				EDD12B6E0D8666EFE2614DF0 /* ProjectEntry.swift */,
+				8FE50DBA0ACF3072B740E8FD /* RegistryStore.swift */,
+				134BAC98C51E7FD669CE548F /* ValidatedDirectory.swift */,
+				B6FC3B9BB38C15190C9605E0 /* FinderSelection.swift */,
+				ABF7872F8AA09B3DF5E3F2ED /* FinderErrorPresenter.swift */,
+				862C35641AF93C23B08464EA /* TerminalScriptBuilder.swift */,
+				FAF47B4E44B0A978D4F4FAEC /* TerminalLaunchError.swift */,
+				9E3A32355163E4A0660E92F5 /* TerminalLaunchRequest.swift */,
+				A715F9A7057D2DE9C471E49E /* TerminalLauncher.swift */,
+				AA489EF79A0EE43CBF9EDB8A /* TerminalApp.swift */,
+				68BD67147DD913391931BAC9 /* TerminalAppDetector.swift */,
+				2F466EDFDA863BCCC6368663 /* RegistryWatcher.swift */,
+				EBCFACB0C473E2AC2D7F0C62 /* FinderClickMode.swift */,
+				3968C9D11E0157E3683A8615 /* SharedSettings.swift */,
+				A2E3B631FBAD6CF6CC8FCEDE /* FinderClickMode.swift */,
 			);
-			name = Frameworks;
+			name = NativeCore;
 			sourceTree = "<group>";
 		};
-		403EBADCE2A8A69F7C960058 = {
+		7AF45567CD40F9C6EAC26268 /* Goto */ = {
 			isa = PBXGroup;
 			children = (
-				E6C4CE40C3D44EDFBC6D6339 /* Products */,
-				386A11F157A224D0D0F0C7A6 /* Frameworks */,
-				9A435C3D6AD3574B487BB412 /* Goto */,
-				A47D6114F9659284731FA226 /* FinderBridge */,
-				47D6B44A6567092DDC1102FB /* GotoFinderSync */,
-				450EFFB1846B1D7A54E1B619 /* Shared */,
-				F982435D81025FF93EC06B30 /* NativeCore */,
-				A2E7FB5C4117BD8C4365B2E4 /* Resources */,
-			);
-			sourceTree = "<group>";
-		};
-		450EFFB1846B1D7A54E1B619 /* Shared */ = {
-			isa = PBXGroup;
-			children = (
-				B503D795D596E96BB08B0B5A /* FinderLaunchNotifications.swift */,
-				2336382937181BDD96F231D9 /* FinderLaunchNotifications.swift */,
-			);
-			name = Shared;
-			sourceTree = "<group>";
-		};
-		47D6B44A6567092DDC1102FB /* GotoFinderSync */ = {
-			isa = PBXGroup;
-			children = (
-				273547F0FC0AA96F84E13C5D /* GotoFinderSyncExtension.swift */,
-			);
-			name = GotoFinderSync;
-			sourceTree = "<group>";
-		};
-		92BA02BDB0F2A6C19D87F123 /* OS X */ = {
-			isa = PBXGroup;
-			children = (
-				1007455AF6F97184F6643E4C /* Cocoa.framework */,
-			);
-			name = "OS X";
-			sourceTree = "<group>";
-		};
-		9A435C3D6AD3574B487BB412 /* Goto */ = {
-			isa = PBXGroup;
-			children = (
-				F66A8B893532A976F45C7C39 /* GotoApp.swift */,
-				D17E3CC8720AB217AEAAA6A4 /* MenuBarViewModel.swift */,
-				6E2E5D80C5A353CDCAEC13CA /* SettingsWindow.swift */,
+				D0E4A5FFACD4A36C58BBF5CF /* GotoApp.swift */,
+				BC20AEA1FE6FE4822E2BA87C /* MenuBarViewModel.swift */,
+				175F670D8D30A99E89DE67F9 /* SettingsWindow.swift */,
 			);
 			name = Goto;
 			sourceTree = "<group>";
 		};
-		A2E7FB5C4117BD8C4365B2E4 /* Resources */ = {
+		7E5BEEACF01EDDB845D482F5 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				FBA7E3B903B4FB0BBBCA415C /* Goto.icns */,
+				9BDA67CD75F6E1612F968A80 /* OS X */,
+				FBED81C24052E058940344B0 /* FinderSync.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		98BFA2E819B9145EBAD8C8FD /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D69F288927316A5E559D2171 /* Goto.icns */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
 		};
-		A47D6114F9659284731FA226 /* FinderBridge */ = {
+		9BDA67CD75F6E1612F968A80 /* OS X */ = {
 			isa = PBXGroup;
 			children = (
-				2FA11AC8DF057C6E12B4CEC3 /* FinderLaunchBridge.swift */,
+				8C7D6FEE0BB2E3F31340D54E /* Cocoa.framework */,
+			);
+			name = "OS X";
+			sourceTree = "<group>";
+		};
+		A8534AB4C3D1FDC16ED02BD6 /* FinderBridge */ = {
+			isa = PBXGroup;
+			children = (
+				213E746E1B2699F597B50BC6 /* FinderLaunchBridge.swift */,
 			);
 			name = FinderBridge;
 			sourceTree = "<group>";
 		};
-		E6C4CE40C3D44EDFBC6D6339 /* Products */ = {
+		C3546A492DFB4F62E54E7A19 /* GotoFinderSync */ = {
 			isa = PBXGroup;
 			children = (
-				726589AE05C6F54612FC78F1 /* Goto.app */,
-				40D4E6E728239A194B71D986 /* GotoFinderSync.appex */,
+				2E9318D58815408E2F8518E8 /* GotoFinderSyncExtension.swift */,
 			);
-			name = Products;
+			name = GotoFinderSync;
 			sourceTree = "<group>";
 		};
-		F982435D81025FF93EC06B30 /* NativeCore */ = {
+		E1663DE94274319C287DEB0B /* Shared */ = {
 			isa = PBXGroup;
 			children = (
-				CEA20C404C4D84520058112D /* ProjectEntry.swift */,
-				0768E81FEE577AA8A79AAF61 /* RegistryStore.swift */,
-				2752E275B50370A419050F60 /* ValidatedDirectory.swift */,
-				97B9F06F42EB6D222E31DAE7 /* FinderSelection.swift */,
-				89198AFFFFF3CD3800D5E3A1 /* FinderErrorPresenter.swift */,
-				8B0041BDC5DDD7A723D9BE42 /* TerminalScriptBuilder.swift */,
-				9C8DE8EB3B0F485E71C5C720 /* TerminalLaunchError.swift */,
-				4651B66BCFE675B6C495287C /* TerminalLaunchRequest.swift */,
-				548E79DDCCDEE0CDA7FE95AA /* TerminalLauncher.swift */,
-				F6EE5D14D48C922F62F8BD60 /* TerminalApp.swift */,
-				F6277FB601E20A875D25FC58 /* TerminalAppDetector.swift */,
-				AE41A1E34969BCD1C6127F75 /* RegistryWatcher.swift */,
-				6D72135A1C82EB1F4FDD68F4 /* FinderClickMode.swift */,
-				AA6DD05A20F125B955F010C5 /* SharedSettings.swift */,
-				AD286016BCFC2023A6235F54 /* FinderClickMode.swift */,
+				DC62854EA247DF0D0A5C1A8B /* FinderLaunchNotifications.swift */,
+				9D3397DE1A7D2966C94254A1 /* FinderLaunchNotifications.swift */,
 			);
-			name = NativeCore;
+			name = Shared;
+			sourceTree = "<group>";
+		};
+		E17AD1424262EA126507D4BF = {
+			isa = PBXGroup;
+			children = (
+				EF474539EACCE63319F94736 /* Products */,
+				7E5BEEACF01EDDB845D482F5 /* Frameworks */,
+				7AF45567CD40F9C6EAC26268 /* Goto */,
+				A8534AB4C3D1FDC16ED02BD6 /* FinderBridge */,
+				C3546A492DFB4F62E54E7A19 /* GotoFinderSync */,
+				E1663DE94274319C287DEB0B /* Shared */,
+				2EF555774FA44FAD200E275E /* NativeCore */,
+				98BFA2E819B9145EBAD8C8FD /* Resources */,
+			);
+			sourceTree = "<group>";
+		};
+		EF474539EACCE63319F94736 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				68245F50831E1F36BFA54837 /* Goto.app */,
+				EB22476559B276E7E2A8F555 /* GotoFinderSync.appex */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		1D6FAA7488E8F0F46CB6B71A /* Goto */ = {
+		052D0E9706D23C410A59E9A6 /* GotoFinderSync */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 028B0CC6E0615CE0FFCF23A0 /* Build configuration list for PBXNativeTarget "Goto" */;
+			buildConfigurationList = B9846AA7201E97C1A0388B5C /* Build configuration list for PBXNativeTarget "GotoFinderSync" */;
 			buildPhases = (
-				235D6686EC866996A3E3DE57 /* Sources */,
-				C072ADBBFAB740A80F624041 /* Frameworks */,
-				0EE5CACEB88CC787E982B8C8 /* Resources */,
-				A58FA9C73E10D1C982773CC1 /* Embed App Extensions */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				B7E4FCDF00DC4B8EDD3FD80F /* PBXTargetDependency */,
-			);
-			name = Goto;
-			productName = Goto;
-			productReference = 726589AE05C6F54612FC78F1 /* Goto.app */;
-			productType = "com.apple.product-type.application";
-		};
-		5A9028024641696094311428 /* GotoFinderSync */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 764713B47050FB90A415E30C /* Build configuration list for PBXNativeTarget "GotoFinderSync" */;
-			buildPhases = (
-				2748857AD6554B977FDFCE51 /* Sources */,
-				EE57C416D2820FB4A9AB3938 /* Frameworks */,
-				44C93DCEE9C72B967E9FCF6E /* Resources */,
+				B73918886AC646A02F937AB6 /* Sources */,
+				09CC88BA4550388E45A95719 /* Frameworks */,
+				25DF6932BDCCA245C17DB176 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -254,25 +235,44 @@
 			);
 			name = GotoFinderSync;
 			productName = GotoFinderSync;
-			productReference = 40D4E6E728239A194B71D986 /* GotoFinderSync.appex */;
+			productReference = EB22476559B276E7E2A8F555 /* GotoFinderSync.appex */;
 			productType = "com.apple.product-type.app-extension";
+		};
+		5A8A7B036ED00104F15E3B0D /* Goto */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F8500CA52543951894D19B07 /* Build configuration list for PBXNativeTarget "Goto" */;
+			buildPhases = (
+				6A53F6DD148936F766B42AC5 /* Sources */,
+				997F40110E97EA1B36F9F76E /* Frameworks */,
+				A3E70410FEFE31C5315EECB8 /* Resources */,
+				7E6B27F2700C26527439A327 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AE8D51F568CB7E9B7045C84A /* PBXTargetDependency */,
+			);
+			name = Goto;
+			productName = Goto;
+			productReference = 68245F50831E1F36BFA54837 /* Goto.app */;
+			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		FBF2174A0CFE00B4C76D805B /* Project object */ = {
+		E7852C20C28F137E4518FD1C /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 1520;
 				TargetAttributes = {
-					1D6FAA7488E8F0F46CB6B71A = {
+					052D0E9706D23C410A59E9A6 = {
 					};
-					5A9028024641696094311428 = {
+					5A8A7B036ED00104F15E3B0D = {
 					};
 				};
 			};
-			buildConfigurationList = 6EC9164F0D159ECF192EBAC7 /* Build configuration list for PBXProject "Goto" */;
+			buildConfigurationList = F1C0CC45E4B502E440EDCE3E /* Build configuration list for PBXProject "Goto" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -280,87 +280,130 @@
 				en,
 				Base,
 			);
-			mainGroup = 403EBADCE2A8A69F7C960058;
+			mainGroup = E17AD1424262EA126507D4BF;
 			minimizedProjectReferenceProxies = 0;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = E6C4CE40C3D44EDFBC6D6339 /* Products */;
+			productRefGroup = EF474539EACCE63319F94736 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				1D6FAA7488E8F0F46CB6B71A /* Goto */,
-				5A9028024641696094311428 /* GotoFinderSync */,
+				5A8A7B036ED00104F15E3B0D /* Goto */,
+				052D0E9706D23C410A59E9A6 /* GotoFinderSync */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		0EE5CACEB88CC787E982B8C8 /* Resources */ = {
+		25DF6932BDCCA245C17DB176 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7F815A3039B8A46DF281290 /* Goto.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		44C93DCEE9C72B967E9FCF6E /* Resources */ = {
+		A3E70410FEFE31C5315EECB8 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4BAAB0FCD2F3E6E429083978 /* Goto.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		235D6686EC866996A3E3DE57 /* Sources */ = {
+		6A53F6DD148936F766B42AC5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6F7DA7B4FB8F18387AB24086 /* GotoApp.swift in Sources */,
-				2F7511DCCEBAC2D01B8574C5 /* MenuBarViewModel.swift in Sources */,
-				BDC48EEE02BF22F0E3713DC0 /* SettingsWindow.swift in Sources */,
-				CCDF62B61762F88EC7848400 /* FinderLaunchBridge.swift in Sources */,
-				268113EDDA25E76811862E4F /* FinderLaunchNotifications.swift in Sources */,
-				C64228FF8E632F9F73C48C9E /* ProjectEntry.swift in Sources */,
-				8F8030658FD893CA9C81D482 /* RegistryStore.swift in Sources */,
-				216C051B7FEB3FEE17357087 /* ValidatedDirectory.swift in Sources */,
-				E69ABEB9C136B22B62F23B25 /* FinderSelection.swift in Sources */,
-				0A8678939B3E532D01D164E3 /* FinderErrorPresenter.swift in Sources */,
-				70613E24F653F05EA19D3171 /* TerminalScriptBuilder.swift in Sources */,
-				EAF1901279F073FA180A083D /* TerminalLaunchError.swift in Sources */,
-				264AF964950B608D93C277F4 /* TerminalLaunchRequest.swift in Sources */,
-				E70EA35978D10109D88C215E /* TerminalLauncher.swift in Sources */,
-				C2F5490EC0102C26F2796178 /* TerminalApp.swift in Sources */,
-				E26B453515BEFF70ACE709EC /* TerminalAppDetector.swift in Sources */,
-				B23EFAF290A2636F01A97BD6 /* RegistryWatcher.swift in Sources */,
-				5F18D8BA53D14C844D522703 /* FinderClickMode.swift in Sources */,
-				70F14841E1607DAB3322E0D7 /* SharedSettings.swift in Sources */,
+				C5A02DC42264616C568A85B3 /* GotoApp.swift in Sources */,
+				F832A2E346DA86DE9CEC7E1B /* MenuBarViewModel.swift in Sources */,
+				B23CB04A9FE30C5CE9228233 /* SettingsWindow.swift in Sources */,
+				5146DEACA45DE43640C390AA /* FinderLaunchBridge.swift in Sources */,
+				643FE05C8FB77C4FA2F8924D /* FinderLaunchNotifications.swift in Sources */,
+				6B7D51EC583D2EDD27F950AF /* ProjectEntry.swift in Sources */,
+				734046AACBC75FE02CC4C5CE /* RegistryStore.swift in Sources */,
+				F150DB5B8422580E04643ABF /* ValidatedDirectory.swift in Sources */,
+				A8FE2EDADC7E704FF7D618CD /* FinderSelection.swift in Sources */,
+				18EF4B2DCC28A9F2773642F7 /* FinderErrorPresenter.swift in Sources */,
+				86DF3C85D5B9A5DF58004A44 /* TerminalScriptBuilder.swift in Sources */,
+				A5EF839F85A8C245F0284A5F /* TerminalLaunchError.swift in Sources */,
+				7253A7A22ED6D20CF0E9AC61 /* TerminalLaunchRequest.swift in Sources */,
+				83944BF2F2DCCB4BBFE7D1FE /* TerminalLauncher.swift in Sources */,
+				36AC6F5403934DC973348E15 /* TerminalApp.swift in Sources */,
+				BA8312251112BB08DD4B2E08 /* TerminalAppDetector.swift in Sources */,
+				50227A286A73468B39A9E9CE /* RegistryWatcher.swift in Sources */,
+				4F4D74951AF6F6BB5010CC0C /* FinderClickMode.swift in Sources */,
+				C0BBADB583AF3AA18DD1DF78 /* SharedSettings.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2748857AD6554B977FDFCE51 /* Sources */ = {
+		B73918886AC646A02F937AB6 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4A9968B2DC9259FE7F02FCAC /* GotoFinderSyncExtension.swift in Sources */,
-				A90719425A5A33D447D7CE3D /* FinderLaunchNotifications.swift in Sources */,
-				D60B0773B6600A8EA81C6914 /* FinderClickMode.swift in Sources */,
+				14C32AFD0063EFCCC4261023 /* GotoFinderSyncExtension.swift in Sources */,
+				D40CA715B8AC273A02C13565 /* FinderLaunchNotifications.swift in Sources */,
+				B2D7787ABA0A721025BBAADF /* FinderClickMode.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		B7E4FCDF00DC4B8EDD3FD80F /* PBXTargetDependency */ = {
+		AE8D51F568CB7E9B7045C84A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = GotoFinderSync;
-			target = 5A9028024641696094311428 /* GotoFinderSync */;
-			targetProxy = 816889B47FB597A8DB0E89ED /* PBXContainerItemProxy */;
+			target = 052D0E9706D23C410A59E9A6 /* GotoFinderSync */;
+			targetProxy = 5CB8A41F99329E1ECD322B22 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		07B7A78C6B56820319D631BD /* Debug */ = {
+		4906277F58C1B7E217413154 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = GotoFinderSync/GotoFinderSync.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 0.0.3;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = GotoFinderSync/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../../Frameworks @executable_path/../../PlugIns";
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 0.0.3;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.goto.finder.findersync;
+				PRODUCT_NAME = GotoFinderSync;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		68BD75DCEB0255BF0743F0DE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 0.0.3;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Goto/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../PlugIns";
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 0.0.3;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.goto.finder;
+				PRODUCT_NAME = Goto;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		7127A0CB6F9823F67C5E890C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -421,72 +464,7 @@
 			};
 			name = Debug;
 		};
-		0C1002CC2FE860375AF2C303 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 0.0.3;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Goto/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../PlugIns";
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.0.3;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.goto.finder;
-				PRODUCT_NAME = Goto;
-				SDKROOT = macosx;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		0D40F0357E0A4968606987F8 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_ENTITLEMENTS = GotoFinderSync/GotoFinderSync.entitlements;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 0.0.3;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = GotoFinderSync/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../../Frameworks @executable_path/../../PlugIns";
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.0.3;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.goto.finder.findersync;
-				PRODUCT_NAME = GotoFinderSync;
-				SDKROOT = macosx;
-				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		3891544A190045DD697D9568 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 0.0.3;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Goto/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../PlugIns";
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.0.3;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.goto.finder;
-				PRODUCT_NAME = Goto;
-				SDKROOT = macosx;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
-		A242EEC9FA550B4AD8DE95FF /* Release */ = {
+		8BA8E3E049AA1F6440B2C34F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -540,7 +518,7 @@
 			};
 			name = Release;
 		};
-		C64FAFD34ACF4B866CB3D9F9 /* Release */ = {
+		91FEFE44F7BE939E50E4C937 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
@@ -561,37 +539,59 @@
 			};
 			name = Release;
 		};
+		E3D78B791257CED6F3012161 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 0.0.3;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Goto/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../PlugIns";
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 0.0.3;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.goto.finder;
+				PRODUCT_NAME = Goto;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		028B0CC6E0615CE0FFCF23A0 /* Build configuration list for PBXNativeTarget "Goto" */ = {
+		B9846AA7201E97C1A0388B5C /* Build configuration list for PBXNativeTarget "GotoFinderSync" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				3891544A190045DD697D9568 /* Release */,
-				0C1002CC2FE860375AF2C303 /* Debug */,
+				91FEFE44F7BE939E50E4C937 /* Release */,
+				4906277F58C1B7E217413154 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		6EC9164F0D159ECF192EBAC7 /* Build configuration list for PBXProject "Goto" */ = {
+		F1C0CC45E4B502E440EDCE3E /* Build configuration list for PBXProject "Goto" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				07B7A78C6B56820319D631BD /* Debug */,
-				A242EEC9FA550B4AD8DE95FF /* Release */,
+				7127A0CB6F9823F67C5E890C /* Debug */,
+				8BA8E3E049AA1F6440B2C34F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		764713B47050FB90A415E30C /* Build configuration list for PBXNativeTarget "GotoFinderSync" */ = {
+		F8500CA52543951894D19B07 /* Build configuration list for PBXNativeTarget "Goto" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				C64FAFD34ACF4B866CB3D9F9 /* Release */,
-				0D40F0357E0A4968606987F8 /* Debug */,
+				E3D78B791257CED6F3012161 /* Release */,
+				68BD75DCEB0255BF0743F0DE /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = FBF2174A0CFE00B4C76D805B /* Project object */;
+	rootObject = E7852C20C28F137E4518FD1C /* Project object */;
 }

@@ -15,7 +15,7 @@ Two install surfaces for macOS project jumping:
 | Path | Purpose |
 |------|---------|
 | `src/` | CLI source (commands, select, output) |
-| `native/` | SPM package — shared native core plus legacy `GotoMenuBar` target/tests |
+| `native/` | SPM package — shared native core and `GotoNativeLaunch` |
 | `macos/Goto/` | Xcode — unified app host (menu bar UI + settings window) |
 | `macos/FinderBridge/` | Xcode — Finder launch bridge used by `Goto.app` |
 | `macos/GotoFinderSync/` | Xcode — Finder Sync extension (sandboxed) |
@@ -30,7 +30,7 @@ Two install surfaces for macOS project jumping:
 
 ```bash
 node --test                          # 27 JS tests — must pass before changes
-swift test -c debug                  # 38 Swift tests — must pass before changes
+swift test -c debug                  # 32 Swift tests — must pass before changes
 swift build -c release               # Build SPM targets
 scripts/build-app.sh                 # Build Goto.app (.app + .appex)
 scripts/install-app.sh               # Install Goto.app to ~/Applications

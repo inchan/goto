@@ -156,12 +156,11 @@ goto/
   bin/goto.js            CLI entry point (Node)
   src/                   CLI logic: registry, picker, commands
   shell/                 Shell wrappers (zsh, bash) that source into the parent shell
-  native/                Swift package (shared core + legacy menu bar target)
+  native/                Swift package (shared native core + launch helper)
     Sources/
       GotoNativeCore/    Shared library: registry, terminal launch, settings, Finder types
       GotoNativeLaunch/  CLI for Finder-triggered folder handoff
-      GotoMenuBar/       Legacy standalone menu bar executable
-    Tests/               XCTest suites for core and legacy menu bar logic
+    Tests/               XCTest suites for shared core logic
   macos/                 Xcode project for Goto + GotoFinderSync extension
     Goto/                Unified app host (menu bar UI + settings window)
     FinderBridge/        Finder launch bridge implementation used by the host app

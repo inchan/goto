@@ -23,4 +23,4 @@ Collapse the native host responsibilities back into a single `Goto.app`:
 - Users install and manage one native app instead of two.
 - Packaging simplifies from two `/Applications` bundles to one `Goto.app` bundle.
 - Finder IPC architecture from ADR-001 and ADR-005 remains unchanged; only the host ownership changes.
-- Legacy standalone `GotoMenuBar` build paths can remain temporarily for compatibility, but they are no longer the primary product shape.
+- Legacy standalone `GotoMenuBar` code paths are removed; `Goto.app` is the only supported native host shape.
