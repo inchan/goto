@@ -37,7 +37,7 @@ The GitHub Actions release workflow:
 3. runs JS + Swift verification
 4. decides whether the release is **signed** or **unsigned**
 5. if signing secrets exist, imports Apple signing certificates
-6. builds `Goto.app`
+6. builds `Goto.app` via `scripts/build-app.sh`
 7. stages the embedded Finder Sync extension inside `Goto.app`
 8. stages the CLI payload
 9. builds the package

@@ -79,14 +79,14 @@ The picker renders in an alternate screen buffer. Use arrow keys to navigate, En
 Build and run:
 
 ```sh
-./scripts/build-finder.sh             # produces build/macos-products/Release/Goto.app
+./scripts/build-app.sh                # produces build/macos-products/Release/Goto.app
 open build/macos-products/Release/Goto.app
 ```
 
 Install to `~/Applications` for local development:
 
 ```sh
-./scripts/install-finder.sh
+./scripts/install-app.sh
 ```
 
 This builds `Goto.app`, copies it to `~/Applications/Goto.app`, registers the Finder Sync extension, restarts Finder, and opens the Extensions preference pane so you can verify the extension is enabled.
@@ -94,7 +94,7 @@ This builds `Goto.app`, copies it to `~/Applications/Goto.app`, registers the Fi
 Uninstall the local app build:
 
 ```sh
-./scripts/uninstall-finder.sh
+./scripts/uninstall-app.sh
 ```
 
 ### Toolbar customization
@@ -135,15 +135,13 @@ The Finder Sync extension runs in a sandbox and communicates with `Goto.app` via
 | Script | Purpose |
 |--------|---------|
 | `install-shell.sh` | Append shell integration to `~/.zshrc` / `~/.bashrc` |
-| `build-menu-bar-app.sh` | Legacy standalone `GotoMenuBar.app` build path |
 | `generate-app-icon.sh` | Generate `macos/Resources/Goto.icns` from the SVG source |
-| `run-native-menu-bar.sh` | Legacy menu bar-only runner |
-| `build-finder.sh` | Build `Goto.app` via `xcodebuild` |
+| `build-app.sh` | Build `Goto.app` via `xcodebuild` |
 | `build-pkg.sh` | Build a single installer package containing CLI + `Goto.app` |
 | `uninstall.sh` | Remove the packaged install from `/Applications` and `/usr/local` |
-| `install-finder.sh` | Build `Goto.app`, install to `~/Applications`, register extension |
-| `uninstall-finder.sh` | Remove `~/Applications/Goto.app` and unregister extension |
-| `test-finder.sh` | Install and smoke-test `Goto.app` |
+| `install-app.sh` | Build `Goto.app`, install to `~/Applications`, register extension |
+| `uninstall-app.sh` | Remove `~/Applications/Goto.app` and unregister extension |
+| `test-app.sh` | Install and smoke-test `Goto.app` |
 | `run-native-launch.sh` | Build and run `GotoNativeLaunch` with a given path |
 | `typecheck-native.sh` | Type-check the Swift package without building |
 | `test-native.sh` | Run Swift package tests |
@@ -166,7 +164,7 @@ goto/
     Tests/               XCTest suites for core and legacy menu bar logic
   macos/                 Xcode project for Goto + GotoFinderSync extension
     Goto/                Unified app host (menu bar UI + settings window)
-    GotoFinder/          Finder launch bridge implementation used by the host app
+    FinderBridge/        Finder launch bridge implementation used by the host app
     GotoFinderSync/      Finder Sync extension (FIFinderSync subclass)
   scripts/               Build, install, and test scripts
 ```
@@ -198,7 +196,7 @@ Type-check Swift without a full build:
 Build `Goto.app` (requires Xcode):
 
 ```sh
-./scripts/build-finder.sh
+./scripts/build-app.sh
 ```
 
 ## Documentation

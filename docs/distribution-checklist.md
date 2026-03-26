@@ -48,7 +48,7 @@ References:
 - `package.json` is now the version source of truth (`0.0.1` for the first release target).
 - The CLI, menu bar app, Finder app, and Xcode project now pull version information from that single source.
 - The Finder shipping build now targets **Release**.
-- README naming drift has been corrected to `GotoFinder` / `install-finder.sh`.
+- README naming drift has been corrected to `Goto.app` / `install-app.sh`.
 - `scripts/build-pkg.sh` now builds a single installer package containing CLI + menu bar + Finder.
 - `.github/workflows/release.yml` now defines a GitHub-tag-driven release flow.
 - `docs/github-release.md` documents the GitHub release path and required secrets.
@@ -104,8 +104,8 @@ One `.pkg` installs all of the following:
 - [x] Update shell installation so it targets the installed package path, not the repository path
 - [x] Update README to reflect current names:
   - [x] `Goto.app`
-  - [x] `scripts/install-finder.sh`
-  - [x] `scripts/uninstall-finder.sh`
+  - [x] `scripts/install-app.sh`
+  - [x] `scripts/uninstall-app.sh`
 - [x] Document packaged-install prerequisites separately from repo-local setup
 
 ### Phase 2 — Build a staged payload

@@ -37,7 +37,7 @@ extension_target = project.new_target(:app_extension, "GotoFinderSync", :osx, "1
 
 groups = {
   "Goto" => project.main_group.find_subpath("Goto", true),
-  "GotoFinder" => project.main_group.find_subpath("GotoFinder", true),
+  "FinderBridge" => project.main_group.find_subpath("FinderBridge", true),
   "GotoFinderSync" => project.main_group.find_subpath("GotoFinderSync", true),
   "Shared" => project.main_group.find_subpath("Shared", true),
   "NativeCore" => project.main_group.find_subpath("NativeCore", true),
@@ -48,7 +48,7 @@ app_sources = %w[
   Goto/GotoApp.swift
   Goto/MenuBarViewModel.swift
   Goto/SettingsWindow.swift
-  GotoFinder/FinderLaunchBridge.swift
+  FinderBridge/FinderLaunchBridge.swift
   Shared/FinderLaunchNotifications.swift
   ../native/Sources/GotoNativeCore/ProjectEntry.swift
   ../native/Sources/GotoNativeCore/RegistryStore.swift
@@ -76,8 +76,8 @@ app_sources.each do |path|
   group =
     if path.include?("Goto/")
       groups["Goto"]
-    elsif path.include?("GotoFinder/")
-      groups["GotoFinder"]
+    elsif path.include?("FinderBridge/")
+      groups["FinderBridge"]
     elsif path.include?("Shared/")
       groups["Shared"]
     else

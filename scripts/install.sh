@@ -56,7 +56,7 @@ fi
 
 if $install_app; then
   printf '==> Installing Goto.app\n'
-  app="$("$SCRIPT_DIR/install-finder.sh" "$HOME/Applications/Goto.app")"
+  app="$("$SCRIPT_DIR/install-app.sh" "$HOME/Applications/Goto.app")"
   printf '    Installed at %s\n\n' "$app"
 fi
 

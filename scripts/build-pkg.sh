@@ -25,7 +25,7 @@ rm -rf -- "$work_root" "${output_path}.sha256"
 mkdir -p -- "$payload_root/Applications" "$scripts_root" "$cli_root" "$cli_bin_root" "$(dirname -- "$output_path")"
 
 printf '==> Building Goto.app\n' >&2
-finder_build_app="$($SCRIPT_DIR/build-finder.sh "$finder_products_root" | tail -n 1)"
+finder_build_app="$($SCRIPT_DIR/build-app.sh "$finder_products_root" | tail -n 1)"
 ditto "$finder_build_app" "$app_path"
 
 printf '==> Staging CLI payload\n' >&2

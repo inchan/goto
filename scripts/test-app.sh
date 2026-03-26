@@ -6,7 +6,7 @@ SCRIPT_DIR="$(
 )"
 
 destination="${1:-$HOME/Applications/Goto.app}"
-installed_app="$("$SCRIPT_DIR/install-finder.sh" "$destination")"
+installed_app="$("$SCRIPT_DIR/install-app.sh" "$destination")"
 extension_path="$installed_app/Contents/PlugIns/GotoFinderSync.appex"
 probe_dir="$(mktemp -d "/tmp/goto finder toolbar.XXXXXX")"
 

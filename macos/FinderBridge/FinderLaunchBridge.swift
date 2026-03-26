@@ -183,7 +183,7 @@ final class FinderLaunchBridge {
         alert.runModal()
     }
 
-    private static let logURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("goto-finder-bridge.log")
+    private static let logURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("goto-bridge.log")
     private static let dateFormatter: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         return f
