@@ -25,15 +25,15 @@ rm -rf -- "$work_root" "${output_path}.sha256"
 mkdir -p -- "$payload_root/Applications" "$scripts_root" "$cli_root" "$cli_bin_root" "$(dirname -- "$output_path")"
 
 printf '==> Building Goto.app\n' >&2
-finder_build_app="$($SCRIPT_DIR/build-finder.sh "$finder_products_root" | tail -n 1)"
+finder_build_app="$($SCRIPT_DIR/build-app.sh "$finder_products_root" | tail -n 1)"
 ditto "$finder_build_app" "$app_path"
 
 printf '==> Staging CLI payload\n' >&2
 mkdir -p -- "$cli_root/bin" "$cli_root/scripts"
-cp "$REPO_ROOT/package.json" "$cli_root/package.json"
-cp -R "$REPO_ROOT/bin" "$cli_root/"
-cp -R "$REPO_ROOT/src" "$cli_root/"
-cp -R "$REPO_ROOT/shell" "$cli_root/"
+cp "$REPO_ROOT/product/cli/package.json" "$cli_root/package.json"
+cp -R "$REPO_ROOT/product/cli/bin" "$cli_root/"
+cp -R "$REPO_ROOT/product/cli/src" "$cli_root/"
+cp -R "$REPO_ROOT/product/cli/shell" "$cli_root/"
 cp "$REPO_ROOT/scripts/install-shell.sh" "$cli_root/scripts/install-shell.sh"
 cp "$REPO_ROOT/scripts/uninstall.sh" "$cli_root/scripts/uninstall.sh"
 chmod +x "$cli_root/bin/goto.js" "$cli_root/scripts/install-shell.sh" "$cli_root/scripts/uninstall.sh"
@@ -46,7 +46,7 @@ if [[ -n "${GOTO_CODESIGN_IDENTITY:-}" ]]; then
   printf '==> Signing app bundle\n' >&2
   extension_path="$app_path/Contents/PlugIns/GotoFinderSync.appex"
   codesign --force --timestamp --options runtime --sign "$GOTO_CODESIGN_IDENTITY" \
-    --entitlements "$REPO_ROOT/macos/GotoFinderSync/GotoFinderSync.entitlements" \
+    --entitlements "$REPO_ROOT/product/macos/GotoFinderSync/GotoFinderSync.entitlements" \
     "$extension_path"
   codesign --force --timestamp --options runtime --sign "$GOTO_CODESIGN_IDENTITY" "$app_path"
   codesign --verify --strict --verbose=2 "$app_path"

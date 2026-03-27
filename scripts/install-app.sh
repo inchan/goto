@@ -17,7 +17,7 @@ cleanup() {
 
 trap cleanup EXIT
 
-build_app="$("$SCRIPT_DIR/build-finder.sh" "$products_path" | tail -n 1)"
+build_app="$("$SCRIPT_DIR/build-app.sh" "$products_path" | tail -n 1)"
 
 pkill -f "$destination/Contents/MacOS/Goto" >/dev/null 2>&1 || true
 pkill -f "$destination/Contents/PlugIns/GotoFinderSync.appex/Contents/MacOS/GotoFinderSync" >/dev/null 2>&1 || true

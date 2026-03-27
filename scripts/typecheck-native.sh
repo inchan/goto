@@ -15,4 +15,4 @@ swiftc \
   -sdk "$SDK_PATH" \
   -target "$TARGET" \
   -typecheck \
-  "$REPO_ROOT"/native/Sources/GotoNativeCore/*.swift
+  "$REPO_ROOT"/product/core/Sources/GotoNativeCore/*.swift

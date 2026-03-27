@@ -3,14 +3,15 @@ import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import { spawn } from 'node:child_process';
 
-export const projectRoot = path.resolve(new URL('..', import.meta.url).pathname);
-export const cliPath = path.join(projectRoot, 'bin', 'goto.js');
+export const cliRoot = path.resolve(new URL('..', import.meta.url).pathname);
+export const projectRoot = path.resolve(new URL('../../..', import.meta.url).pathname);
+export const cliPath = path.join(cliRoot, 'bin', 'goto.js');
 
 export async function createTempDir(prefix = 'goto-test-') {
   return fs.mkdtemp(path.join(os.tmpdir(), prefix));
 }
 
-export async function runProcess(command, args, { cwd = projectRoot, env = process.env } = {}) {
+export async function runProcess(command, args, { cwd = cliRoot, env = process.env } = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd,

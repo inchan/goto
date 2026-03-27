@@ -60,8 +60,8 @@ The expected visual reference is the terminal UI feel of `skills.sh` installatio
 | Style the TUI after `skills.sh` terminal presentation | UI quality matters even though the tool itself is intentionally small | ✅ Shipped |
 | Keep `~/.goto` as the single shared registry across shell and native surfaces | Avoids drift between the CLI, menu bar, and Finder entry points | ✅ Shipped |
 | Use a native macOS host for menu bar and Finder surfaces | These capabilities are platform-native and should not depend on brittle terminal-only hacks | ✅ Shipped |
-| Split into three independent packages (goto, goto-menubar, goto-finder) | Eliminates code duplication, enables independent installation | ✅ Shipped |
-| Make goto-finder a headless background agent | Clean separation — menu bar UI belongs in goto-menubar only | ✅ Shipped |
+| Consolidate native surfaces into a single `Goto.app` host | One app now owns the menu bar UI, settings, and Finder bridge lifecycle | ✅ Shipped |
+| Keep runtime surfaces and reusable core logically separate in future repo cleanup (`apps/*`, `packages/*`) | Clarifies ownership and makes future restructuring safer without changing behavior first | 🟡 Planned |
 
 ---
-*Last updated: 2026-03-24 — v1.0 complete, three-package refactoring shipped*
+*Last updated: 2026-03-27 — v1.0 complete, unified `Goto.app` host shipped, repo cleanup planning active*

@@ -22,5 +22,19 @@ resolve_developer_dir() {
   xcode-select -p
 }
 
-exec env DEVELOPER_DIR="$(resolve_developer_dir)" \
-  swift run --package-path "$REPO_ROOT/native" GotoMenuBar
+developer_dir="$(resolve_developer_dir)"
+products_path="${1:-$REPO_ROOT/build/macos-products}"
+intermediates_path="$REPO_ROOT/build/macos-obj"
+
+ruby "$SCRIPT_DIR/generate_macos_project.rb"
+
+env DEVELOPER_DIR="$developer_dir" \
+  xcodebuild \
+  -project "$REPO_ROOT/product/macos/Goto.xcodeproj" \
+  -target Goto \
+  -configuration Release \
+  SYMROOT="$products_path" \
+  OBJROOT="$intermediates_path" \
+  build
+
+printf '%s\n' "$products_path/Release/Goto.app"

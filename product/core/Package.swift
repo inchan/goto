@@ -16,10 +16,6 @@ let package = Package(
             name: "GotoNativeLaunch",
             targets: ["GotoNativeLaunch"]
         ),
-        .executable(
-            name: "GotoMenuBar",
-            targets: ["GotoMenuBar"]
-        ),
     ],
     targets: [
         .target(
@@ -29,17 +25,9 @@ let package = Package(
             name: "GotoNativeLaunch",
             dependencies: ["GotoNativeCore"]
         ),
-        .executableTarget(
-            name: "GotoMenuBar",
-            dependencies: ["GotoNativeCore"]
-        ),
         .testTarget(
             name: "GotoNativeCoreTests",
             dependencies: ["GotoNativeCore"]
-        ),
-        .testTarget(
-            name: "GotoMenuBarTests",
-            dependencies: ["GotoNativeCore", "GotoMenuBar"]
         ),
     ]
 )

@@ -4,7 +4,7 @@ import path from 'node:path';
 
 import { promises as fs } from 'node:fs';
 
-import { cliPath, createTempDir, projectRoot, readRegistry, runProcess, writeExecutable } from './helpers.js';
+import { cliPath, cliRoot, createTempDir, projectRoot, readRegistry, runProcess, writeExecutable } from './helpers.js';
 
 test('the direct executable path works from the repository', async () => {
   const homeDir = await createTempDir();
@@ -76,6 +76,38 @@ test('install-shell script writes the bash source block exactly once', async () 
   assert.equal(matches.length, 1);
   assert.match(contents, /# >>> goto >>>/);
   assert.match(contents, /goto\.bash/);
+});
+
+test('install-shell script replaces a stale managed block when the shell source path moves', async () => {
+  const homeDir = await createTempDir();
+  const zdotDir = await createTempDir();
+  const rcFile = path.join(zdotDir, '.zshrc');
+  const scriptPath = path.join(projectRoot, 'scripts/install-shell.sh');
+  const staleSource = path.join(projectRoot, 'shell', 'goto.zsh');
+
+  await fs.writeFile(
+    rcFile,
+    `export PATH="$PATH:/tmp"\n# >>> goto >>>\nsource "${staleSource}"\n# <<< goto <<<\n`
+  );
+
+  const result = await runProcess('bash', [scriptPath, '--shell', 'zsh'], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      HOME: homeDir,
+      ZDOTDIR: zdotDir,
+      SHELL: '/bin/zsh',
+    },
+  });
+
+  const contents = await fs.readFile(rcFile, 'utf8');
+  const matches = contents.match(/# >>> goto >>>/g) || [];
+
+  assert.equal(result.code, 0);
+  assert.equal(matches.length, 1);
+  assert.match(contents, /export PATH/);
+  assert.doesNotMatch(contents, new RegExp(staleSource.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.match(contents, new RegExp(`${cliRoot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/shell/goto\\.zsh`));
 });
 
 test('pkg postinstall runs shell integration for the logged-in user and registers Goto.app extension', async () => {
@@ -200,7 +232,7 @@ test('uninstall script removes packaged files and preserves user data by default
   await fs.writeFile(settingsPath, '{"finder":{"enabled":true}}\n');
   await fs.writeFile(
     zshrcPath,
-    `# >>> goto >>>\nsource "${installPrefix}/shell/goto.zsh"\n# <<< goto <<<\n# keep me\n# >>> goto >>>\nsource "${projectRoot}/shell/goto.zsh"\n# <<< goto <<<\n`
+    `# >>> goto >>>\nsource "${installPrefix}/shell/goto.zsh"\n# <<< goto <<<\n# keep me\n# >>> goto >>>\nsource "${cliRoot}/shell/goto.zsh"\n# <<< goto <<<\n`
   );
   await fs.writeFile(
     bashrcPath,
@@ -238,7 +270,7 @@ test('uninstall script removes packaged files and preserves user data by default
   await assert.rejects(fs.access(uninstallSymlink));
   assert.match(zshContents, /# keep me/);
   assert.doesNotMatch(zshContents, new RegExp(`${installPrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/shell/goto\\.zsh`));
-  assert.match(zshContents, new RegExp(`${projectRoot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/shell/goto\\.zsh`));
+  assert.match(zshContents, new RegExp(`${cliRoot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/shell/goto\\.zsh`));
   assert.match(bashContents, /export PATH/);
   assert.doesNotMatch(bashContents, new RegExp(`${installPrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/shell/goto\\.bash`));
   await fs.access(registryPath);
@@ -300,12 +332,12 @@ test('bash and zsh wrappers pass through registry management commands', async ()
 
   const bashResult = await runProcess(
     'bash',
-    ['-c', `source "${path.join(projectRoot, 'shell/goto.bash')}" && goto -a "${projectDir}"`],
+    ['-c', `source "${path.join(cliRoot, 'shell/goto.bash')}" && goto -a "${projectDir}"`],
     { cwd: projectRoot, env }
   );
   const zshResult = await runProcess(
     'zsh',
-    ['-c', `source "${path.join(projectRoot, 'shell/goto.zsh')}" && goto -a "${projectDir}"`],
+    ['-c', `source "${path.join(cliRoot, 'shell/goto.zsh')}" && goto -a "${projectDir}"`],
     { cwd: projectRoot, env }
   );
 
@@ -321,8 +353,8 @@ test('bash and zsh wrappers only cd on successful no-arg selection', async () =>
   const fakeBinDir = await createTempDir('goto-fake-node-');
   const targetDir = await createTempDir('goto-target-');
   const fakeNodePath = path.join(fakeBinDir, 'node');
-  const wrapperBash = path.join(projectRoot, 'shell/goto.bash');
-  const wrapperZsh = path.join(projectRoot, 'shell/goto.zsh');
+  const wrapperBash = path.join(cliRoot, 'shell/goto.bash');
+  const wrapperZsh = path.join(cliRoot, 'shell/goto.zsh');
 
   await writeExecutable(
     fakeNodePath,
@@ -369,8 +401,8 @@ exec "${process.execPath}" "$@"
 test('bash and zsh wrappers leave the directory unchanged on cancel', async () => {
   const fakeBinDir = await createTempDir('goto-fake-node-cancel-');
   const fakeNodePath = path.join(fakeBinDir, 'node');
-  const wrapperBash = path.join(projectRoot, 'shell/goto.bash');
-  const wrapperZsh = path.join(projectRoot, 'shell/goto.zsh');
+  const wrapperBash = path.join(cliRoot, 'shell/goto.bash');
+  const wrapperZsh = path.join(cliRoot, 'shell/goto.zsh');
 
   await writeExecutable(
     fakeNodePath,

@@ -118,4 +118,4 @@
 
 ---
 *Requirements defined: 2026-03-12*
-*Last updated: 2026-03-24 — v1.0 complete, v1.1 hardening scrapped, three-package refactoring shipped*
+*Last updated: 2026-03-27 — v1.0 complete, unified `Goto.app` host shipped, repo cleanup planning active*

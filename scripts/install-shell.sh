@@ -68,16 +68,24 @@ resolve_default_shell() {
 
 install_for_shell() {
   local shell_name="$1"
-  local rc_file source_file marker_start marker_end
+  local rc_file source_file marker_start marker_end temp_file
 
   case "$shell_name" in
     zsh)
       rc_file="${ZDOTDIR:-$HOME}/.zshrc"
-      source_file="$REPO_ROOT/shell/goto.zsh"
+      if [[ -f "$REPO_ROOT/product/cli/shell/goto.zsh" ]]; then
+        source_file="$REPO_ROOT/product/cli/shell/goto.zsh"
+      else
+        source_file="$REPO_ROOT/shell/goto.zsh"
+      fi
       ;;
     bash)
       rc_file="$HOME/.bashrc"
-      source_file="$REPO_ROOT/shell/goto.bash"
+      if [[ -f "$REPO_ROOT/product/cli/shell/goto.bash" ]]; then
+        source_file="$REPO_ROOT/product/cli/shell/goto.bash"
+      else
+        source_file="$REPO_ROOT/shell/goto.bash"
+      fi
       ;;
     *)
       printf 'goto install: unsupported shell: %s\n' "$shell_name" >&2
@@ -91,9 +99,19 @@ install_for_shell() {
   mkdir -p -- "$(dirname -- "$rc_file")"
   touch "$rc_file"
 
-  if grep -Fq "$source_file" "$rc_file" || grep -Fq "$marker_start" "$rc_file"; then
+  if grep -Fq "$source_file" "$rc_file"; then
     printf 'goto already configured in %s\n' "$rc_file"
     return
+  fi
+
+  if grep -Fq "$marker_start" "$rc_file"; then
+    temp_file="$(mktemp "${TMPDIR:-/tmp}/goto-install.XXXXXX")"
+    awk -v marker_start="$marker_start" -v marker_end="$marker_end" '
+      $0 == marker_start { in_block = 1; next }
+      in_block && $0 == marker_end { in_block = 0; next }
+      !in_block { print }
+    ' "$rc_file" > "$temp_file"
+    mv "$temp_file" "$rc_file"
   fi
 
   {
