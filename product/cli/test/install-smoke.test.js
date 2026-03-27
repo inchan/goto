@@ -120,8 +120,10 @@ test('pkg postinstall runs shell integration for the logged-in user and register
   const suPath = path.join(fakeBinDir, 'su');
   const pluginkitPath = path.join(fakeBinDir, 'pluginkit');
   const killallPath = path.join(fakeBinDir, 'killall');
+  const openPath = path.join(fakeBinDir, 'open');
   const suLogPath = path.join(fakeBinDir, 'su.log');
   const pluginkitLogPath = path.join(fakeBinDir, 'pluginkit.log');
+  const openLogPath = path.join(fakeBinDir, 'open.log');
   const appDir = path.join(await createTempDir('goto-app-'), 'Goto.app');
   const extensionPath = path.join(appDir, 'Contents', 'PlugIns', 'GotoFinderSync.appex');
 
@@ -170,6 +172,13 @@ exit 0
 exit 0
 `
   );
+  await writeExecutable(
+    openPath,
+    `#!/bin/sh
+printf '%s\\n' "$*" >> "${openLogPath}"
+exit 0
+`
+  );
 
   const result = await runProcess('sh', [scriptPath], {
     cwd: projectRoot,
@@ -179,6 +188,7 @@ exit 0
       GOTO_INSTALL_SHELL_BIN: installScriptPath,
       GOTO_PLUGINKIT_BIN: pluginkitPath,
       GOTO_KILLALL_BIN: killallPath,
+      GOTO_OPEN_BIN: openPath,
       GOTO_STAT_BIN: statPath,
       GOTO_SU_BIN: suPath,
     },
@@ -188,12 +198,14 @@ exit 0
   const matches = contents.match(/source ".*goto\.zsh"/g) || [];
   const suLog = await fs.readFile(suLogPath, 'utf8');
   const pluginkitLog = await fs.readFile(pluginkitLogPath, 'utf8');
+  const openLog = await fs.readFile(openLogPath, 'utf8');
 
   assert.equal(result.code, 0);
   assert.equal(matches.length, 1);
   assert.match(result.stdout, /Shell integration was installed for test-user/);
   assert.match(suLog, /-l test-user -c/);
   assert.match(pluginkitLog, /-a .*GotoFinderSync\.appex/);
+  assert.match(openLog, new RegExp(`-gj ${appDir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
 });
 
 test('uninstall script removes packaged files and preserves user data by default', async () => {
