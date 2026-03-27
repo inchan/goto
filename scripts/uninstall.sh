@@ -15,6 +15,8 @@ EOF
 INSTALL_PREFIX="${GOTO_INSTALL_PREFIX:-/usr/local/lib/goto}"
 BIN_PREFIX="${GOTO_BIN_PREFIX:-/usr/local/bin}"
 APP_PATH="${GOTO_APP_PATH:-/Applications/Goto.app}"
+LEGACY_MENU_APP_PATH="${GOTO_LEGACY_MENU_APP_PATH:-/Applications/GotoMenuBar.app}"
+LEGACY_FINDER_APP_PATH="${GOTO_LEGACY_FINDER_APP_PATH:-/Applications/GotoFinder.app}"
 EXTENSION_PATH="$APP_PATH/Contents/PlugIns/GotoFinderSync.appex"
 EXTENSION_ID="${GOTO_EXTENSION_ID:-dev.goto.finder.findersync}"
 INSTALL_RECEIPT_ID="${GOTO_INSTALL_RECEIPT_ID:-dev.goto.installer}"
@@ -141,13 +143,15 @@ if [[ -n "$target_home" ]]; then
 fi
 
 "$PKILL_BIN" -f "$APP_PATH/Contents/MacOS/" >/dev/null 2>&1 || true
+"$PKILL_BIN" -f "$LEGACY_MENU_APP_PATH/Contents/MacOS/" >/dev/null 2>&1 || true
+"$PKILL_BIN" -f "$LEGACY_FINDER_APP_PATH/Contents/MacOS/" >/dev/null 2>&1 || true
 
 "$PLUGINKIT_BIN" -e ignore -i "$EXTENSION_ID" >/dev/null 2>&1 || true
 if [[ -d "$EXTENSION_PATH" ]]; then
   "$PLUGINKIT_BIN" -r "$EXTENSION_PATH" >/dev/null 2>&1 || true
 fi
 
-rm -rf -- "$APP_PATH" "$INSTALL_PREFIX"
+rm -rf -- "$APP_PATH" "$LEGACY_MENU_APP_PATH" "$LEGACY_FINDER_APP_PATH" "$INSTALL_PREFIX"
 rm -f -- "$BIN_PREFIX/goto" "$BIN_PREFIX/goto-install-shell" "$BIN_PREFIX/goto-uninstall"
 
 "$PKGUTIL_BIN" --forget "$INSTALL_RECEIPT_ID" >/dev/null 2>&1 || true

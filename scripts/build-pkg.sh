@@ -52,7 +52,9 @@ if [[ -n "${GOTO_CODESIGN_IDENTITY:-}" ]]; then
   codesign --verify --strict --verbose=2 "$app_path"
 fi
 
+cp "$REPO_ROOT/scripts/pkg-preinstall.sh" "$scripts_root/preinstall"
 cp "$REPO_ROOT/scripts/pkg-postinstall.sh" "$scripts_root/postinstall"
+chmod +x "$scripts_root/preinstall"
 chmod +x "$scripts_root/postinstall"
 
 pkgbuild_cmd=(

@@ -208,6 +208,53 @@ exit 0
   assert.match(openLog, new RegExp(`-gj ${appDir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
 });
 
+test('pkg preinstall removes legacy split apps before installing Goto.app', async () => {
+  const appsRoot = await createTempDir('goto-preinstall-apps-');
+  const fakeBinDir = await createTempDir('goto-preinstall-bin-');
+  const scriptPath = path.join(projectRoot, 'scripts/pkg-preinstall.sh');
+  const menuAppPath = path.join(appsRoot, 'GotoMenuBar.app');
+  const finderAppPath = path.join(appsRoot, 'GotoFinder.app');
+  const extensionPath = path.join(finderAppPath, 'Contents', 'PlugIns', 'GotoFinderSync.appex');
+  const pluginkitPath = path.join(fakeBinDir, 'pluginkit');
+  const pkillPath = path.join(fakeBinDir, 'pkill');
+  const pluginkitLogPath = path.join(fakeBinDir, 'pluginkit.log');
+
+  await fs.mkdir(path.join(menuAppPath, 'Contents', 'MacOS'), { recursive: true });
+  await fs.mkdir(extensionPath, { recursive: true });
+  await writeExecutable(
+    pluginkitPath,
+    `#!/bin/sh
+printf '%s\\n' "$*" >> "${pluginkitLogPath}"
+exit 0
+`
+  );
+  await writeExecutable(
+    pkillPath,
+    `#!/bin/sh
+exit 0
+`
+  );
+
+  const result = await runProcess('sh', [scriptPath], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      GOTO_LEGACY_MENU_APP: menuAppPath,
+      GOTO_LEGACY_FINDER_APP: finderAppPath,
+      GOTO_PLUGINKIT_BIN: pluginkitPath,
+      GOTO_PKILL_BIN: pkillPath,
+    },
+  });
+
+  const pluginkitLog = await fs.readFile(pluginkitLogPath, 'utf8');
+
+  assert.equal(result.code, 0);
+  await assert.rejects(fs.access(menuAppPath));
+  await assert.rejects(fs.access(finderAppPath));
+  assert.match(pluginkitLog, /-e ignore -i dev\.goto\.finder\.findersync/);
+  assert.match(pluginkitLog, /-r .*GotoFinderSync\.appex/);
+});
+
 test('uninstall script removes packaged files and preserves user data by default', async () => {
   const homeDir = await createTempDir('goto-uninstall-home-');
   const installRoot = await createTempDir('goto-uninstall-install-');
@@ -216,6 +263,8 @@ test('uninstall script removes packaged files and preserves user data by default
   const fakeBinDir = await createTempDir('goto-uninstall-fakebin-');
   const scriptPath = path.join(projectRoot, 'scripts/uninstall.sh');
   const appPath = path.join(appsRoot, 'Goto.app');
+  const legacyMenuAppPath = path.join(appsRoot, 'GotoMenuBar.app');
+  const legacyFinderAppPath = path.join(appsRoot, 'GotoFinder.app');
   const extensionPath = path.join(appPath, 'Contents', 'PlugIns', 'GotoFinderSync.appex');
   const installPrefix = path.join(installRoot, 'goto');
   const gotoSymlink = path.join(binRoot, 'goto');
@@ -230,6 +279,8 @@ test('uninstall script removes packaged files and preserves user data by default
 
   await fs.mkdir(path.join(installPrefix, 'scripts'), { recursive: true });
   await fs.mkdir(extensionPath, { recursive: true });
+  await fs.mkdir(path.join(legacyMenuAppPath, 'Contents', 'MacOS'), { recursive: true });
+  await fs.mkdir(path.join(legacyFinderAppPath, 'Contents', 'MacOS'), { recursive: true });
   await fs.writeFile(path.join(installPrefix, 'scripts', 'install-shell.sh'), '#!/bin/sh\n');
   await writeExecutable(path.join(fakeBinDir, 'pluginkit'), `#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"${pluginkitLogPath}\"\n`);
   await writeExecutable(path.join(fakeBinDir, 'pkgutil'), `#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"${pkgutilLogPath}\"\n`);
@@ -259,6 +310,8 @@ test('uninstall script removes packaged files and preserves user data by default
       GOTO_INSTALL_PREFIX: installPrefix,
       GOTO_BIN_PREFIX: binRoot,
       GOTO_APP_PATH: appPath,
+      GOTO_LEGACY_MENU_APP_PATH: legacyMenuAppPath,
+      GOTO_LEGACY_FINDER_APP_PATH: legacyFinderAppPath,
       GOTO_PLUGINKIT_BIN: path.join(fakeBinDir, 'pluginkit'),
       GOTO_PKGUTIL_BIN: path.join(fakeBinDir, 'pkgutil'),
       GOTO_PKILL_BIN: path.join(fakeBinDir, 'pkill'),
@@ -276,6 +329,8 @@ test('uninstall script removes packaged files and preserves user data by default
 
   assert.equal(result.code, 0);
   await assert.rejects(fs.access(appPath));
+  await assert.rejects(fs.access(legacyMenuAppPath));
+  await assert.rejects(fs.access(legacyFinderAppPath));
   await assert.rejects(fs.access(installPrefix));
   await assert.rejects(fs.access(gotoSymlink));
   await assert.rejects(fs.access(installShellSymlink));
@@ -300,10 +355,14 @@ test('uninstall script removes user data with --purge', async () => {
   const fakeBinDir = await createTempDir('goto-uninstall-purge-fakebin-');
   const scriptPath = path.join(projectRoot, 'scripts/uninstall.sh');
   const installPrefix = path.join(installRoot, 'goto');
+  const legacyMenuAppPath = path.join(appsRoot, 'GotoMenuBar.app');
+  const legacyFinderAppPath = path.join(appsRoot, 'GotoFinder.app');
   const registryPath = path.join(homeDir, '.goto');
   const settingsPath = path.join(homeDir, '.goto-settings');
 
   await fs.mkdir(installPrefix, { recursive: true });
+  await fs.mkdir(path.join(legacyMenuAppPath, 'Contents', 'MacOS'), { recursive: true });
+  await fs.mkdir(path.join(legacyFinderAppPath, 'Contents', 'MacOS'), { recursive: true });
   await writeExecutable(path.join(fakeBinDir, 'pluginkit'), '#!/bin/sh\nexit 0\n');
   await writeExecutable(path.join(fakeBinDir, 'pkgutil'), '#!/bin/sh\nexit 0\n');
   await writeExecutable(path.join(fakeBinDir, 'pkill'), '#!/bin/sh\nexit 0\n');
@@ -321,6 +380,8 @@ test('uninstall script removes user data with --purge', async () => {
       GOTO_INSTALL_PREFIX: installPrefix,
       GOTO_BIN_PREFIX: binRoot,
       GOTO_APP_PATH: path.join(appsRoot, 'Goto.app'),
+      GOTO_LEGACY_MENU_APP_PATH: legacyMenuAppPath,
+      GOTO_LEGACY_FINDER_APP_PATH: legacyFinderAppPath,
       GOTO_PLUGINKIT_BIN: path.join(fakeBinDir, 'pluginkit'),
       GOTO_PKGUTIL_BIN: path.join(fakeBinDir, 'pkgutil'),
       GOTO_PKILL_BIN: path.join(fakeBinDir, 'pkill'),
