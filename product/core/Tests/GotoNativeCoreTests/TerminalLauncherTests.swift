@@ -4,12 +4,16 @@ import XCTest
 @testable import GotoNativeCore
 
 final class TerminalLauncherTests: XCTestCase {
-    func testLaunchPassesAppleScriptToExecutorForTerminalApp() throws {
+    func testLaunchUsesOpenDirectlyForTerminalApp() throws {
+        let opener = StubDirectoryOpener(
+            result: AppleScriptExecutionResult(exitCode: 0, stdout: "", stderr: "")
+        )
         let executor = StubAppleScriptExecutor(
             result: AppleScriptExecutionResult(exitCode: 0, stdout: "", stderr: "")
         )
         let launcher = TerminalLauncher(
             executor: executor,
+            directoryOpener: opener,
             detector: FixedTerminalAppDetector(.terminal)
         )
         let request = TerminalLaunchRequest(
@@ -19,9 +23,9 @@ final class TerminalLauncherTests: XCTestCase {
 
         _ = try launcher.launch(request)
 
-        XCTAssertEqual(executor.scripts.count, 1)
-        let builder = TerminalScriptBuilder(terminalApp: .terminal)
-        XCTAssertEqual(executor.scripts[0], builder.appleScript(forDirectory: "/tmp/demo"))
+        XCTAssertTrue(executor.scripts.isEmpty)
+        XCTAssertEqual(opener.calls.count, 1)
+        XCTAssertEqual(opener.calls[0].arguments, ["-a", "Terminal", "/tmp/demo"])
     }
 
     func testLaunchUsesITermAppleScript() throws {
@@ -45,7 +49,7 @@ final class TerminalLauncherTests: XCTestCase {
 
     func testLaunchMapsPermissionDeniedAndFallsBackToOpen() throws {
         let executor = StubAppleScriptExecutor(
-            result: AppleScriptExecutionResult(exitCode: 1, stdout: "", stderr: "Not authorized to send Apple events to Terminal. (-1743)")
+            result: AppleScriptExecutionResult(exitCode: 1, stdout: "", stderr: "Not authorized to send Apple events to iTerm. (-1743)")
         )
         let opener = StubDirectoryOpener(
             result: AppleScriptExecutionResult(exitCode: 0, stdout: "", stderr: "")
@@ -53,7 +57,7 @@ final class TerminalLauncherTests: XCTestCase {
         let launcher = TerminalLauncher(
             executor: executor,
             directoryOpener: opener,
-            detector: FixedTerminalAppDetector(.terminal)
+            detector: FixedTerminalAppDetector(.iterm2)
         )
         let request = TerminalLaunchRequest(
             directory: ValidatedDirectory(path: "/tmp/demo", name: "demo"),
@@ -64,7 +68,7 @@ final class TerminalLauncherTests: XCTestCase {
 
         XCTAssertEqual(opener.calls.count, 1)
         XCTAssertEqual(opener.calls[0].path, "/tmp/demo")
-        XCTAssertEqual(opener.calls[0].arguments, ["-a", "Terminal", "/tmp/demo"])
+        XCTAssertEqual(opener.calls[0].arguments, ["-a", "iTerm2", "/tmp/demo"])
     }
 
     func testLaunchUsesOpenDirectlyForNonAppleScriptTerminals() throws {
@@ -96,7 +100,7 @@ final class TerminalLauncherTests: XCTestCase {
         let launcher = TerminalLauncher(
             executor: executor,
             directoryOpener: nil,
-            detector: FixedTerminalAppDetector(.terminal)
+            detector: FixedTerminalAppDetector(.iterm2)
         )
         let request = TerminalLaunchRequest(
             directory: ValidatedDirectory(path: "/tmp/demo", name: "demo"),
@@ -110,12 +114,12 @@ final class TerminalLauncherTests: XCTestCase {
 
     func testLaunchMapsPermissionDeniedWhenFallbackIsUnavailable() throws {
         let executor = StubAppleScriptExecutor(
-            result: AppleScriptExecutionResult(exitCode: 1, stdout: "", stderr: "Not authorized to send Apple events to Terminal. (-1743)")
+            result: AppleScriptExecutionResult(exitCode: 1, stdout: "", stderr: "Not authorized to send Apple events to iTerm. (-1743)")
         )
         let launcher = TerminalLauncher(
             executor: executor,
             directoryOpener: nil,
-            detector: FixedTerminalAppDetector(.terminal)
+            detector: FixedTerminalAppDetector(.iterm2)
         )
         let request = TerminalLaunchRequest(
             directory: ValidatedDirectory(path: "/tmp/demo", name: "demo"),

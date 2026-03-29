@@ -35,7 +35,7 @@ public enum TerminalApp: String, Equatable, Sendable, CaseIterable, Identifiable
 
     public var supportsAppleScript: Bool {
         switch self {
-        case .terminal, .iterm2: return true
+        case .iterm2: return true
         default: return false
         }
     }
