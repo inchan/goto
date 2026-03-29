@@ -255,6 +255,152 @@ exit 0
   assert.match(pluginkitLog, /-r .*GotoFinderSync\.appex/);
 });
 
+test('install-app script removes legacy GotoFinder.app registrations before installing Goto.app', async () => {
+  const appsRoot = await createTempDir('goto-install-apps-');
+  const fakeBinDir = await createTempDir('goto-install-bin-');
+  const buildRoot = await createTempDir('goto-install-build-');
+  const scriptPath = path.join(projectRoot, 'scripts/install-app.sh');
+  const buildScriptPath = path.join(fakeBinDir, 'build-app.sh');
+  const pluginkitPath = path.join(fakeBinDir, 'pluginkit');
+  const pkillPath = path.join(fakeBinDir, 'pkill');
+  const killallPath = path.join(fakeBinDir, 'killall');
+  const openPath = path.join(fakeBinDir, 'open');
+  const osascriptPath = path.join(fakeBinDir, 'osascript');
+  const sleepPath = path.join(fakeBinDir, 'sleep');
+  const pluginkitLogPath = path.join(fakeBinDir, 'pluginkit.log');
+  const openLogPath = path.join(fakeBinDir, 'open.log');
+  const destinationPath = path.join(appsRoot, 'Goto.app');
+  const legacyAppPath = path.join(appsRoot, 'GotoFinder.app');
+  const builtAppPath = path.join(buildRoot, 'Release', 'Goto.app');
+  const builtExtensionPath = path.join(builtAppPath, 'Contents', 'PlugIns', 'GotoFinderSync.appex');
+  const legacyExtensionPath = path.join(legacyAppPath, 'Contents', 'PlugIns', 'GotoFinderSync.appex');
+  const destinationExtensionPath = path.join(destinationPath, 'Contents', 'PlugIns', 'GotoFinderSync.appex');
+
+  await fs.mkdir(builtExtensionPath, { recursive: true });
+  await fs.mkdir(legacyExtensionPath, { recursive: true });
+  await writeExecutable(
+    buildScriptPath,
+    `#!/bin/sh
+printf '%s\\n' "${builtAppPath}"
+`
+  );
+  await writeExecutable(
+    pluginkitPath,
+    `#!/bin/sh
+printf '%s\\n' "$*" >> "${pluginkitLogPath}"
+if [ "$1" = "-m" ]; then
+  printf '+    dev.goto.finder.findersync(0.0.1)\\tUUID\\tDATE\\t%s\\n' "${legacyExtensionPath}"
+fi
+exit 0
+`
+  );
+  await writeExecutable(pkillPath, '#!/bin/sh\nexit 0\n');
+  await writeExecutable(killallPath, '#!/bin/sh\nexit 0\n');
+  await writeExecutable(
+    openPath,
+    `#!/bin/sh
+printf '%s\\n' "$*" >> "${openLogPath}"
+exit 0
+`
+  );
+  await writeExecutable(osascriptPath, '#!/bin/sh\nexit 0\n');
+  await writeExecutable(sleepPath, '#!/bin/sh\nexit 0\n');
+
+  const result = await runProcess('bash', [scriptPath, destinationPath], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      GOTO_BUILD_APP_SCRIPT: buildScriptPath,
+      GOTO_LEGACY_FINDER_APP: legacyAppPath,
+      GOTO_PLUGINKIT_BIN: pluginkitPath,
+      GOTO_PKILL_BIN: pkillPath,
+      GOTO_KILLALL_BIN: killallPath,
+      GOTO_OPEN_BIN: openPath,
+      GOTO_OSASCRIPT_BIN: osascriptPath,
+      GOTO_SLEEP_BIN: sleepPath,
+    },
+  });
+
+  const pluginkitLog = await fs.readFile(pluginkitLogPath, 'utf8');
+  const openLog = await fs.readFile(openLogPath, 'utf8');
+
+  assert.equal(result.code, 0);
+  assert.equal(result.stdout.trim(), destinationPath);
+  await fs.access(destinationExtensionPath);
+  await assert.rejects(fs.access(legacyAppPath));
+  assert.match(pluginkitLog, /-m -A -D -v -i dev\.goto\.finder\.findersync/);
+  assert.match(pluginkitLog, /-e ignore -i dev\.goto\.finder\.findersync/);
+  assert.match(pluginkitLog, new RegExp(`-r ${legacyExtensionPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+  assert.match(pluginkitLog, new RegExp(`-a ${destinationExtensionPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+  assert.match(pluginkitLog, /-e use -i dev\.goto\.finder\.findersync/);
+  assert.match(pluginkitLog, new RegExp(`-r ${builtExtensionPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+  assert.match(openLog, new RegExp(destinationPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.match(openLog, /x-apple\.systempreferences:com\.apple\.ExtensionsPreferences/);
+});
+
+test('install-app script warns when a legacy app bundle cannot be removed', async () => {
+  const appsRoot = await createTempDir('goto-install-warning-apps-');
+  const fakeBinDir = await createTempDir('goto-install-warning-bin-');
+  const buildRoot = await createTempDir('goto-install-warning-build-');
+  const scriptPath = path.join(projectRoot, 'scripts/install-app.sh');
+  const buildScriptPath = path.join(fakeBinDir, 'build-app.sh');
+  const pluginkitPath = path.join(fakeBinDir, 'pluginkit');
+  const pkillPath = path.join(fakeBinDir, 'pkill');
+  const killallPath = path.join(fakeBinDir, 'killall');
+  const openPath = path.join(fakeBinDir, 'open');
+  const osascriptPath = path.join(fakeBinDir, 'osascript');
+  const sleepPath = path.join(fakeBinDir, 'sleep');
+  const rmPath = path.join(fakeBinDir, 'rm');
+  const destinationPath = path.join(appsRoot, 'Goto.app');
+  const legacyAppPath = path.join(appsRoot, 'GotoFinder.app');
+  const builtAppPath = path.join(buildRoot, 'Release', 'Goto.app');
+  const builtExtensionPath = path.join(builtAppPath, 'Contents', 'PlugIns', 'GotoFinderSync.appex');
+
+  await fs.mkdir(builtExtensionPath, { recursive: true });
+  await fs.mkdir(path.join(legacyAppPath, 'Contents', 'MacOS'), { recursive: true });
+  await writeExecutable(
+    buildScriptPath,
+    `#!/bin/sh
+printf '%s\\n' "${builtAppPath}"
+`
+  );
+  await writeExecutable(pluginkitPath, '#!/bin/sh\nexit 0\n');
+  await writeExecutable(pkillPath, '#!/bin/sh\nexit 0\n');
+  await writeExecutable(killallPath, '#!/bin/sh\nexit 0\n');
+  await writeExecutable(openPath, '#!/bin/sh\nexit 0\n');
+  await writeExecutable(osascriptPath, '#!/bin/sh\nexit 0\n');
+  await writeExecutable(sleepPath, '#!/bin/sh\nexit 0\n');
+  await writeExecutable(
+    rmPath,
+    `#!/bin/sh
+if [ "$3" = "${legacyAppPath}" ]; then
+  exit 1
+fi
+exec /bin/rm "$@"
+`
+  );
+
+  const result = await runProcess('bash', [scriptPath, destinationPath], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      GOTO_BUILD_APP_SCRIPT: buildScriptPath,
+      GOTO_LEGACY_FINDER_APP: legacyAppPath,
+      GOTO_PLUGINKIT_BIN: pluginkitPath,
+      GOTO_PKILL_BIN: pkillPath,
+      GOTO_KILLALL_BIN: killallPath,
+      GOTO_OPEN_BIN: openPath,
+      GOTO_OSASCRIPT_BIN: osascriptPath,
+      GOTO_SLEEP_BIN: sleepPath,
+      GOTO_RM_BIN: rmPath,
+    },
+  });
+
+  assert.equal(result.code, 0);
+  assert.match(result.stderr, new RegExp(`Warning: legacy app still present at ${legacyAppPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+  await fs.access(legacyAppPath);
+});
+
 test('uninstall script removes packaged files and preserves user data by default', async () => {
   const homeDir = await createTempDir('goto-uninstall-home-');
   const installRoot = await createTempDir('goto-uninstall-install-');
