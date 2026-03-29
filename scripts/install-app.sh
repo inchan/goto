@@ -19,6 +19,7 @@ osascript_bin="${GOTO_OSASCRIPT_BIN:-/usr/bin/osascript}"
 sleep_bin="${GOTO_SLEEP_BIN:-/bin/sleep}"
 ditto_bin="${GOTO_DITTO_BIN:-/usr/bin/ditto}"
 rm_bin="${GOTO_RM_BIN:-/bin/rm}"
+mkdir -p -- "$REPO_ROOT/build"
 products_path="$(mktemp -d "$REPO_ROOT/build/install-products.XXXXXX")"
 legacy_apps=(
   "${GOTO_LEGACY_MENU_APP:-$HOME/Applications/GotoMenuBar.app}"
