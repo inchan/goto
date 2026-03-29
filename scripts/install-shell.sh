@@ -22,6 +22,7 @@ SCRIPT_DIR="$(
 REPO_ROOT="$(
   cd -- "$SCRIPT_DIR/.." >/dev/null 2>&1 && pwd -P
 )"
+SOURCE_ROOT="${GOTO_INSTALL_SHELL_SOURCE_ROOT:-$REPO_ROOT}"
 
 TARGET_MODE="auto"
 TARGET_SHELL=""
@@ -73,18 +74,18 @@ install_for_shell() {
   case "$shell_name" in
     zsh)
       rc_file="${ZDOTDIR:-$HOME}/.zshrc"
-      if [[ -f "$REPO_ROOT/product/cli/shell/goto.zsh" ]]; then
-        source_file="$REPO_ROOT/product/cli/shell/goto.zsh"
+      if [[ -f "$SOURCE_ROOT/product/cli/shell/goto.zsh" ]]; then
+        source_file="$SOURCE_ROOT/product/cli/shell/goto.zsh"
       else
-        source_file="$REPO_ROOT/shell/goto.zsh"
+        source_file="$SOURCE_ROOT/shell/goto.zsh"
       fi
       ;;
     bash)
       rc_file="$HOME/.bashrc"
-      if [[ -f "$REPO_ROOT/product/cli/shell/goto.bash" ]]; then
-        source_file="$REPO_ROOT/product/cli/shell/goto.bash"
+      if [[ -f "$SOURCE_ROOT/product/cli/shell/goto.bash" ]]; then
+        source_file="$SOURCE_ROOT/product/cli/shell/goto.bash"
       else
-        source_file="$REPO_ROOT/shell/goto.bash"
+        source_file="$SOURCE_ROOT/shell/goto.bash"
       fi
       ;;
     *)

@@ -1,10 +1,14 @@
 #!/bin/sh
 set -e
 
+SCRIPT_DIR="$(
+  cd -- "$(dirname -- "$0")" >/dev/null 2>&1 && pwd -P
+)"
 FINDER_APP="${GOTO_FINDER_APP:-/Applications/Goto.app}"
 EXTENSION_PATH="$FINDER_APP/Contents/PlugIns/GotoFinderSync.appex"
 EXTENSION_ID="${GOTO_EXTENSION_ID:-dev.goto.finder.findersync}"
-INSTALL_SHELL_BIN="${GOTO_INSTALL_SHELL_BIN:-/usr/local/bin/goto-install-shell}"
+INSTALL_SHELL_BIN="${GOTO_INSTALL_SHELL_BIN:-$SCRIPT_DIR/install-shell-helper.sh}"
+INSTALL_SHELL_SOURCE_ROOT="${GOTO_INSTALL_SHELL_SOURCE_ROOT:-/usr/local/lib/goto}"
 PLUGINKIT_BIN="${GOTO_PLUGINKIT_BIN:-/usr/bin/pluginkit}"
 KILLALL_BIN="${GOTO_KILLALL_BIN:-/usr/bin/killall}"
 OPEN_BIN="${GOTO_OPEN_BIN:-/usr/bin/open}"
@@ -32,7 +36,7 @@ install_shell_integration() {
       ;;
   esac
 
-  "$SU_BIN" -l "$console_user" -c "'$INSTALL_SHELL_BIN'" >/dev/null 2>&1
+  "$SU_BIN" -l "$console_user" -c "GOTO_INSTALL_SHELL_SOURCE_ROOT='$INSTALL_SHELL_SOURCE_ROOT' '$INSTALL_SHELL_BIN'" >/dev/null 2>&1
 }
 
 launch_host_app() {

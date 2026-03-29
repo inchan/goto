@@ -110,6 +110,34 @@ test('install-shell script replaces a stale managed block when the shell source 
   assert.match(contents, new RegExp(`${cliRoot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/shell/goto\\.zsh`));
 });
 
+test('install-shell script can target an installed payload root explicitly', async () => {
+  const homeDir = await createTempDir();
+  const zdotDir = await createTempDir();
+  const stagedRoot = await createTempDir('goto-staged-root-');
+  const rcFile = path.join(zdotDir, '.zshrc');
+  const scriptPath = path.join(projectRoot, 'scripts/install-shell.sh');
+  const stagedShellPath = path.join(stagedRoot, 'shell');
+
+  await fs.mkdir(stagedShellPath, { recursive: true });
+  await fs.writeFile(path.join(stagedShellPath, 'goto.zsh'), '# staged goto zsh\n');
+
+  const result = await runProcess('bash', [scriptPath, '--shell', 'zsh'], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      HOME: homeDir,
+      ZDOTDIR: zdotDir,
+      SHELL: '/bin/zsh',
+      GOTO_INSTALL_SHELL_SOURCE_ROOT: stagedRoot,
+    },
+  });
+
+  const contents = await fs.readFile(rcFile, 'utf8');
+
+  assert.equal(result.code, 0);
+  assert.match(contents, new RegExp(`${path.join(stagedRoot, 'shell', 'goto.zsh').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+});
+
 test('pkg postinstall runs shell integration for the logged-in user and registers Goto.app extension', async () => {
   const homeDir = await createTempDir('goto-postinstall-home-');
   const fakeBinDir = await createTempDir('goto-postinstall-bin-');

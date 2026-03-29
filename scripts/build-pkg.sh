@@ -54,8 +54,10 @@ fi
 
 cp "$REPO_ROOT/scripts/pkg-preinstall.sh" "$scripts_root/preinstall"
 cp "$REPO_ROOT/scripts/pkg-postinstall.sh" "$scripts_root/postinstall"
+cp "$REPO_ROOT/scripts/install-shell.sh" "$scripts_root/install-shell-helper.sh"
 chmod +x "$scripts_root/preinstall"
 chmod +x "$scripts_root/postinstall"
+chmod +x "$scripts_root/install-shell-helper.sh"
 
 pkgbuild_cmd=(
   pkgbuild
