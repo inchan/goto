@@ -80,6 +80,8 @@ extension_path="$destination/Contents/PlugIns/GotoFinderSync.appex"
 "$pluginkit_bin" -e use -i "$extension_id" >/dev/null 2>&1 || true
 "$pluginkit_bin" -r "$build_app/Contents/PlugIns/GotoFinderSync.appex" >/dev/null 2>&1 || true
 
+printf '%s\n' "$destination"
+
 "$killall_bin" Finder >/dev/null 2>&1 || true
 
 "$sleep_bin" 2
@@ -95,5 +97,3 @@ extension_path="$destination/Contents/PlugIns/GotoFinderSync.appex"
 for legacy_app in "${failed_legacy_apps[@]}"; do
   printf 'Warning: legacy app still present at %s\n' "$legacy_app" >&2
 done
-
-printf '%s\n' "$destination"
