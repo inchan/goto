@@ -21,6 +21,7 @@ final class GotoFinderSyncExtension: FIFinderSync {
         // Use real home from environment — homeDirectoryForCurrentUser returns sandbox container
         let home = ProcessInfo.processInfo.environment["HOME"] ?? "/Users"
         controller.directoryURLs = [URL(fileURLWithPath: home, isDirectory: true)]
+        debug("init home=\(home) directoryURLs=\(controller.directoryURLs.map(\.path))")
 
         let center = DistributedNotificationCenter.default()
 
@@ -40,6 +41,7 @@ final class GotoFinderSyncExtension: FIFinderSync {
             .gotoExtensionReady, object: nil, userInfo: nil,
             options: [.deliverImmediately]
         )
+        debug("posted extension ready")
     }
 
     override var toolbarItemName: String { "goto" }
@@ -56,11 +58,13 @@ final class GotoFinderSyncExtension: FIFinderSync {
     override func beginObservingDirectory(at url: URL) {
         observedDirectories.removeAll { $0.path == url.path }
         observedDirectories.append(url)
+        debug("begin observing path=\(url.path) observed=\(observedDirectories.map(\.path))")
         postNotification(.gotoFinderObservedDirectoryBegan, path: url.path)
     }
 
     override func endObservingDirectory(at url: URL) {
         observedDirectories.removeAll { $0.path == url.path }
+        debug("end observing path=\(url.path) observed=\(observedDirectories.map(\.path))")
         postNotification(.gotoFinderObservedDirectoryEnded, path: url.path)
     }
 
@@ -69,6 +73,7 @@ final class GotoFinderSyncExtension: FIFinderSync {
     @objc private func handleProjectListUpdate(_ notification: Notification) {
         guard let encoded = notification.userInfo?[FinderSyncBroadcast.projectsKey] as? String else { return }
         cachedProjectPaths = FinderSyncBroadcast.decodeProjects(encoded)
+        debug("project list update count=\(cachedProjectPaths.count)")
     }
 
     @objc private func handlePreferenceUpdate(_ notification: Notification) {
@@ -78,6 +83,7 @@ final class GotoFinderSyncExtension: FIFinderSync {
         if let enabled = notification.userInfo?[FinderSyncBroadcast.enabledKey] as? Bool {
             cachedEnabled = enabled
         }
+        debug("preference update enabled=\(cachedEnabled) clickMode=\(cachedClickMode.rawValue)")
     }
 
     // MARK: - Toolbar Menu
@@ -86,6 +92,7 @@ final class GotoFinderSyncExtension: FIFinderSync {
         let menu = NSMenu(title: "")
         menuTagToPath = [:]
         nextTag = 1
+        debug("menu requested kind=\(menuKind) enabled=\(cachedEnabled) clickMode=\(cachedClickMode.rawValue) selected=\(selectionDescription())")
 
         guard menuKind == .toolbarItemMenu, cachedEnabled else {
             if !cachedEnabled {
@@ -100,6 +107,7 @@ final class GotoFinderSyncExtension: FIFinderSync {
                 .gotoExtensionReady, object: nil, userInfo: nil,
                 options: [.deliverImmediately]
             )
+            debug("menu requested project refresh")
         }
 
         let clickMode = cachedClickMode
@@ -158,6 +166,7 @@ final class GotoFinderSyncExtension: FIFinderSync {
 
     @objc func menuItemClicked(_ sender: NSMenuItem) {
         guard let path = menuTagToPath[sender.tag] else { return }
+        debug("menu item clicked tag=\(sender.tag) path=\(path)")
         if path == currentFinderFolderSentinel {
             launchCurrentFinderFolder()
         } else {
@@ -172,6 +181,7 @@ final class GotoFinderSyncExtension: FIFinderSync {
         if let prev = lastAutomaticLaunch, prev.path == path,
            now.timeIntervalSince(prev.instant) < 1.0 { return }
         lastAutomaticLaunch = (path, now)
+        debug("posting launch request path=\(path)")
         postNotification(.gotoFinderLaunchRequested, path: path)
     }
 
@@ -180,6 +190,7 @@ final class GotoFinderSyncExtension: FIFinderSync {
         if let prev = lastAutomaticLaunch, prev.path == currentFinderFolderSentinel,
            now.timeIntervalSince(prev.instant) < 1.0 { return }
         lastAutomaticLaunch = (currentFinderFolderSentinel, now)
+        debug("posting launch request currentFinderFolder observed=\(observedDirectories.map(\.path))")
         DistributedNotificationCenter.default().postNotificationName(
             .gotoFinderLaunchRequested, object: nil,
             userInfo: [FinderLaunchNotification.modeKey: FinderLaunchNotification.currentFinderFolderMode],
@@ -190,6 +201,7 @@ final class GotoFinderSyncExtension: FIFinderSync {
     // MARK: - Helpers
 
     private func postNotification(_ name: Notification.Name, path: String) {
+        debug("posting notification name=\(name.rawValue) path=\(path)")
         DistributedNotificationCenter.default().postNotificationName(
             name, object: nil,
             userInfo: [FinderLaunchNotification.pathKey: path],
@@ -209,5 +221,31 @@ final class GotoFinderSyncExtension: FIFinderSync {
             return url
         }
         return nil
+    }
+
+    private func selectionDescription() -> String {
+        let selected = controller.selectedItemURLs()?.map(\.path) ?? []
+        let targeted = controller.targetedURL()?.path ?? "nil"
+        let observed = observedDirectories.map(\.path)
+        return "selected=\(selected) targeted=\(targeted) observed=\(observed)"
+    }
+
+    private static let logURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("goto-findersync.log")
+    private static let dateFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        return formatter
+    }()
+
+    private func debug(_ message: String) {
+        let line = "[\(Self.dateFormatter.string(from: Date()))] \(message)\n"
+        let data = Data(line.utf8)
+
+        if let handle = try? FileHandle(forWritingTo: Self.logURL) {
+            defer { try? handle.close() }
+            _ = try? handle.seekToEnd()
+            try? handle.write(contentsOf: data)
+        } else {
+            try? data.write(to: Self.logURL)
+        }
     }
 }

@@ -78,7 +78,9 @@ final class FinderLaunchBridge {
     }
 
     @objc private func handleLaunchRequest(_ notification: Notification) {
+        debug("launch notification userInfo=\(String(describing: notification.userInfo))")
         guard let request = request(from: notification) else {
+            debug("ignored launch notification with no parseable request")
             return
         }
 
@@ -120,11 +122,13 @@ final class FinderLaunchBridge {
     private func request(from notification: Notification) -> FinderLaunchRequest? {
         if let mode = notification.userInfo?[FinderLaunchNotification.modeKey] as? String,
            mode == FinderLaunchNotification.currentFinderFolderMode {
+            debug("parsed current finder folder request from notification")
             return .currentFinderFolder
         }
 
         if let path = notification.userInfo?[FinderLaunchNotification.pathKey] as? String,
            !path.isEmpty {
+            debug("parsed path request from notification path=\(path)")
             return .path(path)
         }
 

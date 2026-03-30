@@ -100,6 +100,7 @@ public struct TerminalLauncher {
     public func launch(_ request: TerminalLaunchRequest) throws -> AppleScriptExecutionResult {
         let terminalApp = detector.detect()
         let builder = TerminalScriptBuilder(terminalApp: terminalApp)
+        Self.debug("launch start terminal=\(terminalApp.rawValue) supportsAppleScript=\(terminalApp.supportsAppleScript) path=\(request.directoryPath)")
 
         if terminalApp.supportsAppleScript {
             return try launchViaAppleScript(request: request, builder: builder, terminalApp: terminalApp)
@@ -113,12 +114,15 @@ public struct TerminalLauncher {
         builder: TerminalScriptBuilder,
         terminalApp: TerminalApp
     ) throws -> AppleScriptExecutionResult {
+        Self.debug("launch via applescript terminal=\(terminalApp.rawValue) path=\(request.directoryPath)")
         let result = try executor.execute(script: builder.appleScript(forDirectory: request.directoryPath))
+        Self.debug("applescript result terminal=\(terminalApp.rawValue) exit=\(result.exitCode) stdout=\(result.stdout) stderr=\(result.stderr)")
 
         guard result.exitCode == 0 else {
             let error = mapLaunchFailure(result)
 
             if error == .permissionDenied, let directoryOpener {
+                Self.debug("applescript permission denied; falling back to open terminal=\(terminalApp.rawValue)")
                 return try openDirectory(
                     request: request,
                     builder: builder,
@@ -140,6 +144,7 @@ public struct TerminalLauncher {
             throw TerminalLaunchError.terminalUnavailable
         }
 
+        Self.debug("launch via open terminal=\(builder.terminalApp.rawValue) path=\(request.directoryPath)")
         return try openDirectory(
             request: request,
             builder: builder,
@@ -170,7 +175,9 @@ public struct TerminalLauncher {
         directoryOpener: any DirectoryOpening
     ) throws -> AppleScriptExecutionResult {
         let args = builder.openCommand(forDirectory: request.directoryPath)
+        Self.debug("open command terminal=\(builder.terminalApp.rawValue) args=\(args)")
         let result = try directoryOpener.open(directoryPath: request.directoryPath, arguments: args)
+        Self.debug("open result terminal=\(builder.terminalApp.rawValue) exit=\(result.exitCode) stdout=\(result.stdout) stderr=\(result.stderr)")
 
         guard result.exitCode == 0 else {
             let combined = [result.stdout, result.stderr]
@@ -191,3 +198,24 @@ public struct TerminalLauncher {
 }
 
 extension TerminalLauncher: TerminalLaunching {}
+
+private extension TerminalLauncher {
+    static let logURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("goto-launcher.log")
+    static let dateFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        return formatter
+    }()
+
+    static func debug(_ message: String) {
+        let line = "[\(dateFormatter.string(from: Date()))] \(message)\n"
+        let data = Data(line.utf8)
+
+        if let handle = try? FileHandle(forWritingTo: logURL) {
+            defer { try? handle.close() }
+            _ = try? handle.seekToEnd()
+            try? handle.write(contentsOf: data)
+        } else {
+            try? data.write(to: logURL)
+        }
+    }
+}
