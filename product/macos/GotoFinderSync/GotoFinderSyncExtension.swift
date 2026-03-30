@@ -183,6 +183,7 @@ final class GotoFinderSyncExtension: FIFinderSync {
         lastAutomaticLaunch = (path, now)
         debug("posting launch request path=\(path)")
         postNotification(.gotoFinderLaunchRequested, path: path)
+        postProbeNotification()
     }
 
     private func launchCurrentFinderFolder() {
@@ -196,6 +197,7 @@ final class GotoFinderSyncExtension: FIFinderSync {
             userInfo: [FinderLaunchNotification.modeKey: FinderLaunchNotification.currentFinderFolderMode],
             options: [.deliverImmediately]
         )
+        postProbeNotification()
     }
 
     // MARK: - Helpers
@@ -205,6 +207,16 @@ final class GotoFinderSyncExtension: FIFinderSync {
         DistributedNotificationCenter.default().postNotificationName(
             name, object: nil,
             userInfo: [FinderLaunchNotification.pathKey: path],
+            options: [.deliverImmediately]
+        )
+    }
+
+    private func postProbeNotification() {
+        debug("posting probe notification")
+        DistributedNotificationCenter.default().postNotificationName(
+            .gotoFinderLaunchProbe,
+            object: nil,
+            userInfo: nil,
             options: [.deliverImmediately]
         )
     }

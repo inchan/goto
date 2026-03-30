@@ -53,6 +53,14 @@ final class FinderLaunchBridge {
 
         DistributedNotificationCenter.default().addObserver(
             self,
+            selector: #selector(handleLaunchProbe(_:)),
+            name: .gotoFinderLaunchProbe,
+            object: nil,
+            suspensionBehavior: .deliverImmediately
+        )
+
+        DistributedNotificationCenter.default().addObserver(
+            self,
             selector: #selector(handleObservedDirectoryEnded(_:)),
             name: .gotoFinderObservedDirectoryEnded,
             object: nil,
@@ -85,6 +93,10 @@ final class FinderLaunchBridge {
         }
 
         handle(request: request)
+    }
+
+    @objc private func handleLaunchProbe(_ notification: Notification) {
+        debug("launch probe received userInfo=\(String(describing: notification.userInfo))")
     }
 
     private func handle(request: FinderLaunchRequest) {

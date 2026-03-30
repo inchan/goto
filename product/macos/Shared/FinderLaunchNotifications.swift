@@ -55,6 +55,7 @@ enum FinderLaunchURL {
 
 extension Notification.Name {
     static let gotoFinderLaunchRequested = Notification.Name("dev.goto.finder-sync.launch-requested")
+    static let gotoFinderLaunchProbe = Notification.Name("dev.goto.finder-sync.launch-probe")
     static let gotoFinderObservedDirectoryBegan = Notification.Name("dev.goto.finder-sync.observed-directory-began")
     static let gotoFinderObservedDirectoryEnded = Notification.Name("dev.goto.finder-sync.observed-directory-ended")
     static let gotoProjectListUpdated = Notification.Name("dev.goto.project-list-updated")
