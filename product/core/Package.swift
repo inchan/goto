@@ -12,18 +12,10 @@ let package = Package(
             name: "GotoNativeCore",
             targets: ["GotoNativeCore"]
         ),
-        .executable(
-            name: "GotoNativeLaunch",
-            targets: ["GotoNativeLaunch"]
-        ),
     ],
     targets: [
         .target(
             name: "GotoNativeCore"
-        ),
-        .executableTarget(
-            name: "GotoNativeLaunch",
-            dependencies: ["GotoNativeCore"]
         ),
         .testTarget(
             name: "GotoNativeCoreTests",

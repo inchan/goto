@@ -5,8 +5,7 @@ import XCTest
 final class TerminalLaunchRequestTests: XCTestCase {
     func testRequestExposesDirectoryMetadata() {
         let request = TerminalLaunchRequest(
-            directory: ValidatedDirectory(path: "/tmp/demo project", name: "demo project"),
-            surface: .menuBar
+            directory: ValidatedDirectory(path: "/tmp/demo project", name: "demo project")
         )
 
         XCTAssertEqual(request.directoryPath, "/tmp/demo project")

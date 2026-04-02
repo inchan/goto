@@ -2,30 +2,18 @@
 
 ## Goal
 
-Publish a single notarized installer package from GitHub Releases.
+Publish a single installer package from GitHub Releases.
 
 - Artifact: `goto-<version>.pkg`
 - Release trigger: push the matching Git tag (`v<version>` for version `<version>`)
 
-## If you don’t have a paid Apple Developer account
+## Unsigned fallback
 
-You can still use **GitHub Releases**.
+Without a paid Apple Developer account, the workflow publishes an unsigned prerelease instead:
 
-What you **can’t** do without the paid Apple Developer Program is:
-
-- issue **Developer ID** certificates
-- **notarize** the package with Apple
-
-So the practical fallback is:
-
-- publish an **unsigned prerelease** from GitHub
-- artifact name becomes `goto-<version>-unsigned.pkg`
-- users install it manually and approve it in **System Settings → Privacy & Security → Open Anyway**
-
-This is fine for early testers, internal distribution, and pre-release validation.
-It is **not** ideal for broad public distribution.
-
-**Current decision:** stay on the unsigned GitHub prerelease lane for now, and defer the signed/notarized lane until the paid Apple account exists.
+- artifact name: `goto-<version>-unsigned.pkg`
+- GitHub release type: prerelease
+- users approve the package manually in System Settings > Privacy & Security
 
 ## What the workflow does
 
@@ -33,42 +21,32 @@ The GitHub Actions release workflow:
 
 1. checks out the repo
 2. validates that the Git tag matches `product/cli/package.json`
-3. runs JS + Swift verification
-4. decides whether the release is **signed** or **unsigned**
-5. if signing secrets exist, imports Apple signing certificates
-6. builds `Goto.app` via `scripts/build-app.sh`
-7. stages the embedded Finder Sync extension inside `Goto.app`
-8. stages the CLI payload
-9. builds the package
-10. if notarization secrets exist, notarizes and staples the package
-11. uploads the package and checksum to a GitHub Release
+3. runs JS and Swift verification
+4. decides whether the release is signed or unsigned
+5. builds `Goto.app` via `scripts/build-app.sh`
+6. stages the CLI payload
+7. builds the package
+8. if notarization secrets exist, notarizes and staples the package
+9. uploads the package and checksum to a GitHub Release
 
 ## Required GitHub repository secrets
 
-If these secrets are **missing**, the workflow falls back to an **unsigned prerelease** automatically.
-That fallback is now the intended short-term plan.
+If these secrets are missing, the workflow falls back to an unsigned prerelease automatically.
 
 ### Apple signing certificates
 
 - `APPLE_DEVELOPER_ID_APP_CERT_BASE64`
-  - Base64-encoded `.p12` containing the **Developer ID Application** certificate
 - `APPLE_DEVELOPER_ID_APP_CERT_PASSWORD`
-  - Password for that `.p12`
 - `APPLE_DEVELOPER_ID_INSTALLER_CERT_BASE64`
-  - Base64-encoded `.p12` containing the **Developer ID Installer** certificate
 - `APPLE_DEVELOPER_ID_INSTALLER_CERT_PASSWORD`
-  - Password for that `.p12`
 - `APPLE_DEVELOPER_ID_APPLICATION_IDENTITY`
-  - Exact identity name for codesigning apps
 - `APPLE_DEVELOPER_ID_INSTALLER_IDENTITY`
-  - Exact identity name for signing the installer package
 
 ### Apple notarization API key
 
 - `APPLE_API_KEY_ID`
 - `APPLE_API_ISSUER_ID`
 - `APPLE_API_PRIVATE_KEY_BASE64`
-  - Base64-encoded App Store Connect API private key (`.p8`)
 
 ## Versioning rule
 
@@ -79,12 +57,6 @@ For any GitHub release:
 - package version: `<version>`
 - git tag: `v<version>`
 - release title: `goto <version>`
-
-If Apple signing/notarization secrets are missing, the release becomes:
-
-- artifact: `goto-<version>-unsigned.pkg`
-- release title: `goto <version> (unsigned beta)`
-- GitHub release type: **prerelease**
 
 ## How to cut a release
 
@@ -99,9 +71,7 @@ git push origin "v$version"
 ```
 
 4. Wait for `.github/workflows/release.yml` to finish
-5. Verify the GitHub Release contains:
-   - either `goto-<version>.pkg` or `goto-<version>-unsigned.pkg`
-   - the matching `.sha256` file
+5. Verify the GitHub Release contains either `goto-<version>.pkg` or `goto-<version>-unsigned.pkg`
 
 ## Local dry run
 
@@ -118,28 +88,3 @@ GOTO_CODESIGN_IDENTITY="Developer ID Application: ..." \
 GOTO_INSTALLER_IDENTITY="Developer ID Installer: ..." \
 ./scripts/build-pkg.sh
 ```
-
-Then notarize it:
-
-```sh
-APPLE_API_KEY_ID="..." \
-APPLE_API_ISSUER_ID="..." \
-APPLE_API_PRIVATE_KEY_PATH="/path/to/AuthKey_XXXX.p8" \
-./scripts/notarize-pkg.sh "build/goto-$(./scripts/current-version.sh --raw).pkg"
-```
-
-## User-facing note for unsigned releases
-
-For unsigned beta releases, users should expect a Gatekeeper warning on first open/install.
-Apple’s official guidance is that they can approve a trusted app or installer via:
-
-1. attempting to open/install it first
-2. going to **System Settings**
-3. opening **Privacy & Security**
-4. clicking **Open Anyway**
-
-## References
-
-- Apple Support — Safely open apps on your Mac: <https://support.apple.com/en-us/102445>
-- GitHub Actions secrets: <https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets>
-- Apple notarization: <https://developer.apple.com/documentation/security/customizing-the-notarization-workflow>

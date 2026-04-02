@@ -51,13 +51,12 @@ final class MenuBarViewModel: ObservableObject {
 
         do {
             let request = TerminalLaunchRequest(
-                directory: ValidatedDirectory(path: project.path, name: project.name),
-                surface: .menuBar
+                directory: ValidatedDirectory(path: project.path, name: project.name)
             )
             try launcher.launch(request)
             statusMessage = nil
         } catch let error as TerminalLaunchError {
-            let presenter = FinderErrorPresenter()
+            let presenter = TerminalErrorPresenter()
             statusMessage = presenter.present(launchError: error).message
         } catch {
             statusMessage = error.localizedDescription

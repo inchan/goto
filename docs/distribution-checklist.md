@@ -2,55 +2,22 @@
 
 ## Goal
 
-Ship the CLI plus unified `Goto.app` as a **single downloadable artifact** from GitHub Releases with the least engineering churn.
+Ship the CLI plus `Goto.app` as a single downloadable artifact from GitHub Releases with the least engineering churn.
 
 ## Recommendation
 
-Use a **single flat installer package** published on GitHub Releases:
+Use a single flat installer package published on GitHub Releases:
 
 - preferred public-release artifact: `goto-<version>.pkg`
 - fallback free-account artifact: `goto-<version>-unsigned.pkg`
-
-Why this is the best fit for the current repo:
-
-- It satisfies the “one package” requirement better than Homebrew or three separate downloads.
-- The repo already has install/build scripts for all three surfaces, so packaging them together is less disruptive than redesigning the product split.
-- Apple’s notarization workflow explicitly supports **flat installer packages**, alongside ZIP and DMG artifacts.
-- Homebrew is a weaker fit here because upstream formulae should not build `.app` bundles, which pushes a mixed CLI + app distribution toward casks/taps instead of one simple package.
-
-### If we optimize for absolute fastest beta
-
-A notarized **DMG or ZIP with `install.command`** is even easier to ship than a `.pkg`, but it is less polished and less “single package installer” in practice.
-
-### If we don’t have a paid Apple Developer account
-
-Use the same GitHub Release flow, but ship an **unsigned prerelease** package.
-
-- GitHub can still host the artifact.
-- The package can still install.
-- Users will have to approve it manually in **Privacy & Security → Open Anyway**.
-- This is acceptable for beta/testing distribution, not ideal for broad public rollout.
-
-## Decision notes from official docs
-
-- Apple notarization supports **signed app bundles, flat installer packages, and disk images**.
-- Homebrew’s formula guidance says not to make formulae build `.app` bundles.
-
-References:
-- Apple: <https://developer.apple.com/documentation/security/customizing-the-notarization-workflow>
-- Homebrew: <https://docs.brew.sh/Acceptable-Formulae>
 
 ## Current repo state
 
 ### Already in place
 
-- The CLI and unified `Goto.app` are the install targets that matter for distribution.
+- The CLI and `Goto.app` are the install targets that matter for distribution.
 - `product/cli/package.json` is the version source of truth for packaged releases.
-- The CLI, menu bar app, Finder app, and Xcode project now pull version information from that single source.
-- The Finder shipping build now targets **Release**.
-- README naming drift has been corrected to `Goto.app` / `install-app.sh`.
-- `scripts/build-pkg.sh` now builds a single installer package containing CLI + menu bar + Finder.
-- `.github/workflows/release.yml` now defines a GitHub-tag-driven release flow.
+- `scripts/build-pkg.sh` builds a single installer package containing the CLI and `Goto.app`.
 - `docs/github-release.md` documents the GitHub release path and required secrets.
 
 ### Current status
@@ -60,28 +27,15 @@ References:
 | GitHub prerelease lane | Unsigned prerelease path is available when Apple signing secrets are absent | This remains the fallback distribution path |
 | Apple code signing | Deferred until a paid Apple Developer Program account exists | Not required for the current unsigned beta lane |
 | Apple notarization | Deferred until a paid Apple Developer Program account exists | Not required for the current unsigned beta lane |
-| Local macOS tooling | Native verification requires full Xcode (`DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` in this environment) | Command Line Tools alone are insufficient for native build/test packaging steps |
+| Local macOS tooling | Native verification requires full Xcode | Command Line Tools alone are insufficient for native packaging steps |
 
 ## Recommended packaging shape
 
 One `.pkg` installs all of the following:
 
-1. **CLI payload**
-   - Install the current repo-style tree to a stable prefix, for example:
-     - `/usr/local/lib/goto/` or
-     - `/opt/goto/`
-   - Keep `bin/`, `shell/`, and any runtime JS files together so the existing shell wrappers still resolve paths correctly.
-
-2. **Unified native app**
-   - Install `Goto.app` into `/Applications`.
-   - Bundle `GotoFinderSync.appex` inside `Goto.app/Contents/PlugIns/`.
-   - Register the embedded extension in a postinstall step.
-
-4. **Shell setup helper**
-   - Install an easy command such as:
-     - `/usr/local/bin/goto-install-shell`
-   - That helper should call the packaged `install-shell.sh` against the installed prefix.
-   - Prefer this over silently mutating dotfiles from a root installer process.
+1. CLI payload under a stable prefix such as `/usr/local/lib/goto`
+2. `Goto.app` in `/Applications`
+3. shell setup helper commands such as `goto-install-shell` and `goto-uninstall`
 
 ## Distribution checklist
 
@@ -89,16 +43,11 @@ One `.pkg` installs all of the following:
 
 - [x] Confirm the primary artifact is `goto-<version>.pkg` on GitHub Releases
 - [x] Choose the permanent CLI install prefix (`/usr/local/lib/goto`)
-- [x] Keep **Node 20+** as the v1 packaged-distribution prerequisite
-- [ ] Decide whether the installer will:
-  - [ ] only install assets, then ask the user to run shell setup
-  - [x] or also perform shell setup automatically for the current user
-
-**Recommendation:** keep Node 20+ as a documented prerequisite for the first packaged release. It is the lowest-effort path for this developer-focused tool.
+- [x] Keep Node 20+ as the v1 packaged-distribution prerequisite
+- [ ] Decide whether the installer only installs assets or also performs shell setup automatically
 
 ### Phase 1 — Repo hardening before packaging
 
-- [x] Switch Finder shipping build to **Release**
 - [x] Make app versions come from one source of truth
 - [x] Make CLI `--version` come from the same source of truth
 - [x] Update shell installation so it targets the installed package path, not the repository path
@@ -106,83 +55,44 @@ One `.pkg` installs all of the following:
   - [x] `Goto.app`
   - [x] `scripts/install-app.sh`
   - [x] `scripts/uninstall-app.sh`
-- [x] Document packaged-install prerequisites separately from repo-local setup
 
 ### Phase 2 — Build a staged payload
 
-- [x] Add a release staging directory, for example `build/release-root/`
+- [x] Add a release staging directory
 - [x] Stage CLI files into the chosen install prefix inside the staging root
 - [x] Stage `Goto.app` into `/Applications`
 - [x] Stage helper scripts (`goto-install-shell`, `goto-uninstall`)
 - [x] Add a postinstall script that:
-  - [x] registers the Finder Sync extension with `pluginkit`
-  - [x] restarts Finder if needed
-  - [ ] optionally opens Extensions settings
   - [x] runs shell setup automatically for the logged-in user when possible
   - [x] prints a manual shell setup fallback clearly
+  - [x] launches `Goto.app` for the logged-in user when possible
 
-### Phase 3 — Deferred public-release track (signing and notarization)
+### Phase 3 — Deferred public-release track
 
-- [ ] Obtain Apple Developer Program access (Deferred)
-- [ ] Create / configure signing identities (Deferred):
-  - [ ] **Developer ID Application**
-  - [ ] **Developer ID Installer**
-- [ ] Sign `Goto.app` and the embedded Finder Sync extension correctly
+- [ ] Obtain Apple Developer Program access
+- [ ] Create or configure signing identities
+- [ ] Sign `Goto.app`
 - [ ] Build the flat installer package
-- [ ] Sign the `.pkg` with **Developer ID Installer**
+- [ ] Sign the `.pkg`
 - [ ] Submit the `.pkg` with `notarytool`
 - [ ] Staple the notarization ticket to the `.pkg`
-- [ ] Verify with Gatekeeper tooling before release
 
 ### Phase 4 — QA on clean machines
 
 - [ ] Fresh install on a clean macOS user account
-- [ ] Verify CLI shell setup on **zsh**
-- [ ] Verify CLI shell setup on **bash**
+- [ ] Verify CLI shell setup on zsh
+- [ ] Verify CLI shell setup on bash
 - [ ] Verify `goto --version`
 - [ ] Verify menu bar app launch and registry sync
-- [ ] Verify Finder app launch and extension registration
-- [ ] Verify Finder extension enable flow in System Settings
-- [ ] Verify paths with spaces and non-ASCII characters
 - [ ] Verify upgrade from an older local-repo install
-- [ ] Verify upgrade/replacement from legacy `GotoHost.app` installs
 - [ ] Verify uninstall story
 
 ### Phase 5 — Release automation
 
-- [x] Add GitHub Actions release automation that performs:
-  - [ ] version bump / version injection
-  - [x] JS tests
-  - [x] Swift tests
-  - [x] native typecheck
-  - [x] app builds
-  - [x] payload staging
-  - [x] pkg build
-  - [x] notarization
-  - [x] checksum generation
+- [x] Add GitHub Actions release automation for package builds
+- [x] Upload the package and checksum to a GitHub Release
 - [ ] Publish release notes
-- [x] Attach the notarized `.pkg` and checksums to a GitHub Release
-
-## Suggested implementation order
-
-1. **Fix versioning + Release build mode**
-2. **Fix shell integration to support an installed prefix**
-3. **Fix README drift**
-4. **Add staged payload builder**
-5. **Add `.pkg` builder + postinstall**
-6. **Add signing/notarization**
-7. **Add release automation**
 
 ## Explicit recommendation
 
-If the constraint is:
-
-- **one downloadable thing**
-- **all three surfaces together**
-- **lowest overall complexity from today’s repo**
-
-then choose:
-
-> **Current plan: keep shipping `goto-<version>-unsigned.pkg` as a GitHub prerelease. The signed/notarized `goto-<version>.pkg` path is deferred until a paid Apple Developer Program account is available.**
-
-That is the cleanest compromise between “one package” and “least engineering work.”
+Keep shipping `goto-<version>-unsigned.pkg` as a GitHub prerelease until a paid Apple Developer Program account is available.

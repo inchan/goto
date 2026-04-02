@@ -25,16 +25,33 @@ resolve_developer_dir() {
 developer_dir="$(resolve_developer_dir)"
 products_path="${1:-$REPO_ROOT/build/macos-products}"
 intermediates_path="$REPO_ROOT/build/macos-obj"
+module_cache_path="$REPO_ROOT/build/ModuleCache.noindex"
 
 ruby "$SCRIPT_DIR/generate_macos_project.rb"
+mkdir -p "$module_cache_path"
 
-env DEVELOPER_DIR="$developer_dir" \
-  xcodebuild \
-  -project "$REPO_ROOT/product/macos/Goto.xcodeproj" \
-  -target Goto \
-  -configuration Release \
-  SYMROOT="$products_path" \
-  OBJROOT="$intermediates_path" \
-  build
+if [[ -n "${GOTO_DEVELOPMENT_TEAM:-}" ]]; then
+  env DEVELOPER_DIR="$developer_dir" \
+    xcodebuild \
+    -project "$REPO_ROOT/product/macos/Goto.xcodeproj" \
+    -target Goto \
+    -configuration Release \
+    SYMROOT="$products_path" \
+    OBJROOT="$intermediates_path" \
+    CLANG_MODULE_CACHE_PATH="$module_cache_path" \
+    CODE_SIGN_STYLE=Automatic \
+    DEVELOPMENT_TEAM="$GOTO_DEVELOPMENT_TEAM" \
+    build
+else
+  env DEVELOPER_DIR="$developer_dir" \
+    xcodebuild \
+    -project "$REPO_ROOT/product/macos/Goto.xcodeproj" \
+    -target Goto \
+    -configuration Release \
+    SYMROOT="$products_path" \
+    OBJROOT="$intermediates_path" \
+    CLANG_MODULE_CACHE_PATH="$module_cache_path" \
+    build
+fi
 
 printf '%s\n' "$products_path/Release/Goto.app"

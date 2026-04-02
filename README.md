@@ -1,25 +1,24 @@
 # goto
 
-A macOS developer utility for jumping to project directories. One registry, two surfaces: a terminal TUI picker and a unified `Goto.app` that combines the menu bar UI with the Finder toolbar integration host.
+A macOS developer utility for jumping to project directories. One registry, two surfaces: a terminal TUI picker and a menu bar `Goto.app`.
 
 ## Features
 
 - Interactive terminal picker with keyboard navigation and MRU ordering
 - Bulk-register every child directory under a workspace root
-- Unified `Goto.app` with a menu bar project list, settings window, and embedded Finder Sync host
-- Finder Sync toolbar button that opens folders in terminal directly from Finder
+- Menu bar `Goto.app` with a shared project list and settings window
+- Finder toolbar button that opens the current Finder folder in Terminal
 - Auto-detects installed terminal: Terminal, iTerm2, Warp, Ghostty, Alacritty, Kitty
-- Configurable Finder click modes: direct open, project list, or both
 - File-watch on `~/.goto` keeps every surface in sync without polling
-- Zero runtime dependencies (Node side); Xcode-built native app with embedded Finder Sync extension
+- Zero runtime dependencies on the CLI side; native app built with Xcode
 
 ## Setup
 
 Prerequisites:
 
 - Node 20+
-- macOS 13+ (Ventura or later)
-- Xcode (for native builds only)
+- macOS 13+
+- Xcode for native app builds
 
 Install shell integration:
 
@@ -27,31 +26,21 @@ Install shell integration:
 ./scripts/install-shell.sh
 ```
 
-This appends a `source` line to your `~/.zshrc` (or `~/.bashrc`). You can target a specific shell:
-
-```sh
-./scripts/install-shell.sh --shell zsh
-./scripts/install-shell.sh --shell bash
-./scripts/install-shell.sh --all
-```
-
-Reload your shell afterward (`source ~/.zshrc` or `source ~/.bashrc`).
+This appends a `source` line to your `~/.zshrc` or `~/.bashrc`.
 
 ## Packaged Release
 
-GitHub Releases are intended to publish a single installer package: `goto-<version>.pkg`.
+GitHub Releases publish a single installer package: `goto-<version>.pkg`.
 
-For the current packaged release flow:
+Current packaged behavior:
 
-- the packaged CLI still expects **Node 20+** on the target Mac
+- the packaged CLI still expects Node 20+ on the target Mac
 - the installer lays down the CLI payload plus `Goto.app`
 - the installer attempts shell integration automatically for the logged-in user
 - if shell integration is skipped, run `goto-install-shell` manually
-- remove the packaged install later with `sudo goto-uninstall` (`--purge` also deletes `~/.goto` and `~/.goto-settings`)
+- remove the packaged install later with `sudo goto-uninstall` (`--purge` also deletes `~/.goto`)
 
-If Apple signing/notarization secrets are unavailable, the GitHub workflow falls back to an **unsigned prerelease** package: `goto-<version>-unsigned.pkg`.
-Users can still install it, but macOS will require manual approval in **Privacy & Security → Open Anyway**.
-The signed/notarized public-release path is deferred until an Apple Developer Program account is available.
+If Apple signing or notarization secrets are unavailable, the GitHub workflow falls back to an unsigned prerelease package: `goto-<version>-unsigned.pkg`.
 
 See [docs/github-release.md](docs/github-release.md) for the release workflow and required GitHub secrets.
 
@@ -70,16 +59,14 @@ goto --help                  # show usage
 goto --version               # print version
 ```
 
-The picker renders in an alternate screen buffer. Use arrow keys to navigate, Enter to confirm, Esc to cancel. The most recently opened project is promoted to the top of the list.
-
 ## Goto App
 
-`Goto.app` is the native host app. It stays in the menu bar, shows the shared project list, exposes Finder-related settings, and embeds the Finder Sync extension host process.
+`Goto.app` is the native menu bar app. It shows the shared project list, opens projects in the configured terminal, and exposes native settings such as terminal choice and launch-at-login.
 
 Build and run:
 
 ```sh
-./scripts/build-app.sh                # produces build/macos-products/Release/Goto.app
+./scripts/build-app.sh
 open build/macos-products/Release/Goto.app
 ```
 
@@ -89,92 +76,56 @@ Install to `~/Applications` for local development:
 ./scripts/install-app.sh
 ```
 
-This builds `Goto.app`, copies it to `~/Applications/Goto.app`, registers the Finder Sync extension, restarts Finder, and opens the Extensions preference pane so you can verify the extension is enabled.
-
 Uninstall the local app build:
 
 ```sh
 ./scripts/uninstall-app.sh
 ```
 
-### Toolbar customization
-
-After installation, right-click the Finder toolbar and choose "Customize Toolbar...". Drag the **goto** icon (terminal symbol) into your toolbar.
-
-### Click modes
-
-The Finder toolbar button behavior is controlled by the click mode setting in `~/.goto-settings`:
-
-| Mode | Behavior |
-|------|----------|
-| `direct` | Immediately opens the current/selected folder in terminal |
-| `list` | Shows a menu of saved projects to choose from |
-| `directPlusList` | Opens the current folder and also shows the project list (default) |
-
-### IPC
-
-The Finder Sync extension runs in a sandbox and communicates with `Goto.app` via `DistributedNotificationCenter`. The host app broadcasts the project list and preferences to the extension. The extension posts launch requests back to the host, which performs the actual terminal open.
-
 ## Registry
 
-`~/.goto` -- one absolute path per line. Shared by the CLI and `Goto.app`. Safe to edit by hand.
-
-`~/.goto-settings` -- JSON file for native-side preferences. Current shape:
-
-```json
-{
-  "finder": {
-    "clickMode": "directPlusList",
-    "enabled": true
-  }
-}
-```
+`~/.goto` stores one absolute path per line. The CLI and `Goto.app` share it as the single source of truth.
 
 ## Scripts
 
 | Script | Purpose |
 |--------|---------|
-| `install-shell.sh` | Append shell integration to `~/.zshrc` / `~/.bashrc` |
+| `install-shell.sh` | Append shell integration to `~/.zshrc` or `~/.bashrc` |
 | `generate-app-icon.sh` | Generate `product/macos/Resources/Goto.icns` from `product/macos/artwork/` sources |
 | `build-app.sh` | Build `Goto.app` via `xcodebuild` |
-| `build-pkg.sh` | Build a single installer package containing CLI + `Goto.app` |
+| `build-pkg.sh` | Build a single installer package containing CLI plus `Goto.app` |
+| `install-app.sh` | Build `Goto.app` and install it to `~/Applications` |
+| `uninstall-app.sh` | Remove `~/Applications/Goto.app` |
+| `install.sh` | Install the CLI, the app, or both from the repository |
 | `uninstall.sh` | Remove the packaged install from `/Applications` and `/usr/local` |
-| `install-app.sh` | Build `Goto.app`, install to `~/Applications`, register extension |
-| `uninstall-app.sh` | Remove `~/Applications/Goto.app` and unregister extension |
-| `test-app.sh` | Install and smoke-test `Goto.app` |
-| `run-native-launch.sh` | Build and run `GotoNativeLaunch` with a given path |
-| `typecheck-native.sh` | Type-check the Swift package without building |
+| `typecheck-native.sh` | Type-check the Swift package without a full app build |
 | `test-native.sh` | Run Swift package tests |
 | `current-version.sh` | Print the current project version from `product/cli/package.json` |
-| `generate_macos_project.rb` | Generate the `product/macos/Goto.xcodeproj` for the Finder app and extension |
+| `generate_macos_project.rb` | Generate the `product/macos/Goto.xcodeproj` project |
 | `notarize-pkg.sh` | Submit a built package to Apple notarization and staple it |
 
 ## Architecture
 
-```
+```text
 goto/
   product/
     cli/                 CLI app
       bin/goto.js        CLI entry point (Node)
       src/               CLI logic: registry, picker, commands
-      shell/             Shell wrappers (zsh, bash) sourced into the parent shell
+      shell/             Shell wrappers sourced into the parent shell
       test/              Node test suite
-    macos/               Xcode project for Goto + GotoFinderSync extension
+    macos/               Xcode project for Goto.app
       artwork/           Source artwork such as the SVG app icon
-      Goto/              Unified app host (menu bar UI + settings window)
-      FinderBridge/      Finder launch bridge implementation used by the host app
-      GotoFinderSync/    Finder Sync extension (FIFinderSync subclass)
-    core/                Swift package (shared native core + launch helper)
+      Goto/              Menu bar app host and settings window
+      GotoFinderSync/    Finder Sync extension toolbar button
+    core/                Swift package shared by the native app
       Sources/
-        GotoNativeCore/  Shared library: registry, terminal launch, settings, Finder types
-        GotoNativeLaunch/ CLI for Finder-triggered folder handoff
-      Tests/             XCTest suites for shared core logic
-  scripts/               Build, install, and test scripts
+        GotoNativeCore/  Registry, terminal launch, and native helpers
+      Tests/             XCTest suites for shared native logic
+  scripts/               Build, install, and packaging scripts
 ```
 
-The Node CLI and `Goto.app` share `~/.goto` as the single source of truth. `Goto.app` watches both `~/.goto` and `~/.goto-settings` to keep the menu bar UI and Finder Sync extension in sync.
-
-Terminal launches use AppleScript for Terminal.app and iTerm2, and fall back to `open -a` for terminals that do not support AppleScript (Warp, Ghostty, Alacritty, Kitty).
+The CLI and `Goto.app` share `~/.goto`. Terminal launches use AppleScript for Terminal.app and iTerm2, and fall back to `open -a` for terminals that do not support AppleScript.
 
 ## Development
 
@@ -196,7 +147,7 @@ Type-check Swift without a full build:
 ./scripts/typecheck-native.sh
 ```
 
-Build `Goto.app` (requires Xcode):
+Build `Goto.app`:
 
 ```sh
 ./scripts/build-app.sh
@@ -204,8 +155,8 @@ Build `Goto.app` (requires Xcode):
 
 ## Documentation
 
-- [CLAUDE.md](CLAUDE.md) — AI context file (loaded by Claude Code on every session)
-- [docs/distribution-checklist.md](docs/distribution-checklist.md) — distribution packaging checklist and recommended single-package path
+- [AGENTS.md](AGENTS.md) — repository guidance and project context
+- [docs/distribution-checklist.md](docs/distribution-checklist.md) — distribution packaging checklist
 - [docs/github-release.md](docs/github-release.md) — GitHub Actions release flow and required secrets
 - [docs/planning/STRUCTURE.md](docs/planning/STRUCTURE.md) — current `product/` layout summary
 - [docs/adr/](docs/adr/) — Architecture Decision Records

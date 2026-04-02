@@ -10,19 +10,6 @@
   <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
   <key>CFBundleIconFile</key>
   <string>Goto</string>
-  <key>CFBundleURLTypes</key>
-  <array>
-    <dict>
-      <key>CFBundleTypeRole</key>
-      <string>Viewer</string>
-      <key>CFBundleURLName</key>
-      <string>dev.goto.app</string>
-      <key>CFBundleURLSchemes</key>
-      <array>
-        <string>goto-finder</string>
-      </array>
-    </dict>
-  </array>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>

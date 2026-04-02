@@ -1,17 +1,10 @@
 import Foundation
 
-public enum LaunchSurface: String, Equatable, Sendable {
-    case menuBar
-    case finder
-}
-
 public struct TerminalLaunchRequest: Equatable, Sendable {
     public let directory: ValidatedDirectory
-    public let surface: LaunchSurface
 
-    public init(directory: ValidatedDirectory, surface: LaunchSurface) {
+    public init(directory: ValidatedDirectory) {
         self.directory = directory
-        self.surface = surface
     }
 
     public var directoryPath: String {

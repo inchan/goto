@@ -36,17 +36,13 @@
 - [x] **INST-02**: User can enable `goto` in `zsh` by sourcing a documented shell integration snippet
 - [x] **INST-03**: User can enable `goto` in `bash` by sourcing a documented shell integration snippet
 
-### Native macOS Surfaces
+### Native macOS Surface
 
 - [x] **APP-01**: Native macOS surfaces and the shell workflow use the same local project registry without duplicate sources of truth
 - [x] **MB-01**: User can open a menu bar entry point and see the registered projects list without opening a shell first
 - [x] **MB-02**: User can choose a saved project from the menu bar and open it in Terminal
 - [x] **MB-03**: If Terminal is already open, the chosen project opens in the active Terminal context instead of forcing a second disconnected flow
 - [x] **MB-04**: The menu bar surface shows or safely disables missing project paths instead of silently failing
-- [x] **FDR-01**: User can invoke a Finder surface on a selected folder to open that folder in Terminal
-- [x] **FDR-02**: The Finder flow works for normal project paths including spaces and non-ASCII characters
-- [x] **FDR-03**: Invalid or missing Finder selections fail with clear feedback instead of a broken Terminal state
-- [x] **FDR-04**: Finder-triggered launch reuses the same Terminal handoff behavior as the menu bar flow
 
 ### Visual Polish
 
@@ -75,8 +71,6 @@
 | Tags, groups, favorites | Adds metadata and UI surface beyond the minimal cut |
 | Shells beyond `zsh` and `bash` | Expands compatibility work before the core product is proven |
 | Package publishing | Local install is enough for the first release |
-| Alternate terminals beyond Terminal.app | Defer until the default Terminal flow is proven end-to-end |
-| Team-shared launch state or presence sync | Native launcher surfaces still stay local-first in the first cut |
 
 ## Traceability
 
@@ -101,21 +95,16 @@
 | INST-01 | Phase 1 | Done |
 | INST-02 | Phase 3 | Done |
 | INST-03 | Phase 3 | Done |
-| UI-01 | Phase 3 | Done |
-| UI-02 | Phase 3 | Done |
 | APP-01 | Phase 4 | Done |
 | MB-01 | Phase 4 | Done |
 | MB-02 | Phase 4 | Done |
 | MB-03 | Phase 4 | Done |
 | MB-04 | Phase 4 | Done |
-| FDR-01 | Phase 5 | Done |
-| FDR-02 | Phase 5 | Done |
-| FDR-03 | Phase 5 | Done |
-| FDR-04 | Phase 5 | Done |
+| UI-01 | Phase 3 | Done |
+| UI-02 | Phase 3 | Done |
 
 **Coverage:**
-- v1 requirements: 30 total (30 Done)
+- v1 requirements: 26 total (26 Done)
 
 ---
-*Requirements defined: 2026-03-12*
-*Last updated: 2026-03-27 — v1.0 complete, unified `Goto.app` host shipped, repo cleanup planning active*
+*Last updated: 2026-04-01 — Finder integration removed; CLI + menu bar app retained*

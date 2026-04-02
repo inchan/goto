@@ -17,8 +17,7 @@ final class TerminalLauncherTests: XCTestCase {
             detector: FixedTerminalAppDetector(.terminal)
         )
         let request = TerminalLaunchRequest(
-            directory: ValidatedDirectory(path: "/tmp/demo", name: "demo"),
-            surface: .menuBar
+            directory: ValidatedDirectory(path: "/tmp/demo", name: "demo")
         )
 
         _ = try launcher.launch(request)
@@ -37,8 +36,7 @@ final class TerminalLauncherTests: XCTestCase {
             detector: FixedTerminalAppDetector(.iterm2)
         )
         let request = TerminalLaunchRequest(
-            directory: ValidatedDirectory(path: "/tmp/demo", name: "demo"),
-            surface: .menuBar
+            directory: ValidatedDirectory(path: "/tmp/demo", name: "demo")
         )
 
         _ = try launcher.launch(request)
@@ -60,8 +58,7 @@ final class TerminalLauncherTests: XCTestCase {
             detector: FixedTerminalAppDetector(.iterm2)
         )
         let request = TerminalLaunchRequest(
-            directory: ValidatedDirectory(path: "/tmp/demo", name: "demo"),
-            surface: .finder
+            directory: ValidatedDirectory(path: "/tmp/demo", name: "demo")
         )
 
         _ = try launcher.launch(request)
@@ -83,8 +80,7 @@ final class TerminalLauncherTests: XCTestCase {
             detector: FixedTerminalAppDetector(.warp)
         )
         let request = TerminalLaunchRequest(
-            directory: ValidatedDirectory(path: "/tmp/demo", name: "demo"),
-            surface: .menuBar
+            directory: ValidatedDirectory(path: "/tmp/demo", name: "demo")
         )
 
         _ = try launcher.launch(request)
@@ -103,8 +99,7 @@ final class TerminalLauncherTests: XCTestCase {
             detector: FixedTerminalAppDetector(.iterm2)
         )
         let request = TerminalLaunchRequest(
-            directory: ValidatedDirectory(path: "/tmp/demo", name: "demo"),
-            surface: .menuBar
+            directory: ValidatedDirectory(path: "/tmp/demo", name: "demo")
         )
 
         XCTAssertThrowsError(try launcher.launch(request)) { error in
@@ -122,8 +117,7 @@ final class TerminalLauncherTests: XCTestCase {
             detector: FixedTerminalAppDetector(.iterm2)
         )
         let request = TerminalLaunchRequest(
-            directory: ValidatedDirectory(path: "/tmp/demo", name: "demo"),
-            surface: .finder
+            directory: ValidatedDirectory(path: "/tmp/demo", name: "demo")
         )
 
         XCTAssertThrowsError(try launcher.launch(request)) { error in
@@ -140,8 +134,7 @@ final class TerminalLauncherTests: XCTestCase {
             detector: FixedTerminalAppDetector(.ghostty)
         )
         let request = TerminalLaunchRequest(
-            directory: ValidatedDirectory(path: "/tmp/demo", name: "demo"),
-            surface: .menuBar
+            directory: ValidatedDirectory(path: "/tmp/demo", name: "demo")
         )
 
         XCTAssertThrowsError(try launcher.launch(request)) { error in

@@ -6,7 +6,13 @@ public struct ValidatedDirectory: Equatable, Sendable {
 
     public init(path: String, name: String? = nil) {
         self.path = path
-        self.name = name ?? RegistryStore.projectName(for: path)
+
+        if let name, !name.isEmpty {
+            self.name = name
+        } else {
+            let derivedName = URL(fileURLWithPath: path).lastPathComponent
+            self.name = derivedName.isEmpty ? path : derivedName
+        }
     }
 
     public var url: URL {

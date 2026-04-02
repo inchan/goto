@@ -3,7 +3,6 @@ import SwiftUI
 
 @main
 struct GotoApp: App {
-    @NSApplicationDelegateAdaptor(GotoAppDelegate.self) private var appDelegate
     @StateObject private var viewModel = MenuBarViewModel()
 
     var body: some Scene {
@@ -80,17 +79,5 @@ private struct MenuBarContentView: View {
             .buttonStyle(.borderless)
         }
         .padding(12)
-    }
-}
-
-final class GotoAppDelegate: NSObject, NSApplicationDelegate {
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        FinderLaunchBridge.shared.start()
-    }
-
-    func application(_ application: NSApplication, open urls: [URL]) {
-        for url in urls {
-            FinderLaunchBridge.shared.handle(url: url)
-        }
     }
 }

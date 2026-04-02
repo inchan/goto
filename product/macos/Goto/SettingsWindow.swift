@@ -8,10 +8,6 @@ struct SettingsWindow: View {
 
     @State private var installedTerminals: [TerminalApp] = []
     @State private var autoLabel = "Auto"
-    @State private var finderEnabled: Bool = true
-    @State private var finderClickMode: FinderClickMode = .directPlusList
-
-    private let sharedSettings = SharedSettings()
 
     var body: some View {
         Form {
@@ -25,23 +21,6 @@ struct SettingsWindow: View {
                 .onChange(of: terminalRaw) { _ in
                     TerminalPreference(rawValue: terminalRaw).save()
                     viewModel.reloadLauncher()
-                }
-            }
-
-            Section("Finder") {
-                Toggle("Finder toolbar integration", isOn: $finderEnabled)
-                    .onChange(of: finderEnabled) { _ in
-                        saveFinderPreference()
-                    }
-
-                Picker("Click behavior", selection: $finderClickMode) {
-                    ForEach(FinderClickMode.allCases) { mode in
-                        Text(mode.displayName).tag(mode)
-                    }
-                }
-                .disabled(!finderEnabled)
-                .onChange(of: finderClickMode) { _ in
-                    saveFinderPreference()
                 }
             }
 
@@ -65,12 +44,11 @@ struct SettingsWindow: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 420, height: 400)
+        .frame(width: 420, height: 320)
         .onAppear {
             installedTerminals = TerminalApp.installedApps
             autoLabel = "Auto (\(TerminalAppDetector().detect().displayName))"
             syncLaunchAtLoginState()
-            loadFinderPreference()
         }
     }
 
@@ -86,16 +64,5 @@ struct SettingsWindow: View {
 
     private func syncLaunchAtLoginState() {
         launchAtLogin = SMAppService.mainApp.status == .enabled
-    }
-
-    private func loadFinderPreference() {
-        let pref = sharedSettings.loadFinderPreference()
-        finderEnabled = pref.enabled
-        finderClickMode = pref.clickMode
-    }
-
-    private func saveFinderPreference() {
-        let pref = FinderPreference(clickMode: finderClickMode, enabled: finderEnabled)
-        try? sharedSettings.saveFinderPreference(pref)
     }
 }
