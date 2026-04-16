@@ -18,6 +18,7 @@ Use a single flat installer package published on GitHub Releases:
 - The CLI and `Goto.app` are the install targets that matter for distribution.
 - `product/cli/package.json` is the version source of truth for packaged releases.
 - `scripts/build-pkg.sh` builds a single installer package containing the CLI and `Goto.app`.
+- `scripts/package-smoke.sh` verifies the package contains the expected app bundle, CLI payload, shell wrappers, and helper commands.
 - `docs/github-release.md` documents the GitHub release path and required secrets.
 
 ### Current status
@@ -90,6 +91,7 @@ One `.pkg` installs all of the following:
 ### Phase 5 — Release automation
 
 - [x] Add GitHub Actions release automation for package builds
+- [x] Smoke-test package payloads before upload
 - [x] Upload the package and checksum to a GitHub Release
 - [ ] Publish release notes
 

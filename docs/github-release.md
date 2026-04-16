@@ -21,13 +21,14 @@ The GitHub Actions release workflow:
 
 1. checks out the repo
 2. validates that the Git tag matches `product/cli/package.json`
-3. runs JS and Swift verification
+3. runs the standard verification harness (`scripts/verify.sh --standard`)
 4. decides whether the release is signed or unsigned
 5. builds `Goto.app` via `scripts/build-app.sh`
 6. stages the CLI payload
 7. builds the package
-8. if notarization secrets exist, notarizes and staples the package
-9. uploads the package and checksum to a GitHub Release
+8. smoke-tests the package payload with `scripts/package-smoke.sh`
+9. if notarization secrets exist, notarizes and staples the package
+10. uploads the package and checksum to a GitHub Release
 
 ## Required GitHub repository secrets
 

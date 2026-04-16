@@ -2,9 +2,8 @@ name: release
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    tags:
+      - 'v*'
 
 permissions:
   contents: write
@@ -38,6 +37,16 @@ jobs:
           bundle_version="$(./scripts/current-version.sh --bundle)"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "bundle_version=$bundle_version" >> "$GITHUB_OUTPUT"
+
+      - name: Validate tag matches package version
+        shell: bash
+        run: |
+          expected_tag="v${{ steps.version.outputs.version }}"
+          actual_tag="${GITHUB_REF_NAME}"
+          if [[ "$actual_tag" != "$expected_tag" ]]; then
+            printf 'Tag mismatch: expected %s but got %s\n' "$expected_tag" "$actual_tag" >&2
+            exit 1
+          fi
 
       - name: Determine release mode
         id: release_mode
@@ -92,10 +101,7 @@ jobs:
 
       - name: Run verification
         shell: bash
-        run: |
-          node --test product/cli/test/*.test.js
-          swift test --package-path product/core
-          ./scripts/typecheck-native.sh
+        run: ./scripts/verify.sh --standard
 
       - name: Import Apple signing assets
         if: steps.release_mode.outputs.mode == 'signed'
@@ -166,6 +172,10 @@ jobs:
               echo "Users will need to approve installation in macOS Privacy & Security via **Open Anyway**."
             } >> "$GITHUB_STEP_SUMMARY"
           fi
+
+      - name: Smoke package payload
+        shell: bash
+        run: ./scripts/package-smoke.sh "${{ steps.package.outputs.pkg_path }}"
 
       - name: Notarize package
         if: steps.release_mode.outputs.mode == 'signed'

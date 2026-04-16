@@ -30,7 +30,10 @@ Two install surfaces for macOS project jumping:
 
 ```bash
 node --test product/cli/test/*.test.js
-swift test --package-path product/core
+scripts/test-native.sh
+scripts/typecheck-native.sh
+scripts/verify.sh
+scripts/verify.sh --ci
 swift build --package-path product/core -c release
 scripts/build-app.sh
 scripts/install-app.sh

@@ -19,9 +19,12 @@ Supporting areas:
 ```text
 product/
   cli/          # current bin + src + shell + related tests
-  macos/        # Xcode menu bar app
+  macos/        # Xcode app targets and resources
+    Goto/       # menu bar app host and settings window
+    GotoFinderSync/ # Finder toolbar extension
     artwork/    # source artwork for the native app
-  core/         # shared native Swift package
+    Resources/  # app resources such as the icon
+  core/         # shared native Swift package for app + Finder extension
 
 docs/
 scripts/

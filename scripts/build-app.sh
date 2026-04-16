@@ -26,16 +26,20 @@ developer_dir="$(resolve_developer_dir)"
 products_path="${1:-$REPO_ROOT/build/macos-products}"
 intermediates_path="$REPO_ROOT/build/macos-obj"
 module_cache_path="$REPO_ROOT/build/ModuleCache.noindex"
+derived_data_path="$REPO_ROOT/build/DerivedData"
+ruby_bin="${GOTO_RUBY_BIN:-ruby}"
+xcodebuild_bin="${GOTO_XCODEBUILD_BIN:-xcodebuild}"
 
-ruby "$SCRIPT_DIR/generate_macos_project.rb"
-mkdir -p "$module_cache_path"
+"$ruby_bin" "$SCRIPT_DIR/generate_macos_project.rb"
+mkdir -p "$module_cache_path" "$derived_data_path"
 
 if [[ -n "${GOTO_DEVELOPMENT_TEAM:-}" ]]; then
   env DEVELOPER_DIR="$developer_dir" \
-    xcodebuild \
+    "$xcodebuild_bin" \
     -project "$REPO_ROOT/product/macos/Goto.xcodeproj" \
-    -target Goto \
+    -scheme Goto \
     -configuration Release \
+    -derivedDataPath "$derived_data_path" \
     SYMROOT="$products_path" \
     OBJROOT="$intermediates_path" \
     CLANG_MODULE_CACHE_PATH="$module_cache_path" \
@@ -44,10 +48,11 @@ if [[ -n "${GOTO_DEVELOPMENT_TEAM:-}" ]]; then
     build
 else
   env DEVELOPER_DIR="$developer_dir" \
-    xcodebuild \
+    "$xcodebuild_bin" \
     -project "$REPO_ROOT/product/macos/Goto.xcodeproj" \
-    -target Goto \
+    -scheme Goto \
     -configuration Release \
+    -derivedDataPath "$derived_data_path" \
     SYMROOT="$products_path" \
     OBJROOT="$intermediates_path" \
     CLANG_MODULE_CACHE_PATH="$module_cache_path" \

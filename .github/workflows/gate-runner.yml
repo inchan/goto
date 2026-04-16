@@ -31,8 +31,4 @@ jobs:
 
       - name: Run gate checks
         shell: bash
-        run: |
-          node --test product/cli/test/*.test.js
-          swift test --package-path product/core
-          ./scripts/typecheck-native.sh
-          ./scripts/build-app.sh
+        run: ./scripts/verify.sh --ci

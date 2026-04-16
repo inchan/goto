@@ -49,6 +49,10 @@
 - [x] **UI-01**: User sees a restrained, polished terminal UI rather than raw default prompt output
 - [x] **UI-02**: User gets useful empty-state and confirmation copy for first-run, add, and remove flows
 
+## Current Source Note
+
+The current native build also ships a Finder Sync toolbar action that opens the selected Finder folder in Terminal. This is implemented in source today, but it was not part of the original v1 requirement count above, so the traceability table remains focused on the original CLI and menu bar scope.
+
 ## v2 Requirements
 
 ### Search And Metadata
@@ -107,4 +111,4 @@
 - v1 requirements: 26 total (26 Done)
 
 ---
-*Last updated: 2026-04-01 — Finder integration removed; CLI + menu bar app retained*
+*Last updated: 2026-04-04 — Source-aligned: original v1 scope remains CLI + menu bar, while the packaged native build still includes Finder toolbar integration*

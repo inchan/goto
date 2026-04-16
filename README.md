@@ -1,6 +1,6 @@
 # goto
 
-A macOS developer utility for jumping to project directories. One registry, two surfaces: a terminal TUI picker and a menu bar `Goto.app`.
+A macOS developer utility for jumping to project directories. One registry, two primary surfaces: a terminal TUI picker and a menu bar `Goto.app`, plus an embedded Finder toolbar extension.
 
 ## Features
 
@@ -98,6 +98,8 @@ Uninstall the local app build:
 | `uninstall-app.sh` | Remove `~/Applications/Goto.app` |
 | `install.sh` | Install the CLI, the app, or both from the repository |
 | `uninstall.sh` | Remove the packaged install from `/Applications` and `/usr/local` |
+| `verify.sh` | Run the standard local verification harness; `--ci` also builds `Goto.app` |
+| `package-smoke.sh` | Build or inspect a `.pkg` and verify the expected app and CLI payload |
 | `typecheck-native.sh` | Type-check the Swift package without a full app build |
 | `test-native.sh` | Run Swift package tests |
 | `current-version.sh` | Print the current project version from `product/cli/package.json` |
@@ -114,18 +116,18 @@ goto/
       src/               CLI logic: registry, picker, commands
       shell/             Shell wrappers sourced into the parent shell
       test/              Node test suite
-    macos/               Xcode project for Goto.app
+    macos/               Xcode project for Goto.app and Finder Sync
       artwork/           Source artwork such as the SVG app icon
       Goto/              Menu bar app host and settings window
       GotoFinderSync/    Finder Sync extension toolbar button
-    core/                Swift package shared by the native app
+    core/                Swift package shared by the native app and Finder extension
       Sources/
         GotoNativeCore/  Registry, terminal launch, and native helpers
       Tests/             XCTest suites for shared native logic
   scripts/               Build, install, and packaging scripts
 ```
 
-The CLI and `Goto.app` share `~/.goto`. Terminal launches use AppleScript for Terminal.app and iTerm2, and fall back to `open -a` for terminals that do not support AppleScript.
+The CLI and `Goto.app` share `~/.goto`. Terminal launches use AppleScript only for iTerm2; Terminal.app, Warp, Ghostty, Alacritty, and Kitty use `open -a`.
 
 ## Development
 
@@ -138,13 +140,19 @@ node --test product/cli/test/*.test.js
 Run Swift tests:
 
 ```sh
-swift test --package-path product/core
+./scripts/test-native.sh
 ```
 
 Type-check Swift without a full build:
 
 ```sh
 ./scripts/typecheck-native.sh
+```
+
+Run the standard local verification harness:
+
+```sh
+./scripts/verify.sh
 ```
 
 Build `Goto.app`:
@@ -158,5 +166,6 @@ Build `Goto.app`:
 - [AGENTS.md](AGENTS.md) — repository guidance and project context
 - [docs/distribution-checklist.md](docs/distribution-checklist.md) — distribution packaging checklist
 - [docs/github-release.md](docs/github-release.md) — GitHub Actions release flow and required secrets
+- [docs/planning/ROADMAP.md](docs/planning/ROADMAP.md) — completion roadmap and verification plan
 - [docs/planning/STRUCTURE.md](docs/planning/STRUCTURE.md) — current `product/` layout summary
 - [docs/adr/](docs/adr/) — Architecture Decision Records

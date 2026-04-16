@@ -2,7 +2,7 @@
 
 ## What This Is
 
-`goto` started as a minimal terminal utility for jumping into registered project directories from anywhere. The product now expands that core into a broader macOS launcher: the shell workflow remains the foundation, with a native menu bar surface for the same shared project list.
+`goto` started as a minimal terminal utility for jumping into registered project directories from anywhere. The product now expands that core into a broader macOS launcher: the shell workflow remains the foundation, with a native menu bar surface for the same shared project list and a Finder toolbar shortcut for opening the currently selected Finder folder in Terminal.
 
 The primary user is an individual developer optimizing their own local terminal workflow.
 
@@ -21,6 +21,10 @@ From anywhere in macOS, get to the right project directory in one quick, low-fri
 - [x] Project registry persists locally in a simple dotfile-based format.
 - [x] A native macOS menu bar surface can show saved projects and open them in Terminal.
 
+## Current Source Note
+
+The current packaged native build also embeds a Finder Sync toolbar entry point that opens the selected Finder folder in Terminal. That convenience surface exists in source today, but it is not counted as part of the original v1 requirement checklist above.
+
 ## Out of Scope
 
 - Shared team sync of project lists
@@ -30,7 +34,7 @@ From anywhere in macOS, get to the right project directory in one quick, low-fri
 
 ## Context
 
-The user wants a very small amount of code that still feels intentional and polished. The core interaction still starts with a terminal-first picker and a refined presentation, but the product is also expected to offer a native macOS menu bar entry point so the same project list can be reached without first opening a shell.
+The user wants a very small amount of code that still feels intentional and polished. The core interaction still starts with a terminal-first picker and a refined presentation, but the product is also expected to offer native macOS entry points so the same project list or current Finder folder can be reached without first opening a shell.
 
 Because a standalone child process cannot change the caller's current directory, shell integration is part of the actual product, not an implementation detail.
 
@@ -56,4 +60,4 @@ Because a standalone child process cannot change the caller's current directory,
 | Use a native macOS menu bar host | The menu bar surface is platform-native | ✅ Shipped |
 
 ---
-*Last updated: 2026-04-01 — Finder integration removed; CLI + menu bar app retained*
+*Last updated: 2026-04-04 — Source-aligned: CLI + menu bar app remain the primary flows, and the packaged native build still embeds Finder toolbar integration*
