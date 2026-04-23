@@ -15,8 +15,32 @@ open_bin="${GOTO_OPEN_BIN:-/usr/bin/open}"
 mkdir -p -- "$REPO_ROOT/build"
 products_path="$(mktemp -d "$REPO_ROOT/build/install-products.XXXXXX")"
 
+conflict_app_paths=()
+if [[ -n "${GOTO_CONFLICT_APP_PATHS:-}" ]]; then
+  while IFS= read -r path; do
+    [[ -n "$path" ]] && conflict_app_paths+=("$path")
+  done <<< "$GOTO_CONFLICT_APP_PATHS"
+else
+  if [[ "$destination" == "$HOME/Applications/Goto.app" ]]; then
+    conflict_app_paths=("/Applications/Goto.app")
+  elif [[ "$destination" == "/Applications/Goto.app" ]]; then
+    conflict_app_paths=("$HOME/Applications/Goto.app")
+  fi
+fi
+
 cleanup() {
   rm -rf -- "$products_path"
+}
+
+remove_conflicting_installs() {
+  local path
+
+  for path in "${conflict_app_paths[@]-}"; do
+    [[ -n "$path" ]] || continue
+    [[ "$path" == "$destination" ]] && continue
+    pkill -f "$path/Contents/MacOS/Goto" >/dev/null 2>&1 || true
+    rm -rf -- "$path"
+  done
 }
 
 trap cleanup EXIT
@@ -24,6 +48,7 @@ trap cleanup EXIT
 build_app="$($build_app_script "$products_path" | tail -n 1)"
 
 pkill -f "$destination/Contents/MacOS/Goto" >/dev/null 2>&1 || true
+remove_conflicting_installs
 mkdir -p -- "$(dirname -- "$destination")"
 rm -rf -- "$destination"
 "$ditto_bin" "$build_app" "$destination"

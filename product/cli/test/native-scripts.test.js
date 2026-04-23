@@ -144,19 +144,21 @@ test('verify script runs the standard local gates in order', async () => {
   assert.doesNotMatch(calls.join('\n'), /^build-app/m);
 });
 
-test('verify script ci mode adds the app build gate', async () => {
+test('verify script ci mode adds the app build gate and Finder appex check', async () => {
   const fakeBinDir = await createTempDir('goto-verify-ci-bin-');
   const logPath = path.join(fakeBinDir, 'verify.log');
   const nodePath = path.join(fakeBinDir, 'node');
   const typecheckPath = path.join(fakeBinDir, 'typecheck-native.sh');
   const testNativePath = path.join(fakeBinDir, 'test-native.sh');
   const buildAppPath = path.join(fakeBinDir, 'build-app.sh');
+  const checkFinderPath = path.join(fakeBinDir, 'check-finder-appex.sh');
   const scriptPath = path.join(projectRoot, 'scripts/verify.sh');
 
   await writeExecutable(nodePath, appendCommandScript(logPath, 'node'));
   await writeExecutable(typecheckPath, appendCommandScript(logPath, 'typecheck-native'));
   await writeExecutable(testNativePath, appendCommandScript(logPath, 'test-native'));
   await writeExecutable(buildAppPath, appendCommandScript(logPath, 'build-app'));
+  await writeExecutable(checkFinderPath, appendCommandScript(logPath, 'check-finder-appex'));
 
   const result = await runProcess('bash', [scriptPath, '--ci'], {
     cwd: projectRoot,
@@ -166,6 +168,7 @@ test('verify script ci mode adds the app build gate', async () => {
       GOTO_NATIVE_TYPECHECK_SCRIPT: typecheckPath,
       GOTO_NATIVE_TEST_SCRIPT: testNativePath,
       GOTO_BUILD_APP_SCRIPT: buildAppPath,
+      GOTO_FINDER_APPEX_CHECK_SCRIPT: checkFinderPath,
     },
   });
 
@@ -177,6 +180,7 @@ test('verify script ci mode adds the app build gate', async () => {
     'typecheck-native',
     'test-native',
     'build-app',
+    'check-finder-appex',
   ]);
 });
 
@@ -225,6 +229,47 @@ exit 0
   assert.match(xcodebuildLog, /-scheme Goto/);
   assert.match(xcodebuildLog, new RegExp(`-derivedDataPath ${escapeRegExp(derivedDataPath)}`));
   assert.match(xcodebuildLog, new RegExp(`SYMROOT=${escapeRegExp(productsPath)}`));
+});
+
+test('generate_macos_project wires Finder Sync entitlements into the generated project', async () => {
+  const scriptPath = path.join(projectRoot, 'scripts', 'generate_macos_project.rb');
+  const projectPath = path.join(projectRoot, 'product', 'macos', 'Goto.xcodeproj');
+  const projectFilePath = path.join(projectPath, 'project.pbxproj');
+  const originalProject = await fs.readFile(projectFilePath, 'utf8');
+  const inspectScript = `
+require 'json'
+require 'xcodeproj'
+project = Xcodeproj::Project.open(ARGV[0])
+result = {}
+project.targets.each do |target|
+  result[target.name] = target.build_configurations.to_h do |config|
+    [config.name, config.build_settings['CODE_SIGN_ENTITLEMENTS']]
+  end
+end
+puts JSON.generate(result)
+`;
+
+  try {
+    const result = await runProcess('ruby', [scriptPath], {
+      cwd: projectRoot,
+      env: process.env,
+    });
+    assert.equal(result.code, 0);
+
+    const inspection = await runProcess('ruby', ['-e', inspectScript, projectPath], {
+      cwd: projectRoot,
+      env: process.env,
+    });
+    assert.equal(inspection.code, 0);
+
+    const parsed = JSON.parse(inspection.stdout);
+    assert.equal(parsed.GotoFinderSync.Debug, 'GotoFinderSync/GotoFinderSync.entitlements');
+    assert.equal(parsed.GotoFinderSync.Release, 'GotoFinderSync/GotoFinderSync.entitlements');
+    assert.equal(parsed.Goto.Debug ?? null, null);
+    assert.equal(parsed.Goto.Release ?? null, null);
+  } finally {
+    await fs.writeFile(projectFilePath, originalProject);
+  }
 });
 
 test('package-smoke script builds a package and verifies the expected payload', async () => {
@@ -320,6 +365,39 @@ PAYLOAD
 
   assert.equal(result.code, 1);
   assert.match(result.stderr, /missing payload path:/);
+});
+
+test('check-finder-appex script validates built appex entitlements', async () => {
+  const fakeBinDir = await createTempDir('goto-check-finder-bin-');
+  const appRoot = path.join(await createTempDir('goto-check-finder-app-'), 'Goto.app');
+  const appexRoot = path.join(appRoot, 'Contents', 'PlugIns', 'GotoFinderSync.appex');
+  const scriptPath = path.join(projectRoot, 'scripts/check-finder-appex.sh');
+  const codesignPath = path.join(fakeBinDir, 'codesign');
+
+  await fs.mkdir(appexRoot, { recursive: true });
+  await writeExecutable(
+    codesignPath,
+    `#!/bin/sh
+cat <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0"><dict>
+<key>com.apple.security.app-sandbox</key><true/>
+<key>com.apple.security.files.user-selected.read-only</key><true/>
+</dict></plist>
+PLIST
+`
+  );
+
+  const result = await runProcess('bash', [scriptPath, appRoot], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      GOTO_CODESIGN_BIN: codesignPath,
+    },
+  });
+
+  assert.equal(result.code, 0);
+  assert.match(result.stdout, /Finder appex check passed:/);
 });
 
 function appendCommandScript(logPath, name) {

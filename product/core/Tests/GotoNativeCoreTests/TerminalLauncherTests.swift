@@ -89,6 +89,40 @@ final class TerminalLauncherTests: XCTestCase {
         XCTAssertEqual(opener.calls[0].arguments, ["-a", "Warp", "/tmp/demo"])
     }
 
+    func testLaunchUsesSavedTerminalPreferenceWhenNoDetectorIsInjected() throws {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        TerminalPreference.specific(.warp).save(to: defaults)
+        defer {
+            defaults.removePersistentDomain(forName: #function)
+        }
+
+        var capturedPreference: TerminalPreference?
+        let opener = StubDirectoryOpener(
+            result: AppleScriptExecutionResult(exitCode: 0, stdout: "", stderr: "")
+        )
+        let launcher = TerminalLauncher(
+            executor: StubAppleScriptExecutor(
+                result: AppleScriptExecutionResult(exitCode: 0, stdout: "", stderr: "")
+            ),
+            directoryOpener: opener,
+            preferenceDefaults: defaults,
+            detectorFactory: { preference in
+                capturedPreference = preference
+                return FixedTerminalAppDetector(.terminal)
+            }
+        )
+        let request = TerminalLaunchRequest(
+            directory: ValidatedDirectory(path: "/tmp/demo", name: "demo")
+        )
+
+        _ = try launcher.launch(request)
+
+        XCTAssertEqual(capturedPreference, .specific(.warp))
+        XCTAssertEqual(opener.calls.count, 1)
+        XCTAssertEqual(opener.calls[0].arguments, ["-a", "Terminal", "/tmp/demo"])
+    }
+
     func testLaunchMapsGeneralFailures() throws {
         let executor = StubAppleScriptExecutor(
             result: AppleScriptExecutionResult(exitCode: 1, stdout: "", stderr: "execution error: bad script")

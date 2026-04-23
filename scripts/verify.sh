@@ -49,6 +49,7 @@ node_bin="${GOTO_NODE_BIN:-node}"
 native_typecheck_script="${GOTO_NATIVE_TYPECHECK_SCRIPT:-$SCRIPT_DIR/typecheck-native.sh}"
 native_test_script="${GOTO_NATIVE_TEST_SCRIPT:-$SCRIPT_DIR/test-native.sh}"
 build_app_script="${GOTO_BUILD_APP_SCRIPT:-$SCRIPT_DIR/build-app.sh}"
+finder_appex_check_script="${GOTO_FINDER_APPEX_CHECK_SCRIPT:-$SCRIPT_DIR/check-finder-appex.sh}"
 
 printf '==> Node CLI tests\n' >&2
 "$node_bin" --test "$REPO_ROOT"/product/cli/test/*.test.js
@@ -61,5 +62,7 @@ printf '==> Native unit tests\n' >&2
 
 if [[ "$mode" == "ci" ]]; then
   printf '==> Native app build\n' >&2
-  "$build_app_script" >/dev/null
+  built_app="$($build_app_script | tail -n 1)"
+  printf '==> Finder appex entitlements\n' >&2
+  "$finder_appex_check_script" "$built_app"
 fi

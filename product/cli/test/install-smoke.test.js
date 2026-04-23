@@ -198,6 +198,65 @@ exit 0
   assert.match(openLog, new RegExp(`-gj ${appDir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
 });
 
+test('pkg postinstall removes conflicting user-local app installs while keeping the system app target', async () => {
+  const homeDir = await createTempDir('goto-postinstall-clean-home-');
+  const fakeBinDir = await createTempDir('goto-postinstall-clean-bin-');
+  const scriptPath = path.join(projectRoot, 'scripts/pkg-postinstall.sh');
+  const installScriptPath = path.join(projectRoot, 'scripts/install-shell.sh');
+  const statPath = path.join(fakeBinDir, 'stat');
+  const suPath = path.join(fakeBinDir, 'su');
+  const openPath = path.join(fakeBinDir, 'open');
+  const systemAppDir = path.join(await createTempDir('goto-system-app-'), 'Goto.app');
+  const userAppDir = path.join(homeDir, 'Applications', 'Goto.app');
+
+  await fs.mkdir(systemAppDir, { recursive: true });
+  await fs.mkdir(path.join(userAppDir, 'Contents', 'MacOS'), { recursive: true });
+  await fs.writeFile(path.join(userAppDir, 'Contents', 'MacOS', 'Goto'), '#!/bin/sh\n');
+
+  await writeExecutable(statPath, `#!/bin/sh\nprintf '%s\\n' "test-user"\n`);
+  await writeExecutable(
+    suPath,
+    `#!/bin/sh
+user=""
+command=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -l)
+      user="$2"
+      shift 2
+      ;;
+    -c)
+      command="$2"
+      shift 2
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+HOME="${homeDir}" SHELL="/bin/zsh" USER="$user" LOGNAME="$user" /bin/sh -c "$command"
+`
+  );
+  await writeExecutable(openPath, '#!/bin/sh\nexit 0\n');
+
+  const result = await runProcess('sh', [scriptPath], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      GOTO_APP_PATH: systemAppDir,
+      GOTO_INSTALL_SHELL_BIN: installScriptPath,
+      GOTO_OPEN_BIN: openPath,
+      GOTO_STAT_BIN: statPath,
+      GOTO_SU_BIN: suPath,
+      GOTO_CONFLICT_APP_PATHS: `${systemAppDir}\n${userAppDir}`,
+    },
+  });
+
+  assert.equal(result.code, 0);
+  await fs.access(systemAppDir);
+  await assert.rejects(fs.access(userAppDir));
+});
+
 test('install-app script copies the built app bundle to the destination and opens it', async () => {
   const appsRoot = await createTempDir('goto-install-apps-');
   const fakeBinDir = await createTempDir('goto-install-bin-');
@@ -209,11 +268,17 @@ test('install-app script copies the built app bundle to the destination and open
   const destinationPath = path.join(appsRoot, 'Goto.app');
   const builtAppPath = path.join(buildRoot, 'Release', 'Goto.app');
   const builtBinaryDir = path.join(builtAppPath, 'Contents', 'MacOS');
+  const builtPluginDir = path.join(builtAppPath, 'Contents', 'PlugIns', 'GotoFinderSync.appex', 'Contents', 'MacOS');
   const destinationBinaryPath = path.join(destinationPath, 'Contents', 'MacOS', 'Goto');
+  const destinationPluginPath = path.join(destinationPath, 'Contents', 'PlugIns', 'GotoFinderSync.appex');
+  const destinationPluginBinaryPath = path.join(destinationPluginPath, 'Contents', 'MacOS', 'GotoFinderSync');
 
   await fs.mkdir(builtBinaryDir, { recursive: true });
+  await fs.mkdir(builtPluginDir, { recursive: true });
   await fs.writeFile(path.join(builtBinaryDir, 'Goto'), '#!/bin/sh\n');
+  await fs.writeFile(path.join(builtPluginDir, 'GotoFinderSync'), '#!/bin/sh\n');
   await writeExecutable(buildScriptPath, `#!/bin/sh\nprintf '%s\\n' "${builtAppPath}"\n`);
+  await fs.writeFile(openLogPath, '');
   await writeExecutable(
     openPath,
     `#!/bin/sh
@@ -236,5 +301,42 @@ exit 0
   assert.equal(result.code, 0);
   assert.equal(result.stdout.trim(), destinationPath);
   await fs.access(destinationBinaryPath);
+  await fs.access(destinationPluginPath);
+  await fs.access(destinationPluginBinaryPath);
   assert.match(openLog, new RegExp(destinationPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+});
+
+test('install-app script removes conflicting installed app copies while updating the destination', async () => {
+  const fakeBinDir = await createTempDir('goto-install-clean-bin-');
+  const buildRoot = await createTempDir('goto-install-clean-build-');
+  const appsRoot = await createTempDir('goto-install-clean-apps-');
+  const legacyRoot = await createTempDir('goto-install-clean-legacy-');
+  const scriptPath = path.join(projectRoot, 'scripts/install-app.sh');
+  const buildScriptPath = path.join(fakeBinDir, 'build-app.sh');
+  const openPath = path.join(fakeBinDir, 'open');
+  const destinationPath = path.join(appsRoot, 'Goto.app');
+  const conflictingPath = path.join(legacyRoot, 'Goto.app');
+  const builtAppPath = path.join(buildRoot, 'Release', 'Goto.app');
+
+  await fs.mkdir(path.join(builtAppPath, 'Contents', 'MacOS'), { recursive: true });
+  await fs.writeFile(path.join(builtAppPath, 'Contents', 'MacOS', 'Goto'), '#!/bin/sh\n');
+  await fs.mkdir(path.join(conflictingPath, 'Contents', 'MacOS'), { recursive: true });
+  await fs.writeFile(path.join(conflictingPath, 'Contents', 'MacOS', 'Goto'), '#!/bin/sh\n');
+
+  await writeExecutable(buildScriptPath, `#!/bin/sh\nprintf '%s\\n' "${builtAppPath}"\n`);
+  await writeExecutable(openPath, '#!/bin/sh\nexit 0\n');
+
+  const result = await runProcess('bash', [scriptPath, destinationPath], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      GOTO_BUILD_APP_SCRIPT: buildScriptPath,
+      GOTO_OPEN_BIN: openPath,
+      GOTO_CONFLICT_APP_PATHS: `${destinationPath}\n${conflictingPath}`,
+    },
+  });
+
+  assert.equal(result.code, 0);
+  await fs.access(destinationPath);
+  await assert.rejects(fs.access(conflictingPath));
 });
