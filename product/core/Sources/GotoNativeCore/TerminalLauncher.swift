@@ -87,13 +87,17 @@ public struct TerminalLauncher {
     public init(
         executor: AppleScriptExecuting = ProcessAppleScriptExecutor(),
         directoryOpener: (any DirectoryOpening)? = OpenCommandDirectoryOpener(),
-        detector: any TerminalAppDetecting = TerminalAppDetector(
-            preference: TerminalPreference.load()
-        )
+        detector: (any TerminalAppDetecting)? = nil,
+        preferenceDefaults: UserDefaults = .standard,
+        detectorFactory: (TerminalPreference) -> any TerminalAppDetecting = { preference in
+            TerminalAppDetector(preference: preference)
+        }
     ) {
         self.executor = executor
         self.directoryOpener = directoryOpener
-        self.detector = detector
+        self.detector = detector ?? detectorFactory(
+            TerminalPreference.load(from: preferenceDefaults)
+        )
     }
 
     @discardableResult

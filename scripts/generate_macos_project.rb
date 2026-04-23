@@ -103,6 +103,7 @@ finder_sync_target.build_configurations.each do |config|
   config.build_settings["INFOPLIST_FILE"] = "GotoFinderSync/Info.plist"
   config.build_settings["PRODUCT_BUNDLE_IDENTIFIER"] = "dev.goto.app.findersync"
   config.build_settings["PRODUCT_NAME"] = "GotoFinderSync"
+  config.build_settings["CODE_SIGN_ENTITLEMENTS"] = "GotoFinderSync/GotoFinderSync.entitlements"
   config.build_settings["APPLICATION_EXTENSION_API_ONLY"] = "YES"
   config.build_settings["SKIP_INSTALL"] = "YES"
   config.build_settings["ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES"] = "YES"

@@ -3,7 +3,7 @@ import FinderSync
 
 final class GotoFinderSyncExtension: FIFinderSync {
     private let controller = FIFinderSyncController.default()
-    private let launcher = TerminalLauncher(detector: TerminalAppDetector(preference: .auto))
+    private let launcher = TerminalLauncher()
     private let presenter = TerminalErrorPresenter()
     private var launchDebouncer = LaunchDebouncer()
 
