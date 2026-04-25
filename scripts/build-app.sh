@@ -24,6 +24,9 @@ resolve_developer_dir() {
 
 developer_dir="$(resolve_developer_dir)"
 products_path="${1:-$REPO_ROOT/build/macos-products}"
+if [[ "$products_path" != /* ]]; then
+  products_path="$REPO_ROOT/$products_path"
+fi
 intermediates_path="$REPO_ROOT/build/macos-obj"
 module_cache_path="$REPO_ROOT/build/ModuleCache.noindex"
 derived_data_path="$REPO_ROOT/build/DerivedData"

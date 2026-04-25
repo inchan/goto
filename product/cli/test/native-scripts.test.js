@@ -231,6 +231,45 @@ exit 0
   assert.match(xcodebuildLog, new RegExp(`SYMROOT=${escapeRegExp(productsPath)}`));
 });
 
+test('build-app script resolves relative product paths from the repository root', async () => {
+  const fakeBinDir = await createTempDir('goto-build-app-relative-bin-');
+  const rubyLogPath = path.join(fakeBinDir, 'ruby.log');
+  const xcodebuildLogPath = path.join(fakeBinDir, 'xcodebuild.log');
+  const rubyPath = path.join(fakeBinDir, 'ruby');
+  const xcodebuildPath = path.join(fakeBinDir, 'xcodebuild');
+  const scriptPath = path.join(projectRoot, 'scripts/build-app.sh');
+  const relativeProductsPath = 'build/relative-products';
+  const expectedProductsPath = path.join(projectRoot, relativeProductsPath);
+  const developerDir = path.join(fakeBinDir, 'FakeXcode.app/Contents/Developer');
+
+  await writeExecutable(rubyPath, appendCommandScript(rubyLogPath, 'ruby'));
+  await writeExecutable(
+    xcodebuildPath,
+    `#!/bin/sh
+{
+  printf 'ARGS=%s\\n' "$*"
+} > '${xcodebuildLogPath}'
+exit 0
+`
+  );
+
+  const result = await runProcess('bash', [scriptPath, relativeProductsPath], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      DEVELOPER_DIR: developerDir,
+      GOTO_RUBY_BIN: rubyPath,
+      GOTO_XCODEBUILD_BIN: xcodebuildPath,
+    },
+  });
+
+  const xcodebuildLog = await fs.readFile(xcodebuildLogPath, 'utf8');
+
+  assert.equal(result.code, 0);
+  assert.match(result.stdout.trim(), new RegExp(`${escapeRegExp(expectedProductsPath)}/Release/Goto\\.app$`));
+  assert.match(xcodebuildLog, new RegExp(`SYMROOT=${escapeRegExp(expectedProductsPath)}`));
+});
+
 test('generate_macos_project wires Finder Sync entitlements into the generated project', async () => {
   const scriptPath = path.join(projectRoot, 'scripts', 'generate_macos_project.rb');
   const projectPath = path.join(projectRoot, 'product', 'macos', 'Goto.xcodeproj');

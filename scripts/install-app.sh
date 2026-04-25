@@ -12,6 +12,7 @@ destination="${1:-$HOME/Applications/Goto.app}"
 build_app_script="${GOTO_BUILD_APP_SCRIPT:-$SCRIPT_DIR/build-app.sh}"
 ditto_bin="${GOTO_DITTO_BIN:-/usr/bin/ditto}"
 open_bin="${GOTO_OPEN_BIN:-/usr/bin/open}"
+rm_bin="${GOTO_RM_BIN:-rm}"
 mkdir -p -- "$REPO_ROOT/build"
 products_path="$(mktemp -d "$REPO_ROOT/build/install-products.XXXXXX")"
 
@@ -39,7 +40,9 @@ remove_conflicting_installs() {
     [[ -n "$path" ]] || continue
     [[ "$path" == "$destination" ]] && continue
     pkill -f "$path/Contents/MacOS/Goto" >/dev/null 2>&1 || true
-    rm -rf -- "$path"
+    if ! "$rm_bin" -rf -- "$path"; then
+      printf 'warning: could not remove conflicting install: %s\n' "$path" >&2
+    fi
   done
 }
 

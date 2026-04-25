@@ -340,3 +340,51 @@ test('install-app script removes conflicting installed app copies while updating
   await fs.access(destinationPath);
   await assert.rejects(fs.access(conflictingPath));
 });
+
+test('install-app script warns and continues when a conflicting install cannot be removed', async () => {
+  const fakeBinDir = await createTempDir('goto-install-conflict-warning-bin-');
+  const buildRoot = await createTempDir('goto-install-conflict-warning-build-');
+  const appsRoot = await createTempDir('goto-install-conflict-warning-apps-');
+  const legacyRoot = await createTempDir('goto-install-conflict-warning-legacy-');
+  const scriptPath = path.join(projectRoot, 'scripts/install-app.sh');
+  const buildScriptPath = path.join(fakeBinDir, 'build-app.sh');
+  const openPath = path.join(fakeBinDir, 'open');
+  const rmPath = path.join(fakeBinDir, 'rm');
+  const destinationPath = path.join(appsRoot, 'Goto.app');
+  const conflictingPath = path.join(legacyRoot, 'Goto.app');
+  const builtAppPath = path.join(buildRoot, 'Release', 'Goto.app');
+
+  await fs.mkdir(path.join(builtAppPath, 'Contents', 'MacOS'), { recursive: true });
+  await fs.writeFile(path.join(builtAppPath, 'Contents', 'MacOS', 'Goto'), '#!/bin/sh\n');
+  await fs.mkdir(path.join(conflictingPath, 'Contents', 'MacOS'), { recursive: true });
+  await fs.writeFile(path.join(conflictingPath, 'Contents', 'MacOS', 'Goto'), '#!/bin/sh\n');
+
+  await writeExecutable(buildScriptPath, `#!/bin/sh\nprintf '%s\\n' "${builtAppPath}"\n`);
+  await writeExecutable(openPath, '#!/bin/sh\nexit 0\n');
+  await writeExecutable(
+    rmPath,
+    `#!/bin/sh
+case "$*" in
+  *'${conflictingPath}'*) exit 1 ;;
+  *) exec /bin/rm "$@" ;;
+esac
+`
+  );
+
+  const result = await runProcess('bash', [scriptPath, destinationPath], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      GOTO_BUILD_APP_SCRIPT: buildScriptPath,
+      GOTO_OPEN_BIN: openPath,
+      GOTO_RM_BIN: rmPath,
+      GOTO_CONFLICT_APP_PATHS: conflictingPath,
+    },
+  });
+
+  assert.equal(result.code, 0);
+  assert.match(result.stderr, /warning: could not remove conflicting install:/);
+  assert.match(result.stderr, new RegExp(conflictingPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  await fs.access(destinationPath);
+  await fs.access(conflictingPath);
+});
