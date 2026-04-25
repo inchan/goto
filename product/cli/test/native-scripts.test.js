@@ -235,7 +235,13 @@ test('generate_macos_project wires Finder Sync entitlements into the generated p
   const scriptPath = path.join(projectRoot, 'scripts', 'generate_macos_project.rb');
   const projectPath = path.join(projectRoot, 'product', 'macos', 'Goto.xcodeproj');
   const projectFilePath = path.join(projectPath, 'project.pbxproj');
-  const originalProject = await fs.readFile(projectFilePath, 'utf8');
+  const originalProject = await fs.readFile(projectFilePath, 'utf8').catch((error) => {
+    if (error.code === 'ENOENT') {
+      return null;
+    }
+
+    throw error;
+  });
   const inspectScript = `
 require 'json'
 require 'xcodeproj'
@@ -268,7 +274,11 @@ puts JSON.generate(result)
     assert.equal(parsed.Goto.Debug ?? null, null);
     assert.equal(parsed.Goto.Release ?? null, null);
   } finally {
-    await fs.writeFile(projectFilePath, originalProject);
+    if (originalProject === null) {
+      await fs.rm(projectPath, { recursive: true, force: true });
+    } else {
+      await fs.writeFile(projectFilePath, originalProject);
+    }
   }
 });
 
