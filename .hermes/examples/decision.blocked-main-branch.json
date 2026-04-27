@@ -1,0 +1,18 @@
+{
+  "decision_id": "decision-block-main",
+  "run_id": "run-example-commander-dry-run",
+  "selected_action": "no_safe_action",
+  "alternatives_considered": [
+    "modify product code",
+    "create worktree",
+    "observe only"
+  ],
+  "classification": "blocked",
+  "why_now": "Main branch and unresolved harness drift make execution unsafe",
+  "why_not_more": "Autonomy should not outrun safety gates",
+  "stop_condition": "branch_main_blocks_execution",
+  "expected_verification": "check_harness_ready exits non-zero for execute mode",
+  "observation_refs": [
+    "obs-plan-tests-drift"
+  ]
+}

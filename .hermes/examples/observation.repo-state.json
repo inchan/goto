@@ -1,0 +1,10 @@
+{
+  "observation_id": "obs-plan-tests-drift",
+  "source": "snapshot_project",
+  "observed_at": "2026-04-27T22:08:46Z",
+  "fact": ".hermes/plan.json says signals.tests=false while repo contains documented Node and Swift tests",
+  "evidence_path": ".hermes/plan.json",
+  "evidence_excerpt": "\"tests\": false",
+  "confidence": "high",
+  "staleness_risk": "medium"
+}

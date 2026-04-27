@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "title": "Hermes Run Record",
+  "type": "object",
+  "required": [
+    "run_id",
+    "started_at",
+    "actor",
+    "role",
+    "trigger_type",
+    "workdir",
+    "branch",
+    "git_status_summary",
+    "goal",
+    "mode",
+    "outcome",
+    "artifact_paths"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "actor": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string"
+    },
+    "trigger_type": {
+      "enum": [
+        "manual",
+        "cron",
+        "delegated",
+        "dry_run"
+      ]
+    },
+    "workdir": {
+      "type": "string"
+    },
+    "branch": {
+      "type": "string"
+    },
+    "git_status_summary": {
+      "type": "string"
+    },
+    "goal": {
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "observe",
+        "plan",
+        "execute",
+        "verify",
+        "review"
+      ]
+    },
+    "outcome": {
+      "enum": [
+        "completed",
+        "blocked",
+        "no_safe_action",
+        "failed"
+      ]
+    },
+    "artifact_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

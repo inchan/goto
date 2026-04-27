@@ -1,0 +1,12 @@
+{
+  "verification_id": "verify-manual-gate-example",
+  "run_id": "run-example-commander-dry-run",
+  "commands_run": [],
+  "manual_checks": [
+    "Enable Finder Sync extension in macOS Settings",
+    "Confirm Finder toolbar launch manually"
+  ],
+  "result": "blocked",
+  "evidence_excerpt": "Manual Finder extension enablement is required",
+  "residual_risk": "Cannot be completed by autonomous repo-local scripts"
+}
