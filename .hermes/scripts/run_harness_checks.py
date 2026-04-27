@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+import fnmatch
 import json
+import subprocess
 import sys
 from datetime import datetime, timezone
 
@@ -56,6 +58,8 @@ def _lane_report(validation, lane: str | None) -> dict:
             "id": lane,
             "name": None,
             "workflow": None,
+            "allowed_paths": [],
+            "forbidden_paths": [],
             "issues": [{
                 "code": "empty_operating_lane",
                 "severity": "critical",
@@ -69,6 +73,8 @@ def _lane_report(validation, lane: str | None) -> dict:
             "id": lane_id,
             "name": selected.get("name"),
             "workflow": selected.get("workflow"),
+            "allowed_paths": selected.get("allowed_paths", []),
+            "forbidden_paths": selected.get("forbidden_paths", []),
             "issues": [],
         }
     return {
@@ -76,11 +82,80 @@ def _lane_report(validation, lane: str | None) -> dict:
         "id": lane_id,
         "name": None,
         "workflow": None,
+        "allowed_paths": [],
+        "forbidden_paths": [],
         "issues": [{
             "code": "unknown_operating_lane",
             "severity": "critical",
             "message": f"Unknown operating lane {lane_id!r}; allowed lanes are {sorted(lanes)}",
         }],
+    }
+
+
+def _changed_files(repo: Path) -> list[str]:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo), "status", "--porcelain", "--untracked-files=all"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return []
+    if result.returncode != 0:
+        return []
+    files: list[str] = []
+    for line in result.stdout.splitlines():
+        if not line:
+            continue
+        path = line[3:]
+        if " -> " in path:
+            old_path, new_path = path.split(" -> ", 1)
+            files.append(old_path)
+            files.append(new_path)
+        else:
+            files.append(path)
+    return sorted(set(files))
+
+
+def _matches_path(path: str, patterns: list[str]) -> bool:
+    return any(fnmatch.fnmatch(path, pattern) for pattern in patterns)
+
+
+def _boundary_report(repo: Path, lane_selection: dict) -> dict:
+    changed = _changed_files(repo)
+    allowed = lane_selection.get("allowed_paths") or []
+    forbidden = lane_selection.get("forbidden_paths") or []
+    issues = []
+    if lane_selection.get("status") != "selected":
+        return {
+            "status": "not_evaluated",
+            "changed_files": changed,
+            "allowed_paths": allowed,
+            "forbidden_paths": forbidden,
+            "issues": [],
+        }
+    for path in changed:
+        if _matches_path(path, forbidden):
+            issues.append({
+                "code": "lane_path_forbidden",
+                "severity": "critical",
+                "path": path,
+                "message": f"{path} is forbidden for lane {lane_selection.get('id')}",
+            })
+        elif allowed and not _matches_path(path, allowed):
+            issues.append({
+                "code": "lane_path_not_allowed",
+                "severity": "critical",
+                "path": path,
+                "message": f"{path} is outside allowed paths for lane {lane_selection.get('id')}",
+            })
+    return {
+        "status": "blocked" if issues else "pass",
+        "changed_files": changed,
+        "allowed_paths": allowed,
+        "forbidden_paths": forbidden,
+        "issues": issues,
     }
 
 
@@ -93,6 +168,7 @@ def run_harness_checks(repo: Path | str = Path("."), action_description: str | N
     execute = evaluate_readiness(repo, mode="execute")
     preflight = classify_action(action_description or "observe harness status")
     lane_selection = _lane_report(validation, lane)
+    lane_selection["boundary"] = _boundary_report(repo, lane_selection)
 
     validate_status = "pass" if validation.ok else "fail"
     drift_status = "pass" if drift.get("summary", {}).get("critical", 0) == 0 else "fail"
@@ -147,6 +223,8 @@ def aggregate_exit_code(report: dict, require: str = "observe") -> int:
         return 20
     if report.get("lane", {}).get("status") == "invalid":
         return 20
+    if report.get("lane", {}).get("boundary", {}).get("status") == "blocked":
+        return 10
     if report["steps"]["validate_harness"]["status"] == "fail":
         return 20
     if report["steps"]["drift_report"]["status"] == "fail":

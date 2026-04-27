@@ -65,6 +65,9 @@ class HarnessTests(unittest.TestCase):
             self.assertEqual(expected_workflows[lane["id"]], lane["workflow"])
             workflow_path = self.repo / ".hermes" / lane["workflow"]
             self.assertTrue(workflow_path.exists(), lane["workflow"])
+            self.assertIsInstance(lane.get("allowed_paths"), list, lane["id"])
+            self.assertIsInstance(lane.get("forbidden_paths"), list, lane["id"])
+            self.assertTrue(lane["allowed_paths"], lane["id"])
 
     def test_snapshot_detects_tests_in_live_repo(self):
         from scripts.snapshot_project import build_snapshot
@@ -248,6 +251,49 @@ class HarnessTests(unittest.TestCase):
         self.assertEqual("project_drift", report["lane"]["id"])
         self.assertEqual("workflows/project-drift.md", report["lane"]["workflow"])
         self.assertEqual("project_drift", report["summary"]["lane"])
+
+    def test_lane_boundaries_block_self_improvement_product_changes(self):
+        from scripts.run_harness_checks import aggregate_exit_code, run_harness_checks
+
+        temp, repo = self._temp_repo_with_valid_harness(git=True, branch="hermes/test")
+        with temp:
+            product_file = repo / "product" / "cli" / "src" / "index.js"
+            product_file.parent.mkdir(parents=True)
+            product_file.write_text("export const changed = true;\n")
+            report = run_harness_checks(repo, lane="self_improvement")
+
+        boundary = report["lane"]["boundary"]
+        self.assertEqual("blocked", boundary["status"])
+        self.assertIn("product/cli/src/index.js", boundary["changed_files"])
+        self.assertEqual("lane_path_forbidden", boundary["issues"][0]["code"])
+        self.assertEqual(10, aggregate_exit_code(report, require="observe"))
+
+    def test_lane_boundaries_include_rename_sources_and_destinations(self):
+        from scripts.run_harness_checks import aggregate_exit_code, run_harness_checks
+
+        temp, repo = self._temp_repo_with_valid_harness(git=True, branch="hermes/test")
+        with temp:
+            product_file = repo / "product" / "cli" / "src" / "index.js"
+            product_file.parent.mkdir(parents=True)
+            product_file.write_text("export const changed = false;\n")
+            subprocess.run(["git", "add", "."], cwd=repo, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(["git", "commit", "-m", "add product file"], cwd=repo, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            destination = repo / ".hermes" / "moved-index.js"
+            subprocess.run(
+                ["git", "mv", "product/cli/src/index.js", str(destination.relative_to(repo))],
+                cwd=repo,
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            report = run_harness_checks(repo, lane="self_improvement")
+
+        boundary = report["lane"]["boundary"]
+        self.assertEqual("blocked", boundary["status"])
+        self.assertIn("product/cli/src/index.js", boundary["changed_files"])
+        self.assertIn(".hermes/moved-index.js", boundary["changed_files"])
+        self.assertEqual("lane_path_forbidden", boundary["issues"][0]["code"])
+        self.assertEqual(10, aggregate_exit_code(report, require="observe"))
 
     def test_invalid_lane_blocks_aggregate_report(self):
         from scripts.run_harness_checks import aggregate_exit_code, run_harness_checks
