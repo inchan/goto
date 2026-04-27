@@ -15,8 +15,8 @@ Usage: scripts/verify.sh [--standard|--ci|--help]
 Runs the local verification harness.
 
 Modes:
-  --standard  Node tests, native typecheck, and native Swift tests (default)
-  --ci        Standard checks plus a release app build
+  --standard  Node tests, native typecheck/tests, and Hermes observe harness (default)
+  --ci        Standard checks plus a release app build and Finder appex validation
   --help      Show this help
 USAGE
 }
@@ -50,6 +50,7 @@ native_typecheck_script="${GOTO_NATIVE_TYPECHECK_SCRIPT:-$SCRIPT_DIR/typecheck-n
 native_test_script="${GOTO_NATIVE_TEST_SCRIPT:-$SCRIPT_DIR/test-native.sh}"
 build_app_script="${GOTO_BUILD_APP_SCRIPT:-$SCRIPT_DIR/build-app.sh}"
 finder_appex_check_script="${GOTO_FINDER_APPEX_CHECK_SCRIPT:-$SCRIPT_DIR/check-finder-appex.sh}"
+hermes_harness_script="${GOTO_HERMES_HARNESS_SCRIPT:-$REPO_ROOT/.hermes/scripts/run_harness_checks.py}"
 
 printf '==> Node CLI tests\n' >&2
 "$node_bin" --test "$REPO_ROOT"/product/cli/test/*.test.js
@@ -59,6 +60,9 @@ printf '==> Native typecheck\n' >&2
 
 printf '==> Native unit tests\n' >&2
 "$native_test_script"
+
+printf '==> Hermes harness checks\n' >&2
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$REPO_ROOT/.hermes" "$hermes_harness_script" --require-observe --action "verify repository gates" "$REPO_ROOT"
 
 if [[ "$mode" == "ci" ]]; then
   printf '==> Native app build\n' >&2

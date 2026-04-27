@@ -113,12 +113,14 @@ test('verify script runs the standard local gates in order', async () => {
   const nodePath = path.join(fakeBinDir, 'node');
   const typecheckPath = path.join(fakeBinDir, 'typecheck-native.sh');
   const testNativePath = path.join(fakeBinDir, 'test-native.sh');
+  const harnessPath = path.join(fakeBinDir, 'run-harness-checks.py');
   const buildAppPath = path.join(fakeBinDir, 'build-app.sh');
   const scriptPath = path.join(projectRoot, 'scripts/verify.sh');
 
   await writeExecutable(nodePath, appendCommandScript(logPath, 'node'));
   await writeExecutable(typecheckPath, appendCommandScript(logPath, 'typecheck-native'));
   await writeExecutable(testNativePath, appendCommandScript(logPath, 'test-native'));
+  await writeExecutable(harnessPath, appendCommandScript(logPath, 'harness'));
   await writeExecutable(buildAppPath, appendCommandScript(logPath, 'build-app'));
 
   const result = await runProcess('bash', [scriptPath], {
@@ -128,6 +130,7 @@ test('verify script runs the standard local gates in order', async () => {
       GOTO_NODE_BIN: nodePath,
       GOTO_NATIVE_TYPECHECK_SCRIPT: typecheckPath,
       GOTO_NATIVE_TEST_SCRIPT: testNativePath,
+      GOTO_HERMES_HARNESS_SCRIPT: harnessPath,
       GOTO_BUILD_APP_SCRIPT: buildAppPath,
     },
   });
@@ -139,8 +142,10 @@ test('verify script runs the standard local gates in order', async () => {
     'node',
     'typecheck-native',
     'test-native',
+    'harness',
   ]);
   assert.match(calls[0], /--test/);
+  assert.match(calls[3], /--require-observe/);
   assert.doesNotMatch(calls.join('\n'), /^build-app/m);
 });
 
@@ -150,6 +155,7 @@ test('verify script ci mode adds the app build gate and Finder appex check', asy
   const nodePath = path.join(fakeBinDir, 'node');
   const typecheckPath = path.join(fakeBinDir, 'typecheck-native.sh');
   const testNativePath = path.join(fakeBinDir, 'test-native.sh');
+  const harnessPath = path.join(fakeBinDir, 'run-harness-checks.py');
   const buildAppPath = path.join(fakeBinDir, 'build-app.sh');
   const checkFinderPath = path.join(fakeBinDir, 'check-finder-appex.sh');
   const scriptPath = path.join(projectRoot, 'scripts/verify.sh');
@@ -157,6 +163,7 @@ test('verify script ci mode adds the app build gate and Finder appex check', asy
   await writeExecutable(nodePath, appendCommandScript(logPath, 'node'));
   await writeExecutable(typecheckPath, appendCommandScript(logPath, 'typecheck-native'));
   await writeExecutable(testNativePath, appendCommandScript(logPath, 'test-native'));
+  await writeExecutable(harnessPath, appendCommandScript(logPath, 'harness'));
   await writeExecutable(buildAppPath, appendCommandScript(logPath, 'build-app'));
   await writeExecutable(checkFinderPath, appendCommandScript(logPath, 'check-finder-appex'));
 
@@ -167,6 +174,7 @@ test('verify script ci mode adds the app build gate and Finder appex check', asy
       GOTO_NODE_BIN: nodePath,
       GOTO_NATIVE_TYPECHECK_SCRIPT: typecheckPath,
       GOTO_NATIVE_TEST_SCRIPT: testNativePath,
+      GOTO_HERMES_HARNESS_SCRIPT: harnessPath,
       GOTO_BUILD_APP_SCRIPT: buildAppPath,
       GOTO_FINDER_APPEX_CHECK_SCRIPT: checkFinderPath,
     },
@@ -179,9 +187,11 @@ test('verify script ci mode adds the app build gate and Finder appex check', asy
     'node',
     'typecheck-native',
     'test-native',
+    'harness',
     'build-app',
     'check-finder-appex',
   ]);
+  assert.match(calls[3], /--require-observe/);
 });
 
 test('build-app script keeps Xcode build outputs inside the repository', async () => {
