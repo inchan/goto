@@ -172,6 +172,16 @@ class HarnessTests(unittest.TestCase):
         self.assertFalse(result["requires_manual_gate"])
         self.assertIn("project-local .hermes", result["matched_terms"])
 
+    def test_preflight_prefers_repo_write_for_modify_scripts_even_when_check_term_present(self):
+        from scripts.check_harness_ready import classify_action
+
+        result = classify_action("modify scripts/verify.sh to run .hermes harness checks")
+
+        self.assertEqual("repo_write", result["classification"])
+        self.assertFalse(result["allowed_in_observe"])
+        self.assertTrue(result["allowed_in_execute"])
+        self.assertIn("modify scripts/", result["matched_terms"])
+
     def test_preflight_blocks_user_or_system_side_effects(self):
         from scripts.check_harness_ready import classify_action
 
