@@ -44,7 +44,47 @@ def _safe_next_action(execute_status: str, preflight: dict) -> str:
     return "execute_allowed_by_harness"
 
 
-def run_harness_checks(repo: Path | str = Path("."), action_description: str | None = None) -> dict:
+def _lane_report(validation, lane: str | None) -> dict:
+    if lane is None:
+        lane_id = "operations"
+    else:
+        lane_id = lane.strip()
+    lanes = {item.get("id"): item for item in validation.operating_lanes if isinstance(item, dict)}
+    if not lane_id:
+        return {
+            "status": "invalid",
+            "id": lane,
+            "name": None,
+            "workflow": None,
+            "issues": [{
+                "code": "empty_operating_lane",
+                "severity": "critical",
+                "message": "Operating lane must be a non-empty lane id",
+            }],
+        }
+    selected = lanes.get(lane_id)
+    if selected:
+        return {
+            "status": "selected",
+            "id": lane_id,
+            "name": selected.get("name"),
+            "workflow": selected.get("workflow"),
+            "issues": [],
+        }
+    return {
+        "status": "invalid",
+        "id": lane_id,
+        "name": None,
+        "workflow": None,
+        "issues": [{
+            "code": "unknown_operating_lane",
+            "severity": "critical",
+            "message": f"Unknown operating lane {lane_id!r}; allowed lanes are {sorted(lanes)}",
+        }],
+    }
+
+
+def run_harness_checks(repo: Path | str = Path("."), action_description: str | None = None, lane: str | None = None) -> dict:
     repo = Path(repo).resolve()
     validation = validate_harness(repo / ".hermes")
     snapshot = build_snapshot(repo)
@@ -52,6 +92,7 @@ def run_harness_checks(repo: Path | str = Path("."), action_description: str | N
     observe = evaluate_readiness(repo, mode="observe")
     execute = evaluate_readiness(repo, mode="execute")
     preflight = classify_action(action_description or "observe harness status")
+    lane_selection = _lane_report(validation, lane)
 
     validate_status = "pass" if validation.ok else "fail"
     drift_status = "pass" if drift.get("summary", {}).get("critical", 0) == 0 else "fail"
@@ -91,16 +132,20 @@ def run_harness_checks(repo: Path | str = Path("."), action_description: str | N
                 "issues": execute.issues,
             },
         },
+        "lane": lane_selection,
         "preflight": preflight,
         "summary": {
             "operating_state": _operating_state(observe_status, execute_status),
             "safe_next_action": _safe_next_action(execute_status, preflight),
+            "lane": lane_selection.get("id"),
         },
     }
 
 
 def aggregate_exit_code(report: dict, require: str = "observe") -> int:
     if require not in {"observe", "execute"}:
+        return 20
+    if report.get("lane", {}).get("status") == "invalid":
         return 20
     if report["steps"]["validate_harness"]["status"] == "fail":
         return 20
@@ -123,6 +168,7 @@ def main(argv: list[str] | None = None) -> int:
     argv = argv or sys.argv[1:]
     require = "observe"
     action_description = None
+    lane = None
     paths = []
     index = 0
     while index < len(argv):
@@ -137,16 +183,23 @@ def main(argv: list[str] | None = None) -> int:
                 return 20
             action_description = argv[index + 1]
             index += 1
+        elif arg == "--lane":
+            if index + 1 >= len(argv):
+                print("ERROR --lane requires an operating lane id", file=sys.stderr)
+                return 20
+            lane = argv[index + 1]
+            index += 1
         else:
             paths.append(arg)
         index += 1
     repo = Path(paths[0]) if paths else Path(".")
-    report = run_harness_checks(repo, action_description=action_description)
+    report = run_harness_checks(repo, action_description=action_description, lane=lane)
     out = repo / ".hermes" / "derived" / "harness-check-report.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2) + "\n")
     print(str(out))
     print(f"operating_state={report['summary']['operating_state']}")
+    print(f"lane={report['summary']['lane']} status={report['lane']['status']}")
     observe = report["readiness"]["observe"]
     execute = report["readiness"]["execute"]
     print(f"observe={observe['status']} exit_code={observe['exit_code']}")

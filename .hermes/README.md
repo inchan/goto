@@ -22,13 +22,14 @@ Recommended roles: research, planner, implementer, verifier, reviewer
 Use the aggregate check first. It is the safest current entry point because it runs validation, snapshot, drift, and readiness together without enabling execution:
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.hermes python3 .hermes/scripts/run_harness_checks.py --require-observe
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.hermes python3 .hermes/scripts/run_harness_checks.py --require-observe --lane operations
 ```
 
 Expected state on `main`:
 
 ```text
 operating_state=stable_observe_only
+lane=operations status=selected
 observe=pass exit_code=0
 execute=blocked exit_code=10
 require=observe
@@ -37,7 +38,7 @@ require=observe
 Use the stricter form when a caller must prove execution readiness:
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.hermes python3 .hermes/scripts/run_harness_checks.py --require-execute
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.hermes python3 .hermes/scripts/run_harness_checks.py --require-execute --lane operations
 ```
 
 Expected state on `main`: same report, but the command exits non-zero because execution is blocked.
@@ -45,7 +46,7 @@ Expected state on `main`: same report, but the command exits non-zero because ex
 Attach a requested action to the same report before doing any work:
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.hermes python3 .hermes/scripts/run_harness_checks.py --require-observe --action "read README.md"
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.hermes python3 .hermes/scripts/run_harness_checks.py --require-observe --lane operations --action "read README.md"
 ```
 
 The small action gate in `check_harness_ready.py` currently distinguishes:

@@ -240,6 +240,33 @@ class HarnessTests(unittest.TestCase):
         self.assertEqual("read_only", report["preflight"]["classification"])
         self.assertTrue(report["preflight"]["allowed_in_observe"])
 
+    def test_aggregate_report_records_selected_operating_lane(self):
+        from scripts.run_harness_checks import run_harness_checks
+
+        report = run_harness_checks(self.repo, lane="project_drift")
+
+        self.assertEqual("project_drift", report["lane"]["id"])
+        self.assertEqual("workflows/project-drift.md", report["lane"]["workflow"])
+        self.assertEqual("project_drift", report["summary"]["lane"])
+
+    def test_invalid_lane_blocks_aggregate_report(self):
+        from scripts.run_harness_checks import aggregate_exit_code, run_harness_checks
+
+        report = run_harness_checks(self.repo, lane="mixed")
+
+        self.assertEqual("invalid", report["lane"]["status"])
+        self.assertEqual("unknown_operating_lane", report["lane"]["issues"][0]["code"])
+        self.assertEqual(20, aggregate_exit_code(report, require="observe"))
+
+    def test_empty_explicit_lane_blocks_aggregate_report(self):
+        from scripts.run_harness_checks import aggregate_exit_code, run_harness_checks
+
+        report = run_harness_checks(self.repo, lane="")
+
+        self.assertEqual("invalid", report["lane"]["status"])
+        self.assertEqual("empty_operating_lane", report["lane"]["issues"][0]["code"])
+        self.assertEqual(20, aggregate_exit_code(report, require="observe"))
+
     def test_aggregate_report_classifies_requested_action(self):
         from scripts.run_harness_checks import run_harness_checks
 
