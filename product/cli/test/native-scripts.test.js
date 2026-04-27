@@ -146,6 +146,7 @@ test('verify script runs the standard local gates in order', async () => {
   ]);
   assert.match(calls[0], /--test/);
   assert.match(calls[3], /--require-observe/);
+  assert.match(calls[3], /--lane operations/);
   assert.doesNotMatch(calls.join('\n'), /^build-app/m);
 });
 
@@ -192,6 +193,7 @@ test('verify script ci mode adds the app build gate and Finder appex check', asy
     'check-finder-appex',
   ]);
   assert.match(calls[3], /--require-observe/);
+  assert.match(calls[3], /--lane operations/);
 });
 
 test('build-app script keeps Xcode build outputs inside the repository', async () => {

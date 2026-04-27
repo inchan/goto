@@ -62,7 +62,7 @@ printf '==> Native unit tests\n' >&2
 "$native_test_script"
 
 printf '==> Hermes harness checks\n' >&2
-PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$REPO_ROOT/.hermes" "$hermes_harness_script" --require-observe --action "verify repository gates" "$REPO_ROOT"
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$REPO_ROOT/.hermes" "$hermes_harness_script" --require-observe --lane operations --action "verify repository gates" "$REPO_ROOT"
 
 if [[ "$mode" == "ci" ]]; then
   printf '==> Native app build\n' >&2
