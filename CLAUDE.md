@@ -51,6 +51,16 @@ scripts/generate_macos_project.rb
 - `develop` pushes and PRs should go through the gate runner workflow.
 - Merge `develop` into `main` only when you want to cut a deployment or release.
 
+## Hermes operating lanes
+
+For repo-local Hermes work, select exactly one lane from `.hermes/operating-lanes.json` before acting:
+
+- `self_improvement` — improve `.hermes` harness, prompts, tests, runbooks, or reusable skills without implying product behavior changed.
+- `project_drift` — reconcile docs, metadata, CI, and generated-state claims with live repository facts.
+- `operations` — run routine verification, branch/PR, CI, merge, and release-readiness work with the gates above.
+
+Do not mix lane objectives in one change unless the handoff is explicit and separately verified.
+
 ## Architecture rules
 
 1. `goto` stays separate from `Goto.app`.

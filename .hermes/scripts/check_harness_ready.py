@@ -32,7 +32,7 @@ ALLOWED_EXECUTE_BRANCH_PREFIXES = ("hermes/", "feature/", "chore/", "fix/")
 ACTION_RULES = [
     ("user_or_system_side_effect", ["~/.goto", "shell rc", "~/applications", "/applications", "launchctl", "pluginkit", "pkill finder", "sudo", "finder sync", "install-app", "goto.app"]),
     ("scheduler_side_effect", ["cronjob", "cron job", "scheduled job", "recurring cron", "every hour", "every day"]),
-    ("repo_write", ["modify product/", "edit product/", "write product/", "change product/", "patch product/", "modify scripts/", "edit scripts/", "write scripts/", "change scripts/", "patch scripts/", "implement feature", "fix bug", "write .hermes", "edit .hermes", "modify .hermes", "update .hermes", "patch .hermes", "project-local .hermes", "harness artifacts", "add harness"]),
+    ("repo_write", ["modify product/", "edit product/", "write product/", "change product/", "patch product/", "modify scripts/", "edit scripts/", "write scripts/", "change scripts/", "patch scripts/", "implement feature", "fix bug", "write .hermes", "edit .hermes", "modify .hermes", "update .hermes", "patch .hermes", "project-local .hermes", "harness artifacts", "add harness", "separate self-improvement", "operating lanes"]),
 ]
 READ_ONLY_ACTION_TERMS = ["read", "inspect", "review", "observe", "list", "search", "check", "summarize"]
 

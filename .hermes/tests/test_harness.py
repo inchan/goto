@@ -45,6 +45,27 @@ class HarnessTests(unittest.TestCase):
         self.assertEqual([], result.errors)
         self.assertGreaterEqual(result.validated_examples, 4)
 
+    def test_validate_harness_requires_separate_operating_lanes(self):
+        from scripts.validate_harness import validate_harness
+
+        result = validate_harness(self.repo / ".hermes")
+
+        self.assertEqual([], result.errors)
+        lanes = result.operating_lanes
+        self.assertEqual(
+            {"self_improvement", "project_drift", "operations"},
+            {lane["id"] for lane in lanes},
+        )
+        expected_workflows = {
+            "self_improvement": "workflows/self-improvement.md",
+            "project_drift": "workflows/project-drift.md",
+            "operations": "workflows/operations.md",
+        }
+        for lane in lanes:
+            self.assertEqual(expected_workflows[lane["id"]], lane["workflow"])
+            workflow_path = self.repo / ".hermes" / lane["workflow"]
+            self.assertTrue(workflow_path.exists(), lane["workflow"])
+
     def test_snapshot_detects_tests_in_live_repo(self):
         from scripts.snapshot_project import build_snapshot
 
@@ -181,6 +202,16 @@ class HarnessTests(unittest.TestCase):
         self.assertFalse(result["allowed_in_observe"])
         self.assertTrue(result["allowed_in_execute"])
         self.assertIn("modify scripts/", result["matched_terms"])
+
+    def test_preflight_classifies_lane_separation_as_repo_write(self):
+        from scripts.check_harness_ready import classify_action
+
+        result = classify_action("separate self-improvement project drift and operations lanes")
+
+        self.assertEqual("repo_write", result["classification"])
+        self.assertFalse(result["allowed_in_observe"])
+        self.assertTrue(result["allowed_in_execute"])
+        self.assertIn("separate self-improvement", result["matched_terms"])
 
     def test_preflight_blocks_user_or_system_side_effects(self):
         from scripts.check_harness_ready import classify_action

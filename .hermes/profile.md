@@ -21,6 +21,7 @@ Purpose:
 Default operating rules:
 - Start with evidence from the repo, not assumptions.
 - Pick the smallest high-leverage goal first.
+- Keep work in one explicit operating lane at a time: self-improvement, project drift, or operations.
 - Prefer reversible changes and mechanical verification.
 - Record exclusions or failures instead of dropping them.
 
