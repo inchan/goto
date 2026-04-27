@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "purpose": "Keep Hermes self-improvement, project-drift detection, and repo operations as separate lanes with separate evidence and gates.",
+  "lanes": [
+    {
+      "id": "self_improvement",
+      "name": "Hermes self-improvement",
+      "purpose": "Improve the local agent harness, prompts, tests, and reusable workflows without changing goto product behavior unless explicitly selected as a repo task.",
+      "workflow": "workflows/self-improvement.md",
+      "primary_output": ".hermes source/docs/tests or a skill/script update",
+      "manual_gates": [
+        "Changing global Hermes config, credentials, providers, delivery targets, or scheduler jobs",
+        "Turning an advisory harness into an autonomous executor",
+        "Adding broad abstractions without a failing test or repeated use case"
+      ]
+    },
+    {
+      "id": "project_drift",
+      "name": "Project drift and divergence",
+      "purpose": "Detect and reconcile mismatch between docs, plans, harness metadata, generated state, CI, and live repository facts.",
+      "workflow": "workflows/project-drift.md",
+      "primary_output": "drift finding, targeted doc/metadata repair, or explicit waived mismatch",
+      "manual_gates": [
+        "Changing product goals or architecture decisions",
+        "Deleting historical evidence instead of marking it stale",
+        "Rewriting release or user-facing claims without verification"
+      ]
+    },
+    {
+      "id": "operations",
+      "name": "Project operations",
+      "purpose": "Run routine repo operations such as verification, branch/PR loops, release readiness checks, and safe maintenance with evidence and rollback boundaries.",
+      "workflow": "workflows/operations.md",
+      "primary_output": "verified branch/PR/check result, operation log, or safe stop report",
+      "manual_gates": [
+        "Release, deploy, main push, or public announcement",
+        "User/system side effects such as /Applications installs, shell rc edits, Finder restarts, sudo, service managers",
+        "Scheduler creation or modification"
+      ]
+    }
+  ]
+}

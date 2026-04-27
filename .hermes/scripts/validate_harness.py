@@ -11,6 +11,7 @@ import sys
 class ValidationResult:
     errors: list[str] = field(default_factory=list)
     validated_examples: int = 0
+    operating_lanes: list[dict] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -22,6 +23,12 @@ SCHEMA_BY_PREFIX = {
     "observation": "observation.schema.json",
     "decision": "decision.schema.json",
     "verification": "verification.schema.json",
+}
+
+REQUIRED_OPERATING_LANES = {
+    "self_improvement": "workflows/self-improvement.md",
+    "project_drift": "workflows/project-drift.md",
+    "operations": "workflows/operations.md",
 }
 
 
@@ -92,6 +99,41 @@ def _validate_against_schema(data: dict, schema: dict, path: Path) -> list[str]:
     return errors
 
 
+def _validate_operating_lanes(hermes_dir: Path, result: ValidationResult) -> None:
+    lanes_path = hermes_dir / "operating-lanes.json"
+    data = _load_json(lanes_path, result)
+    if data is None:
+        return
+    lanes = data.get("lanes") if isinstance(data, dict) else None
+    if not isinstance(lanes, list):
+        result.errors.append(f"{lanes_path}: missing lanes array")
+        return
+    result.operating_lanes = lanes
+    lane_ids = {lane.get("id") for lane in lanes if isinstance(lane, dict)}
+    required_lane_ids = set(REQUIRED_OPERATING_LANES)
+    missing = sorted(required_lane_ids - lane_ids)
+    extra = sorted(lane_id for lane_id in lane_ids - required_lane_ids if isinstance(lane_id, str))
+    if missing:
+        result.errors.append(f"{lanes_path}: missing required lanes {', '.join(missing)}")
+    if extra:
+        result.errors.append(f"{lanes_path}: unexpected lanes {', '.join(extra)}")
+    for index, lane in enumerate(lanes):
+        if not isinstance(lane, dict):
+            result.errors.append(f"{lanes_path}: lane {index} must be an object")
+            continue
+        for key in ("id", "name", "purpose", "workflow", "primary_output", "manual_gates"):
+            if not lane.get(key):
+                result.errors.append(f"{lanes_path}: lane {lane.get('id', index)!r} missing {key}")
+        workflow = lane.get("workflow")
+        expected_workflow = REQUIRED_OPERATING_LANES.get(lane.get("id"))
+        if expected_workflow and workflow != expected_workflow:
+            result.errors.append(
+                f"{lanes_path}: lane {lane.get('id')!r} workflow must be {expected_workflow}, got {workflow!r}"
+            )
+        if isinstance(workflow, str) and not (hermes_dir / workflow).exists():
+            result.errors.append(f"{lanes_path}: lane {lane.get('id', index)!r} workflow missing: {workflow}")
+
+
 def validate_harness(hermes_dir: Path | str = Path(".hermes")) -> ValidationResult:
     hermes_dir = Path(hermes_dir)
     result = ValidationResult()
@@ -115,6 +157,8 @@ def validate_harness(hermes_dir: Path | str = Path(".hermes")) -> ValidationResu
             continue
         result.errors.extend(_validate_against_schema(data, schema, example_path))
         result.validated_examples += 1
+
+    _validate_operating_lanes(hermes_dir, result)
 
     return result
 

@@ -6,6 +6,10 @@ This file defines how a future goto project commander operates. It is a convenie
 
 ## Run Sequence
 
+0. Select exactly one operating lane from `.hermes/operating-lanes.json`:
+   - self-improvement: Hermes harness/prompts/tests/runbooks only.
+   - project drift: reconcile docs/metadata/CI claims with live repo facts.
+   - operations: routine repo verification, branch/PR, CI, and maintenance work.
 1. Snapshot project state with `.hermes/scripts/snapshot_project.py`.
 2. Validate schemas and examples with `.hermes/scripts/validate_harness.py`.
 3. Check readiness with `.hermes/scripts/check_harness_ready.py`.

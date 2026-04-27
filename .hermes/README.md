@@ -4,6 +4,10 @@ This directory holds project-local Hermes profile and subagent role prompts.
 
 Files:
 - `profile.md` — project default behavior and scope
+- `operating-lanes.json` — separates Hermes self-improvement, project drift, and operations lanes
+- `workflows/self-improvement.md` — improve the local Hermes harness without mixing it with product work
+- `workflows/project-drift.md` — reconcile docs/metadata/CI claims with live repo facts
+- `workflows/operations.md` — run routine repo verification/branch/PR work with gates
 - `agents/research.md` — inspect and ground the problem
 - `agents/planner.md` — pick the next small objective
 - `agents/implementer.md` — make the code change
