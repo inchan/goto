@@ -1,0 +1,16 @@
+{
+  "run_id": "run-example-commander-dry-run",
+  "started_at": "2026-04-27T22:08:46Z",
+  "actor": "hermes",
+  "role": "commander",
+  "trigger_type": "dry_run",
+  "workdir": "/Users/inchan/workspace/goto",
+  "branch": "main",
+  "git_status_summary": "## main...origin/main; .hermes untracked",
+  "goal": "Evaluate harness readiness without product writes",
+  "mode": "observe",
+  "outcome": "blocked",
+  "artifact_paths": [
+    ".hermes/derived/harness-drift-report.json"
+  ]
+}

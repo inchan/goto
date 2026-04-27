@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "title": "Hermes Observation",
+  "type": "object",
+  "required": [
+    "observation_id",
+    "source",
+    "observed_at",
+    "fact",
+    "evidence_path",
+    "evidence_excerpt",
+    "confidence",
+    "staleness_risk"
+  ],
+  "properties": {
+    "observation_id": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "observed_at": {
+      "type": "string"
+    },
+    "fact": {
+      "type": "string"
+    },
+    "evidence_path": {
+      "type": "string"
+    },
+    "evidence_excerpt": {
+      "type": "string"
+    },
+    "confidence": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "staleness_risk": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    }
+  }
+}

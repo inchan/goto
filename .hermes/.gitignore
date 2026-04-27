@@ -1,0 +1,16 @@
+__pycache__/
+*/__pycache__/
+*.pyc
+
+# Local/generated run artifacts. Templates, schemas, scripts, tests, and docs stay trackable.
+runs/
+events/
+reports/*.md
+state/project-snapshot.json
+derived/current-status.json
+derived/harness-drift-report.json
+derived/harness-check-report.json
+derived/action-preflight.json
+derived/observability-scorecard.json
+derived/workflow-health.json
+derived/readiness-*.json

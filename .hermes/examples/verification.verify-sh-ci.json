@@ -1,0 +1,11 @@
+{
+  "verification_id": "verify-ci-example",
+  "run_id": "run-example-commander-dry-run",
+  "commands_run": [
+    "scripts/verify.sh --ci"
+  ],
+  "manual_checks": [],
+  "result": "not_applicable",
+  "evidence_excerpt": "Example only; command not run for this harness bootstrap",
+  "residual_risk": "Product CI verification remains separate from harness validation"
+}

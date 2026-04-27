@@ -1,0 +1,21 @@
+{
+  "project": "goto",
+  "workspace_root": "/Users/inchan/workspace",
+  "score": 90,
+  "roles": [
+    "research",
+    "planner",
+    "implementer",
+    "verifier",
+    "reviewer"
+  ],
+  "signals": {
+    "guidance": 3,
+    "agent_cfg": 2,
+    "tests": true,
+    "docs": true,
+    "code_dirs": true,
+    "git": true
+  },
+  "last_reconciled_by": "snapshot_project detected live repo tests; repaired from false to true"
+}

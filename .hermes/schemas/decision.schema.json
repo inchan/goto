@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "title": "Hermes Decision",
+  "type": "object",
+  "required": [
+    "decision_id",
+    "run_id",
+    "selected_action",
+    "alternatives_considered",
+    "classification",
+    "why_now",
+    "why_not_more",
+    "stop_condition",
+    "expected_verification",
+    "observation_refs"
+  ],
+  "properties": {
+    "decision_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "selected_action": {
+      "type": "string"
+    },
+    "alternatives_considered": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "classification": {
+      "enum": [
+        "read_only",
+        "safe_repo_write",
+        "safe_repo_verify",
+        "approval_required",
+        "manual_gate",
+        "blocked"
+      ]
+    },
+    "why_now": {
+      "type": "string"
+    },
+    "why_not_more": {
+      "type": "string"
+    },
+    "stop_condition": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "expected_verification": {
+      "type": "string"
+    },
+    "observation_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

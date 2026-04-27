@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "title": "Hermes Verification",
+  "type": "object",
+  "required": [
+    "verification_id",
+    "run_id",
+    "commands_run",
+    "manual_checks",
+    "result",
+    "evidence_excerpt",
+    "residual_risk"
+  ],
+  "properties": {
+    "verification_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "commands_run": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "manual_checks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "result": {
+      "enum": [
+        "pass",
+        "fail",
+        "blocked",
+        "not_applicable"
+      ]
+    },
+    "evidence_excerpt": {
+      "type": "string"
+    },
+    "residual_risk": {
+      "type": "string"
+    }
+  }
+}
