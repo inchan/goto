@@ -121,9 +121,23 @@ def _validate_operating_lanes(hermes_dir: Path, result: ValidationResult) -> Non
         if not isinstance(lane, dict):
             result.errors.append(f"{lanes_path}: lane {index} must be an object")
             continue
-        for key in ("id", "name", "purpose", "workflow", "primary_output", "manual_gates"):
-            if not lane.get(key):
+        for key in (
+            "id",
+            "name",
+            "purpose",
+            "workflow",
+            "primary_output",
+            "allowed_paths",
+            "forbidden_paths",
+            "manual_gates",
+        ):
+            if key not in lane or lane.get(key) in (None, ""):
                 result.errors.append(f"{lanes_path}: lane {lane.get('id', index)!r} missing {key}")
+        for key in ("allowed_paths", "forbidden_paths", "manual_gates"):
+            if key in lane and not isinstance(lane.get(key), list):
+                result.errors.append(f"{lanes_path}: lane {lane.get('id', index)!r} {key} must be an array")
+            elif key in lane and any(not isinstance(item, str) or not item for item in lane.get(key, [])):
+                result.errors.append(f"{lanes_path}: lane {lane.get('id', index)!r} {key} must contain non-empty strings")
         workflow = lane.get("workflow")
         expected_workflow = REQUIRED_OPERATING_LANES.get(lane.get("id"))
         if expected_workflow and workflow != expected_workflow:

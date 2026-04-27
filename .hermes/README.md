@@ -49,6 +49,14 @@ Attach a requested action to the same report before doing any work:
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.hermes python3 .hermes/scripts/run_harness_checks.py --require-observe --lane operations --action "read README.md"
 ```
 
+The selected lane also evaluates dirty/untracked paths against `allowed_paths` and `forbidden_paths` in `operating-lanes.json`. Boundary violations are reported under `lane.boundary` and make the aggregate command exit 10, so a self-improvement run cannot silently include product-source edits.
+
+When verifying a branch whose source edits belong to a non-operations lane, set the verification lane explicitly:
+
+```bash
+GOTO_HERMES_VERIFY_LANE=self_improvement scripts/verify.sh --ci
+```
+
 The small action gate in `check_harness_ready.py` currently distinguishes:
 
 - `read_only` — observe-safe

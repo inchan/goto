@@ -131,6 +131,7 @@ test('verify script runs the standard local gates in order', async () => {
       GOTO_NATIVE_TYPECHECK_SCRIPT: typecheckPath,
       GOTO_NATIVE_TEST_SCRIPT: testNativePath,
       GOTO_HERMES_HARNESS_SCRIPT: harnessPath,
+      GOTO_HERMES_VERIFY_LANE: 'operations',
       GOTO_BUILD_APP_SCRIPT: buildAppPath,
     },
   });
@@ -148,6 +149,41 @@ test('verify script runs the standard local gates in order', async () => {
   assert.match(calls[3], /--require-observe/);
   assert.match(calls[3], /--lane operations/);
   assert.doesNotMatch(calls.join('\n'), /^build-app/m);
+});
+
+test('verify script can select a non-default Hermes lane via environment', async () => {
+  const fakeBinDir = await createTempDir('goto-verify-lane-bin-');
+  const logPath = path.join(fakeBinDir, 'verify.log');
+  const nodePath = path.join(fakeBinDir, 'node');
+  const typecheckPath = path.join(fakeBinDir, 'typecheck-native.sh');
+  const testNativePath = path.join(fakeBinDir, 'test-native.sh');
+  const harnessPath = path.join(fakeBinDir, 'run-harness-checks.py');
+  const buildAppPath = path.join(fakeBinDir, 'build-app.sh');
+  const scriptPath = path.join(projectRoot, 'scripts/verify.sh');
+
+  await writeExecutable(nodePath, appendCommandScript(logPath, 'node'));
+  await writeExecutable(typecheckPath, appendCommandScript(logPath, 'typecheck-native'));
+  await writeExecutable(testNativePath, appendCommandScript(logPath, 'test-native'));
+  await writeExecutable(harnessPath, appendCommandScript(logPath, 'harness'));
+  await writeExecutable(buildAppPath, appendCommandScript(logPath, 'build-app'));
+
+  const result = await runProcess('bash', [scriptPath], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      GOTO_NODE_BIN: nodePath,
+      GOTO_NATIVE_TYPECHECK_SCRIPT: typecheckPath,
+      GOTO_NATIVE_TEST_SCRIPT: testNativePath,
+      GOTO_HERMES_HARNESS_SCRIPT: harnessPath,
+      GOTO_HERMES_VERIFY_LANE: 'self_improvement',
+      GOTO_BUILD_APP_SCRIPT: buildAppPath,
+    },
+  });
+
+  const calls = (await fs.readFile(logPath, 'utf8')).trim().split('\n');
+
+  assert.equal(result.code, 0);
+  assert.match(calls[3], /--lane self_improvement/);
 });
 
 test('verify script ci mode adds the app build gate and Finder appex check', async () => {
@@ -176,6 +212,7 @@ test('verify script ci mode adds the app build gate and Finder appex check', asy
       GOTO_NATIVE_TYPECHECK_SCRIPT: typecheckPath,
       GOTO_NATIVE_TEST_SCRIPT: testNativePath,
       GOTO_HERMES_HARNESS_SCRIPT: harnessPath,
+      GOTO_HERMES_VERIFY_LANE: 'operations',
       GOTO_BUILD_APP_SCRIPT: buildAppPath,
       GOTO_FINDER_APPEX_CHECK_SCRIPT: checkFinderPath,
     },

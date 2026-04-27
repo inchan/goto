@@ -8,6 +8,22 @@
       "purpose": "Improve the local agent harness, prompts, tests, and reusable workflows without changing goto product behavior unless explicitly selected as a repo task.",
       "workflow": "workflows/self-improvement.md",
       "primary_output": ".hermes source/docs/tests or a skill/script update",
+      "allowed_paths": [
+        ".hermes/**",
+        "scripts/verify.sh",
+        "product/cli/test/native-scripts.test.js"
+      ],
+      "forbidden_paths": [
+        "product/cli/src/**",
+        "product/cli/bin/**",
+        "product/cli/shell/**",
+        "product/core/**",
+        "product/macos/Goto/**",
+        "product/macos/GotoFinderSync/**",
+        ".github/**",
+        "docs/**",
+        "README.md"
+      ],
       "manual_gates": [
         "Changing global Hermes config, credentials, providers, delivery targets, or scheduler jobs",
         "Turning an advisory harness into an autonomous executor",
@@ -20,6 +36,24 @@
       "purpose": "Detect and reconcile mismatch between docs, plans, harness metadata, generated state, CI, and live repository facts.",
       "workflow": "workflows/project-drift.md",
       "primary_output": "drift finding, targeted doc/metadata repair, or explicit waived mismatch",
+      "allowed_paths": [
+        "README.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "docs/**",
+        ".github/**",
+        ".hermes/**",
+        "scripts/verify.sh",
+        "product/cli/test/native-scripts.test.js"
+      ],
+      "forbidden_paths": [
+        "product/cli/src/**",
+        "product/cli/bin/**",
+        "product/cli/shell/**",
+        "product/core/**",
+        "product/macos/Goto/**",
+        "product/macos/GotoFinderSync/**"
+      ],
       "manual_gates": [
         "Changing product goals or architecture decisions",
         "Deleting historical evidence instead of marking it stale",
@@ -32,6 +66,20 @@
       "purpose": "Run routine repo operations such as verification, branch/PR loops, release readiness checks, and safe maintenance with evidence and rollback boundaries.",
       "workflow": "workflows/operations.md",
       "primary_output": "verified branch/PR/check result, operation log, or safe stop report",
+      "allowed_paths": [
+        ".hermes/derived/**",
+        ".hermes/state/**",
+        ".github/**",
+        "scripts/verify.sh"
+      ],
+      "forbidden_paths": [
+        "product/cli/src/**",
+        "product/cli/bin/**",
+        "product/cli/shell/**",
+        "product/core/**",
+        "product/macos/Goto/**",
+        "product/macos/GotoFinderSync/**"
+      ],
       "manual_gates": [
         "Release, deploy, main push, or public announcement",
         "User/system side effects such as /Applications installs, shell rc edits, Finder restarts, sudo, service managers",
