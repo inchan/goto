@@ -3,6 +3,13 @@ import AppKit
 @MainActor
 final class MenuBarController: NSObject {
 
+    private static func glyphImage() -> NSImage? {
+        guard let url = Bundle.main.url(forResource: "goto-glyph", withExtension: "pdf") else {
+            return nil
+        }
+        return NSImage(contentsOf: url)
+    }
+
     private var statusItem: NSStatusItem?
     private var tagToPath: [Int: String] = [:]
 
@@ -26,7 +33,7 @@ final class MenuBarController: NSObject {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
         if let button = item.button {
-            let img = NSImage(systemSymbolName: "terminal", accessibilityDescription: "Goto")
+            let img = MenuBarController.glyphImage()
             img?.size = NSSize(width: 18, height: 18)
             img?.isTemplate = true
             button.image = img

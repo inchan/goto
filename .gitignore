@@ -1,6 +1,7 @@
 .DS_Store
 .omx/
 build/
+tmp/
 DerivedData/
 xcuserdata/
 *.xcodeproj/

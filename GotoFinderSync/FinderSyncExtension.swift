@@ -26,20 +26,13 @@ final class FinderSyncExtension: FIFinderSync {
     }
 
     override var toolbarItemImage: NSImage {
-        if let image = NSImage(systemSymbolName: "terminal", accessibilityDescription: "Goto") {
-            image.size = NSSize(width: 18, height: 18)
-            image.isTemplate = true
-            return image
+        guard let glyphURL = extensionBundle.url(forResource: "goto-glyph", withExtension: "pdf"),
+              let image = NSImage(contentsOf: glyphURL) else {
+            return NSImage()
         }
-
-        if let iconURL = extensionBundle.url(forResource: "applet", withExtension: "icns"),
-           let image = NSImage(contentsOf: iconURL) {
-            image.size = NSSize(width: 18, height: 18)
-            image.isTemplate = true
-            return image
-        }
-
-        return NSImage()
+        image.size = NSSize(width: 18, height: 18)
+        image.isTemplate = true
+        return image
     }
 
     override func menu(for menuKind: FIMenuKind) -> NSMenu? {
