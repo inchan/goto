@@ -1,0 +1,134 @@
+name: Goto
+options:
+  bundleIdPrefix: com.inchan
+  deploymentTarget:
+    macOS: "13.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    ENABLE_USER_SCRIPT_SANDBOXING: "NO"
+targets:
+  Goto:
+    type: application
+    platform: macOS
+    sources:
+      - path: GotoApp
+      - path: Shared
+      - path: Resources/applet.icns
+        buildPhase: resources
+    info:
+      path: GotoApp/Info.plist
+      properties:
+        CFBundleDisplayName: Goto
+        CFBundleIconFile: applet
+        CFBundleIconName: applet
+        CFBundleIdentifier: com.inchan.goto
+        CFBundleName: Goto
+        CFBundleShortVersionString: 1.0.0
+        CFBundleVersion: "1"
+        CFBundleURLTypes:
+          - CFBundleURLName: com.inchan.goto.worktree
+            CFBundleURLSchemes:
+              - gotoworktree
+        LSMinimumSystemVersion: "13.0"
+        NSAccessibilityUsageDescription: Goto needs Accessibility access to open Terminal.app tabs from Finder.
+        NSAppleEventsUsageDescription: Goto needs to control Finder, Terminal, and Ghostty to open the current folder in a terminal.
+        NSHighResolutionCapable: true
+    dependencies:
+      - target: GotoFinderSync
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.inchan.goto
+        PRODUCT_NAME: Goto
+  GotoLauncher:
+    type: application
+    platform: macOS
+    sources:
+      - path: GotoLauncher
+      - path: Shared
+      - path: Resources/applet.icns
+        buildPhase: resources
+    info:
+      path: GotoLauncher/Info.plist
+      properties:
+        CFBundleDisplayName: Goto Launcher
+        CFBundleIconFile: applet
+        CFBundleIconName: applet
+        CFBundleIdentifier: com.inchan.goto.launcher
+        CFBundleName: GotoLauncher
+        CFBundleShortVersionString: 1.0.0
+        CFBundleVersion: "1"
+        CFBundleURLTypes:
+          - CFBundleURLName: com.inchan.goto.launcher
+            CFBundleURLSchemes:
+              - gotolauncher
+        LSMinimumSystemVersion: "13.0"
+        LSUIElement: true
+        NSAccessibilityUsageDescription: Goto Launcher needs Accessibility access to open Terminal.app tabs from Finder.
+        NSAppleEventsUsageDescription: Goto Launcher needs to control Finder and your selected terminal to open the current folder.
+        NSHighResolutionCapable: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.inchan.goto.launcher
+        PRODUCT_NAME: GotoLauncher
+  GotoCLI:
+    type: tool
+    platform: macOS
+    sources:
+      - path: GotoCLI
+      - path: Shared
+    info:
+      path: GotoCLI/Info.plist
+      properties:
+        CFBundleIdentifier: com.inchan.goto.cli
+        CFBundleName: goto
+        CFBundleShortVersionString: 1.0.0
+        CFBundleVersion: "1"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.inchan.goto.cli
+        PRODUCT_NAME: goto
+        SKIP_INSTALL: "NO"
+  GotoFinderSync:
+    type: app-extension
+    platform: macOS
+    entitlements:
+      path: GotoFinderSync/GotoFinderSync.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.automation.apple-events: true
+    sources:
+      - path: GotoFinderSync
+      - path: Shared
+      - path: Resources/applet.icns
+        buildPhase: resources
+    info:
+      path: GotoFinderSync/Info.plist
+      properties:
+        CFBundleDisplayName: Goto Finder Extension
+        CFBundleIdentifier: com.inchan.goto.findersync
+        CFBundleName: GotoFinderSync
+        CFBundleShortVersionString: 1.0.0
+        CFBundleVersion: "1"
+        NSAppleEventsUsageDescription: Goto needs to control Finder and Ghostty to open the current folder in a terminal.
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.FinderSync
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).FinderSyncExtension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.inchan.goto.findersync
+        PRODUCT_NAME: GotoFinderSync
+  GotoTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Shared
+      - path: GotoTests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: "YES"
+        PRODUCT_BUNDLE_IDENTIFIER: com.inchan.goto.tests
+        PRODUCT_NAME: GotoTests
