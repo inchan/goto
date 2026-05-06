@@ -1,0 +1,140 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Override version (e.g. v1.2.3). Leave blank to auto-bump patch."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-14
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine next version
+        id: ver
+        env:
+          OVERRIDE_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -n "${OVERRIDE_VERSION:-}" ]; then
+            NEXT="$OVERRIDE_VERSION"
+          else
+            LATEST=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1 || true)
+            if [ -z "$LATEST" ]; then
+              NEXT="v0.1.0"
+            else
+              STRIP=${LATEST#v}
+              MAJOR=$(echo "$STRIP" | cut -d. -f1)
+              MINOR=$(echo "$STRIP" | cut -d. -f2)
+              PATCH=$(echo "$STRIP" | cut -d. -f3)
+              NEXT="v${MAJOR}.${MINOR}.$((PATCH + 1))"
+            fi
+          fi
+          if ! [[ "$NEXT" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Resolved version '$NEXT' is not a valid SemVer (vMAJOR.MINOR.PATCH)."
+            exit 1
+          fi
+          echo "next=$NEXT" >> "$GITHUB_OUTPUT"
+          echo "next_no_v=${NEXT#v}" >> "$GITHUB_OUTPUT"
+          echo "Resolved next version: $NEXT"
+
+      - name: Abort if tag already exists
+        env:
+          NEXT: ${{ steps.ver.outputs.next }}
+        run: |
+          set -euo pipefail
+          if git rev-parse "refs/tags/$NEXT" >/dev/null 2>&1; then
+            echo "::error::Tag $NEXT already exists. Bump manually or run workflow_dispatch with an explicit version."
+            exit 1
+          fi
+
+      - name: Install build tools
+        run: |
+          set -euo pipefail
+          brew install xcodegen create-dmg
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build Release artifacts
+        run: |
+          set -euo pipefail
+          common=(
+            -project Goto.xcodeproj
+            -configuration Release
+            -derivedDataPath ./build
+          )
+          xcodebuild "${common[@]}" -scheme Goto build
+          xcodebuild "${common[@]}" -scheme GotoLauncher build
+          xcodebuild "${common[@]}" -scheme GotoCLI build
+
+      - name: Stage DMG contents
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          mkdir -p dist/dmg
+          cp -R "./build/Build/Products/Release/Goto.app" "./dist/dmg/Goto.app"
+          cp -R "./build/Build/Products/Release/GotoLauncher.app" "./dist/dmg/Goto Launcher.app"
+          cp README.md ./dist/dmg/README.md
+
+      - name: Build DMG
+        env:
+          NEXT: ${{ steps.ver.outputs.next }}
+        run: |
+          set -euo pipefail
+          create-dmg \
+            --volname "Goto $NEXT" \
+            --window-pos 200 120 \
+            --window-size 720 420 \
+            --icon-size 100 \
+            --icon "Goto.app" 175 180 \
+            --icon "Goto Launcher.app" 360 180 \
+            --app-drop-link 545 180 \
+            "./dist/Goto-$NEXT.dmg" \
+            ./dist/dmg/
+
+      - name: Stage CLI zip
+        env:
+          NEXT: ${{ steps.ver.outputs.next }}
+        run: |
+          set -euo pipefail
+          mkdir -p "./dist/goto-cli"
+          cp "./build/Build/Products/Release/goto" "./dist/goto-cli/goto"
+          cp scripts/install-cli.sh "./dist/goto-cli/install-cli.sh"
+          chmod +x "./dist/goto-cli/install-cli.sh"
+          (cd ./dist && zip -r "goto-cli-$NEXT.zip" goto-cli/)
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEXT: ${{ steps.ver.outputs.next }}
+        run: |
+          set -euo pipefail
+          git tag "$NEXT"
+          git push origin "$NEXT"
+          gh release create "$NEXT" \
+            --generate-notes \
+            --title "$NEXT" \
+            "./dist/Goto-$NEXT.dmg" \
+            "./dist/goto-cli-$NEXT.zip"

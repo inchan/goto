@@ -2,6 +2,21 @@
 
 Finder Sync Extension 기반 터미널 열기 앱입니다.
 
+## 설치 (Release)
+
+GitHub Releases에 두 자산이 첨부됩니다.
+
+- `Goto-vX.Y.Z.dmg` — `Goto.app` + `Goto Launcher.app` 인스톨러. 마운트 후 두 앱을 `Applications` 단축에 드래그합니다.
+- `goto-cli-vX.Y.Z.zip` — CLI binary + `install-cli.sh`. 압축을 풀고 `./install-cli.sh`를 실행하면 `~/.local/bin/goto`로 설치되고 셸 함수가 등록됩니다.
+
+처음 실행 시 macOS Gatekeeper가 "확인되지 않은 개발자" 경고를 띄울 수 있습니다. 다음 둘 중 하나로 우회하세요.
+
+```sh
+# 방법 1: Finder에서 Goto.app 우클릭 → 열기 (한 번만 승인하면 됩니다).
+# 방법 2: quarantine 속성 제거.
+xattr -dr com.apple.quarantine /Applications/Goto.app "/Applications/Goto Launcher.app"
+```
+
 ## 동작
 
 - Finder Sync 도구막대의 `Goto` 버튼을 클릭하면 두 항목 메뉴가 열립니다.
