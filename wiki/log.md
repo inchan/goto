@@ -23,3 +23,11 @@ Ran an external Claude review over the uncommitted diff. Applied the clear fixes
 ## 2026-05-06 rename | Goto product name
 
 Renamed the product from Goto3 to Goto across app targets, CLI target, bundle identifiers, URL schemes, Swift types, tests, docs, and install flow. The CLI data files remain `~/.goto`, `~/.goto_recent`, and `~/.goto_config` because they were already the canonical user data paths.
+
+## 2026-05-11 fix | menu bar & Finder Sync glyph
+
+Fixed the white square that appeared in the menu bar and Finder Sync toolbar after the P03 icon swap. The mono PDF branch of `scripts/generate-icons.swift` was calling `ctx.clear(rect)`, which on `CGPDFContext` emits a full-page black fill instead of clearing alpha. Removed the call and also wired `iconutil` into the script so `.icns` stays in sync with the iconset PNGs. See `summaries/icon-glyph-fix-2026-05-11`.
+
+## 2026-05-11 fix | settings window front-most
+
+Fixed the menu bar "Settings…" action so the configuration window reliably comes to the front on macOS 14+. Added a `bringToFront(_:)` helper that re-asserts `.regular` activation policy, uses the modern `NSApp.activate()` on macOS 14+, and calls `orderFrontRegardless()`. Hooked `NSWindowDelegate.windowWillClose` so the cached reference is dropped after the user closes the window. See `summaries/settings-window-front-2026-05-11`.
