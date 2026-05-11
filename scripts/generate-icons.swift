@@ -27,9 +27,10 @@ func draw(in rect: CGRect, style: Style, ctx: CGContext) {
         let bg = CGPath(roundedRect: rect, cornerWidth: sx(220), cornerHeight: sx(220), transform: nil)
         ctx.addPath(bg)
         ctx.fillPath()
-    } else {
-        ctx.clear(rect)
     }
+    // mono: PDF context starts transparent; do NOT call ctx.clear() —
+    // CGPDFContext renders clear() as a filled rectangle in the current color,
+    // which makes the entire glyph a solid black square (template => white square).
 
     let inkBlack = NSColor.black.cgColor
     let inkSlate = NSColor(red: 0x33/255.0, green: 0x41/255.0, blue: 0x55/255.0, alpha: 1).cgColor
@@ -150,5 +151,19 @@ for (px, name) in specs {
 
 // Glyph PDF for menu bar / Finder Sync (template image, monochrome black)
 renderPDF(side: 64, style: .mono, to: resources + "/goto-glyph.pdf")
+
+// Compile iconset -> applet.icns via iconutil so the Finder app-bundle icon
+// stays in sync with the PNGs we just wrote.
+let icnsOut = resources + "/applet.icns"
+let task = Process()
+task.launchPath = "/usr/bin/iconutil"
+task.arguments = ["-c", "icns", tmp, "-o", icnsOut]
+try task.run()
+task.waitUntilExit()
+guard task.terminationStatus == 0 else {
+    FileHandle.standardError.write(Data("iconutil failed with status \(task.terminationStatus)\n".utf8))
+    exit(task.terminationStatus)
+}
+print("wrote \(icnsOut)")
 
 print("ok")
