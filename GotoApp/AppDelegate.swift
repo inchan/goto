@@ -88,8 +88,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func showSetupWindow() {
         if let window {
-            window.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
+            bringToFront(window)
             return
         }
 
@@ -211,12 +210,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         window.title = "Goto"
         window.contentView = contentView
+        window.delegate = self
         window.center()
-        window.makeKeyAndOrderFront(nil)
 
-        NSApp.activate(ignoringOtherApps: true)
         self.window = window
         self.terminalStatusLabel = terminalStatusLabel
+        bringToFront(window)
+    }
+
+    private func bringToFront(_ window: NSWindow) {
+        // Menu bar 전용 모드(.accessory)일 때 윈도우가 다른 앱 뒤에 묻히는 것을 막기
+        // 위해 .regular로 끌어올린 뒤 강제 전면화한다.
+        NSApp.setActivationPolicy(.regular)
+        if #available(macOS 14, *) {
+            NSApp.activate()
+        } else {
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
     }
 
     @objc private func menuBarToggleChanged(_ sender: NSButton) {
@@ -378,5 +390,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         label.lineBreakMode = .byWordWrapping
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }
+}
+
+extension AppDelegate: NSWindowDelegate {
+    func windowWillClose(_ notification: Notification) {
+        guard let closing = notification.object as? NSWindow, closing === window else { return }
+        window = nil
+        terminalStatusLabel = nil
     }
 }
