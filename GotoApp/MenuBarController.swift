@@ -15,6 +15,8 @@ final class MenuBarController: NSObject {
 
     private var fileSource: DispatchSourceFileSystemObject?
     private var fileDescriptor: Int32 = -1
+    private var pinnedFileSource: DispatchSourceFileSystemObject?
+    private var pinnedFileDescriptor: Int32 = -1
 
     func update() {
         if GotoSettings.isMenuBarEnabled() {
@@ -69,12 +71,22 @@ final class MenuBarController: NSObject {
         } else {
             let config = GotoSettings.cliConfig()
             let ordered = GotoProjectList.orderedProjects(paths, config: config)
-            let recents = Array(ordered.displayProjects.prefix(ordered.recentCount))
-            let remainingPaths = Array(ordered.displayProjects.dropFirst(ordered.recentCount))
+            let pinned = Array(ordered.displayProjects.prefix(ordered.pinnedCount))
+            let recents = Array(ordered.displayProjects.dropFirst(ordered.pinnedCount).prefix(ordered.recentCount))
+            let remainingPaths = Array(ordered.displayProjects.dropFirst(ordered.pinnedCount + ordered.recentCount))
+            let pinnedSet = Set(pinned)
             var tag = 1
 
+            for path in pinned {
+                addProjectItem(path, to: menu, tag: &tag, pinned: true)
+            }
+
+            if !pinned.isEmpty && !(recents.isEmpty && remainingPaths.isEmpty) {
+                menu.addItem(.separator())
+            }
+
             for path in recents {
-                addProjectItem(path, to: menu, tag: &tag)
+                addProjectItem(path, to: menu, tag: &tag, pinned: pinnedSet.contains(path))
             }
 
             if GotoSettings.isMenuBarProjectGroupingEnabled() {
@@ -90,7 +102,7 @@ final class MenuBarController: NSObject {
                     let submenu = NSMenu()
 
                     for path in group.projects {
-                        addProjectItem(path, to: submenu, tag: &tag)
+                        addProjectItem(path, to: submenu, tag: &tag, pinned: pinnedSet.contains(path))
                     }
 
                     parentItem.submenu = submenu
@@ -102,7 +114,7 @@ final class MenuBarController: NSObject {
                 }
 
                 for path in remainingPaths {
-                    addProjectItem(path, to: menu, tag: &tag)
+                    addProjectItem(path, to: menu, tag: &tag, pinned: pinnedSet.contains(path))
                 }
             }
         }
@@ -125,6 +137,12 @@ final class MenuBarController: NSObject {
         )
     }
 
+    @objc private func togglePin(_ sender: NSMenuItem) {
+        guard let path = tagToPath[sender.tag] else { return }
+        GotoProjectList.togglePinned(path, availableProjects: GotoProjectStore.load())
+        statusItem?.menu = buildMenu()
+    }
+
     @objc private func openSettings() {
         if let delegate = NSApp.delegate as? AppDelegate {
             delegate.showSetupWindow()
@@ -136,7 +154,10 @@ final class MenuBarController: NSObject {
 
         let url = GotoProjectStore.storeURL
         let fd = open(url.path, O_EVTONLY)
-        guard fd >= 0 else { return }
+        guard fd >= 0 else {
+            startWatchingPinnedFile()
+            return
+        }
 
         fileDescriptor = fd
         let source = DispatchSource.makeFileSystemObjectSource(
@@ -161,22 +182,74 @@ final class MenuBarController: NSObject {
 
         source.resume()
         fileSource = source
+
+        startWatchingPinnedFile()
+    }
+
+    private func startWatchingPinnedFile() {
+        pinnedFileSource?.cancel()
+        pinnedFileSource = nil
+        pinnedFileDescriptor = -1
+
+        let url = GotoSettings.pinnedProjectsURL
+        let fd = open(url.path, O_EVTONLY)
+        guard fd >= 0 else { return }
+
+        pinnedFileDescriptor = fd
+        let source = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: fd,
+            eventMask: [.write, .delete, .rename],
+            queue: .main
+        )
+
+        source.setEventHandler { [weak self] in
+            guard let self else { return }
+            MainActor.assumeIsolated {
+                self.statusItem?.menu = self.buildMenu()
+                if source.data.contains(.delete) || source.data.contains(.rename) {
+                    self.startWatchingPinnedFile()
+                }
+            }
+        }
+
+        source.setCancelHandler {
+            close(fd)
+        }
+
+        source.resume()
+        pinnedFileSource = source
     }
 
     private func stopWatchingProjectsFile() {
         fileSource?.cancel()
         fileSource = nil
         fileDescriptor = -1
+        pinnedFileSource?.cancel()
+        pinnedFileSource = nil
+        pinnedFileDescriptor = -1
     }
 
-    private func addProjectItem(_ path: String, to menu: NSMenu, tag: inout Int) {
+    private func addProjectItem(_ path: String, to menu: NSMenu, tag: inout Int, pinned: Bool) {
         tagToPath[tag] = path
 
-        let item = NSMenuItem(title: GotoProjectList.displayItem(for: path).name, action: #selector(openProject(_:)), keyEquivalent: "")
+        let name = GotoProjectList.displayItem(for: path).name
+        let title = pinned ? "📌 \(name)" : name
+
+        let item = NSMenuItem(title: title, action: #selector(openProject(_:)), keyEquivalent: "")
         item.target = self
         item.toolTip = path
         item.tag = tag
         menu.addItem(item)
+
+        let altTitle = pinned ? "📌 \(name)  (핀 해제)" : "📌 \(name)  (핀 고정)"
+        let altItem = NSMenuItem(title: altTitle, action: #selector(togglePin(_:)), keyEquivalent: "")
+        altItem.target = self
+        altItem.toolTip = path
+        altItem.tag = tag
+        altItem.keyEquivalentModifierMask = [.option]
+        altItem.isAlternate = true
+        menu.addItem(altItem)
+
         tag += 1
     }
 

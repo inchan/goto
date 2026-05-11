@@ -26,7 +26,7 @@ private func restoreMode(_ original: inout termios) {
 }
 
 private enum Key {
-    case up, down, left, right, enter, space, esc, quit, other
+    case up, down, left, right, enter, space, pin, esc, quit, other
 }
 
 private func readPendingByte() -> UInt8? {
@@ -53,6 +53,8 @@ private func readKey() -> Key {
         return .enter
     case 0x20:
         return .space
+    case UInt8(ascii: "p"), UInt8(ascii: "P"):
+        return .pin
     case UInt8(ascii: "q"), UInt8(ascii: "Q"):
         return .quit
     case 3:
@@ -89,6 +91,7 @@ private enum MainRow {
 
 private enum SettingsRow: CaseIterable {
     case back
+    case pinSort
     case prefixSort
     case projectSort
     case projectManagement
@@ -130,11 +133,12 @@ private func projectColumns(for paths: [String]) -> ProjectColumns {
 
 private func drawMainList(
     rows: [MainRow],
+    pinnedSet: Set<String>,
     selected: Int,
     tty: UnsafeMutablePointer<FILE>
 ) {
     fputs(ansiClear, tty)
-    fputs("goto — 프로젝트 선택 (↑↓ 이동, Enter 선택, ESC/q 취소)\n\n", tty)
+    fputs("goto — 프로젝트 선택 (↑↓ 이동, Enter 선택, p 핀 토글, ESC/q 취소)\n\n", tty)
     let projectPaths = rows.compactMap { row -> String? in
         if case .project(let path) = row { return path }
         return nil
@@ -152,6 +156,7 @@ private func drawMainList(
                     path: path,
                     parentWidth: columns.parentWidth,
                     nameWidth: columns.nameWidth,
+                    isPinned: pinnedSet.contains(path),
                     isSelected: i == selected
                 ),
                 tty
@@ -184,11 +189,13 @@ private func displayLine(
     path: String,
     parentWidth: Int,
     nameWidth: Int,
+    isPinned: Bool,
     isSelected: Bool
 ) -> String {
     let parent = padded(item.parent, to: parentWidth)
     let name = padded(item.name, to: nameWidth)
-    let text = "\(parent)  \(ansiBold)\(name)\(ansiBoldOff)  \(ansiGray)\(GotoProjectList.displayPath(for: path))"
+    let marker = isPinned ? "📌 " : "   "
+    let text = "\(marker)\(parent)  \(ansiBold)\(name)\(ansiBoldOff)  \(ansiGray)\(GotoProjectList.displayPath(for: path))"
     if isSelected {
         return "\(ansiInvertOn)  \(text)  \(ansiReset)\n"
     }
@@ -224,8 +231,14 @@ private func mainRows(projects: [String], config: GotoCLIConfig) -> [MainRow] {
     let ordered = GotoProjectList.orderedProjects(projects, config: config)
     var rows: [MainRow] = []
 
+    let pinEnd = ordered.pinnedCount
+    let recentEnd = ordered.pinnedCount + ordered.recentCount
+    let total = ordered.displayProjects.count
+
     for (index, path) in ordered.displayProjects.enumerated() {
-        if ordered.recentCount > 0 && ordered.recentCount < ordered.displayProjects.count && index == ordered.recentCount {
+        if pinEnd > 0 && index == pinEnd && index < total {
+            rows.append(.separator)
+        } else if ordered.recentCount > 0 && index == recentEnd && index < total {
             rows.append(.separator)
         }
         rows.append(.project(path))
@@ -285,6 +298,8 @@ private func drawSettings(config: GotoCLIConfig, selected: Int, tty: UnsafeMutab
         case .back:
             fputs(menuLine("뒤로 가기", isSelected: isSelected), tty)
             fputs("\n\(separatorLine(for: tty))\n\n", tty)
+        case .pinSort:
+            fputs(settingsOptionLine("핀 정렬", value: config.pinSortMode.title, titleWidth: titleWidth, isSelected: isSelected), tty)
         case .prefixSort:
             let option = GotoSettings.sortOption(field: config.parentSortField, direction: config.parentSortDirection)
             fputs(settingsOptionLine("상위 폴더 정렬", value: option.title, titleWidth: titleWidth, isSelected: isSelected), tty)
@@ -323,6 +338,9 @@ private func runSettings(config: inout GotoCLIConfig, tty: UnsafeMutablePointer<
             switch rows[selected] {
             case .back:
                 return .back
+            case .pinSort:
+                config.pinSortMode = config.pinSortMode.next
+                GotoSettings.saveCLIConfig(config)
             case .prefixSort:
                 let current = GotoSettings.sortOption(field: config.parentSortField, direction: config.parentSortDirection)
                 let next = current.next
@@ -338,6 +356,8 @@ private func runSettings(config: inout GotoCLIConfig, tty: UnsafeMutablePointer<
             case .projectManagement:
                 return .openProjectManagement
             }
+        case .pin:
+            break
         case .esc:
             return .back
         case .quit:
@@ -357,11 +377,12 @@ private func projectManagementRows(projects: [String], config: GotoCLIConfig) ->
 private func drawProjectManagement(
     rows: [ProjectManagementRow],
     marked: Set<String>,
+    pinnedSet: Set<String>,
     selected: Int,
     tty: UnsafeMutablePointer<FILE>
 ) {
     fputs(ansiClear, tty)
-    fputs("goto — 프로젝트 관리 (↑↓ 이동, Space/Enter 선택, ESC 뒤로)\n\n", tty)
+    fputs("goto — 프로젝트 관리 (↑↓ 이동, Space/Enter 체크, p 핀, ESC 뒤로)\n\n", tty)
 
     let projectPaths = rows.compactMap { row -> String? in
         if case .project(let path) = row { return path }
@@ -381,10 +402,11 @@ private func drawProjectManagement(
             fputs("\n\(separatorLine(for: tty))\n\n", tty)
         case .project(let path):
             let mark = marked.contains(path) ? "[x]" : "[ ]"
+            let pin = pinnedSet.contains(path) ? "📌" : "  "
             let item = GotoProjectList.displayItem(for: path)
             let parent = padded(item.parent, to: columns.parentWidth)
             let name = padded(item.name, to: columns.nameWidth)
-            let text = "\(mark) \(parent)  \(ansiBold)\(name)\(ansiBoldOff)  \(ansiGray)\(GotoProjectList.displayPath(for: path))"
+            let text = "\(mark) \(pin) \(parent)  \(ansiBold)\(name)\(ansiBoldOff)  \(ansiGray)\(GotoProjectList.displayPath(for: path))"
             if isSelected {
                 fputs("\(ansiInvertOn)  \(text)  \(ansiReset)\n", tty)
             } else {
@@ -402,7 +424,8 @@ private func runProjectManagement(
     var rows = projectManagementRows(projects: projects, config: config)
     var selected = firstSelectableIndex(in: rows) { $0.isSelectable }
     var marked = Set<String>()
-    drawProjectManagement(rows: rows, marked: marked, selected: selected, tty: tty)
+    var pinnedSet = Set(GotoProjectList.loadPinnedProjects(availableProjects: projects))
+    drawProjectManagement(rows: rows, marked: marked, pinnedSet: pinnedSet, selected: selected, tty: tty)
 
     while true {
         switch readKey() {
@@ -414,6 +437,11 @@ private func runProjectManagement(
             selected = firstSelectableIndex(in: rows) { $0.isSelectable }
         case .right:
             selected = lastSelectableIndex(in: rows) { $0.isSelectable }
+        case .pin:
+            if case .project(let path) = rows[selected] {
+                GotoProjectList.togglePinned(path, availableProjects: projects)
+                pinnedSet = Set(GotoProjectList.loadPinnedProjects(availableProjects: projects))
+            }
         case .enter, .space:
             switch rows[selected] {
             case .back:
@@ -421,10 +449,12 @@ private func runProjectManagement(
             case .removeSelected:
                 for path in marked {
                     _ = try? GotoProjectStore.remove(path)
+                    GotoProjectList.setPinned(path, pinned: false, availableProjects: GotoProjectStore.load())
                 }
                 projects = GotoProjectStore.load()
                 rows = projectManagementRows(projects: projects, config: config)
                 marked.removeAll()
+                pinnedSet = Set(GotoProjectList.loadPinnedProjects(availableProjects: projects))
                 selected = lastSelectableIndex(in: rows) { $0.isSelectable }
             case .separator:
                 break
@@ -440,7 +470,7 @@ private func runProjectManagement(
         case .other:
             break
         }
-        drawProjectManagement(rows: rows, marked: marked, selected: selected, tty: tty)
+        drawProjectManagement(rows: rows, marked: marked, pinnedSet: pinnedSet, selected: selected, tty: tty)
     }
 }
 
@@ -460,8 +490,9 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
     var projects = initialProjects
     var config = GotoSettings.cliConfig()
     var rows = mainRows(projects: projects, config: config)
+    var pinnedSet = Set(GotoProjectList.loadPinnedProjects(availableProjects: projects))
     var selected = firstSelectableIndex(in: rows) { $0.isSelectable }
-    drawMainList(rows: rows, selected: selected, tty: tty)
+    drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, tty: tty)
 
     while true {
         let key = readKey()
@@ -474,6 +505,20 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
             selected = firstSelectableIndex(in: rows) { $0.isSelectable }
         case .right:
             selected = lastSelectableIndex(in: rows) { $0.isSelectable }
+        case .pin:
+            if case .project(let path) = rows[selected] {
+                GotoProjectList.togglePinned(path, availableProjects: projects)
+                rows = mainRows(projects: projects, config: config)
+                pinnedSet = Set(GotoProjectList.loadPinnedProjects(availableProjects: projects))
+                if let idx = rows.firstIndex(where: { row in
+                    if case .project(let p) = row { return p == path }
+                    return false
+                }) {
+                    selected = idx
+                } else {
+                    selected = firstSelectableIndex(in: rows) { $0.isSelectable }
+                }
+            }
         case .enter, .space:
             switch rows[selected] {
             case .project(let chosen):
@@ -492,6 +537,7 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
                 }
                 config = GotoSettings.cliConfig()
                 rows = mainRows(projects: projects, config: config)
+                pinnedSet = Set(GotoProjectList.loadPinnedProjects(availableProjects: projects))
                 selected = firstSelectableIndex(in: rows) { $0.isSelectable }
             case .separator:
                 break
@@ -502,7 +548,7 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
         case .other:
             break
         }
-        drawMainList(rows: rows, selected: selected, tty: tty)
+        drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, tty: tty)
     }
 }
 
@@ -513,6 +559,8 @@ private let usageText = """
   goto --remove <path>           경로 제거
   goto --add-subdirs <path>      1단계 하위 git 디렉터리 모두 등록
   goto --remove-subdirs <path>   1단계 하위 디렉터리 모두 제거
+  goto --pin <path>              프로젝트 핀 고정 (최상단)
+  goto --unpin <path>            프로젝트 핀 해제
   goto --help                    이 도움말 출력
 """
 
@@ -535,7 +583,7 @@ if args.contains("--help") {
     exit(0)
 }
 
-let knownFlags: Set<String> = ["--add", "--remove", "--add-subdirs", "--remove-subdirs", "--help"]
+let knownFlags: Set<String> = ["--add", "--remove", "--add-subdirs", "--remove-subdirs", "--pin", "--unpin", "--help"]
 for arg in args where arg.hasPrefix("-") {
     if !knownFlags.contains(arg) {
         fputs("error: 알 수 없는 인자: \(arg)\n\(usageText)\n", stderr)
@@ -603,6 +651,34 @@ if let idx = argArray.firstIndex(of: "--remove-subdirs") {
     } catch {
         handleStoreError(error, path: path)
     }
+}
+
+if let idx = argArray.firstIndex(of: "--pin") {
+    guard idx + 1 < argArray.count else {
+        fputs("error: --pin 에 경로가 필요합니다\n\(usageText)\n", stderr)
+        exit(2)
+    }
+    let norm = GotoProjectStore.normalize(argArray[idx + 1])
+    let projects = GotoProjectStore.load()
+    guard projects.contains(norm) else {
+        fputs("error: 등록되지 않은 경로입니다. 먼저 --add 로 등록하세요: \(norm)\n", stderr)
+        exit(2)
+    }
+    let changed = GotoProjectList.setPinned(norm, pinned: true, availableProjects: projects)
+    fputs(changed ? "핀 고정: \(norm)\n" : "이미 핀 고정됨: \(norm)\n", stderr)
+    exit(0)
+}
+
+if let idx = argArray.firstIndex(of: "--unpin") {
+    guard idx + 1 < argArray.count else {
+        fputs("error: --unpin 에 경로가 필요합니다\n\(usageText)\n", stderr)
+        exit(2)
+    }
+    let norm = GotoProjectStore.normalize(argArray[idx + 1])
+    let projects = GotoProjectStore.load()
+    let changed = GotoProjectList.setPinned(norm, pinned: false, availableProjects: projects)
+    fputs(changed ? "핀 해제: \(norm)\n" : "핀 고정되어 있지 않음: \(norm)\n", stderr)
+    exit(0)
 }
 
 if !argArray.isEmpty {

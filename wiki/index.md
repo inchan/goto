@@ -11,6 +11,7 @@
 - [[concepts/project-list-behavior]] — shared project list ordering, recents, sorting, and menu bar grouping behavior.
 - [[concepts/shared-project-list-model]] — refactoring boundary for deterministic project list input/output behavior.
 - [[concepts/settings-persistence]] — where CLI and app settings are stored.
+- [[concepts/pin-feature]] — pinned projects: data layout, sort modes, CLI/menubar UI, alternate-item toggle.
 
 ## Entities
 
