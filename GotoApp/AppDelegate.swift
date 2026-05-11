@@ -132,6 +132,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         existingBehaviorStack.translatesAutoresizingMaskIntoConstraints = false
 
         let cliSortLabel = label("CLI project list sorting", font: .systemFont(ofSize: 13, weight: .semibold))
+        let pinSortLabel = label("핀 정렬", font: .systemFont(ofSize: 12))
+        let pinSortPopup = NSPopUpButton(frame: .zero, pullsDown: false)
+        pinSortPopup.target = self
+        pinSortPopup.action = #selector(pinSortDidChange(_:))
+        pinSortPopup.translatesAutoresizingMaskIntoConstraints = false
+        configurePinSortPopup(pinSortPopup)
+
         let parentSortLabel = label("상위 폴더 정렬", font: .systemFont(ofSize: 12))
         let parentSortPopup = NSPopUpButton(frame: .zero, pullsDown: false)
         parentSortPopup.target = self
@@ -146,6 +153,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         projectSortPopup.translatesAutoresizingMaskIntoConstraints = false
         configureProjectSortPopup(projectSortPopup)
 
+        let pinSortRow = NSStackView(views: [pinSortLabel, pinSortPopup])
+        pinSortRow.orientation = .horizontal
+        pinSortRow.alignment = .centerY
+        pinSortRow.spacing = 12
+        pinSortRow.translatesAutoresizingMaskIntoConstraints = false
+
         let parentSortRow = NSStackView(views: [parentSortLabel, parentSortPopup])
         parentSortRow.orientation = .horizontal
         parentSortRow.alignment = .centerY
@@ -158,7 +171,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         projectSortRow.spacing = 12
         projectSortRow.translatesAutoresizingMaskIntoConstraints = false
 
-        let cliSortStack = NSStackView(views: [cliSortLabel, parentSortRow, projectSortRow])
+        let cliSortStack = NSStackView(views: [cliSortLabel, pinSortRow, parentSortRow, projectSortRow])
         cliSortStack.orientation = .vertical
         cliSortStack.alignment = .leading
         cliSortStack.spacing = 6
@@ -196,8 +209,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             stack.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             terminalPopup.widthAnchor.constraint(equalToConstant: 220),
             existingBehaviorPopup.widthAnchor.constraint(equalToConstant: 220),
+            pinSortLabel.widthAnchor.constraint(equalToConstant: 90),
             parentSortLabel.widthAnchor.constraint(equalToConstant: 90),
             projectSortLabel.widthAnchor.constraint(equalToConstant: 90),
+            pinSortPopup.widthAnchor.constraint(equalToConstant: 180),
             parentSortPopup.widthAnchor.constraint(equalToConstant: 180),
             projectSortPopup.widthAnchor.constraint(equalToConstant: 180)
         ])
@@ -265,6 +280,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         terminalStatusLabel?.stringValue = terminalStatusText()
     }
 
+    @objc private func pinSortDidChange(_ sender: NSPopUpButton) {
+        guard let raw = sender.selectedItem?.representedObject as? String,
+              let mode = GotoPinSortMode(rawValue: raw) else { return }
+        var config = GotoSettings.cliConfig()
+        config.pinSortMode = mode
+        GotoSettings.saveCLIConfig(config)
+        menuBarController?.update()
+    }
+
     @objc private func parentSortDidChange(_ sender: NSPopUpButton) {
         guard let option = selectedSortOption(in: sender) else { return }
         var config = GotoSettings.cliConfig()
@@ -307,6 +331,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let selectedBehavior = GotoSettings.existingTerminalBehavior()
         if let item = popup.itemArray.first(where: { ($0.representedObject as? String) == selectedBehavior.rawValue }) {
+            popup.select(item)
+        }
+    }
+
+    private func configurePinSortPopup(_ popup: NSPopUpButton) {
+        popup.removeAllItems()
+        for mode in GotoPinSortMode.allCases {
+            popup.addItem(withTitle: mode.title)
+            popup.lastItem?.representedObject = mode.rawValue
+        }
+        let current = GotoSettings.cliConfig().pinSortMode
+        if let item = popup.itemArray.first(where: { ($0.representedObject as? String) == current.rawValue }) {
             popup.select(item)
         }
     }

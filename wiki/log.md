@@ -31,3 +31,7 @@ Fixed the white square that appeared in the menu bar and Finder Sync toolbar aft
 ## 2026-05-11 fix | settings window front-most
 
 Fixed the menu bar "Settings…" action so the configuration window reliably comes to the front on macOS 14+. Added a `bringToFront(_:)` helper that re-asserts `.regular` activation policy, uses the modern `NSApp.activate()` on macOS 14+, and calls `orderFrontRegardless()`. Hooked `NSWindowDelegate.windowWillClose` so the cached reference is dropped after the user closes the window. See `summaries/settings-window-front-2026-05-11`.
+
+## 2026-05-11 feat | pin feature
+
+Added project pinning. Pinned projects sit above recents in both the CLI interactive list and the menu bar, with a 📌 marker. Data lives in `~/.goto_pinned` (insertion-ordered) and the CLI/menubar share the same loader. Sorting modes (insertion / name / createdAt × asc/desc) live in `GotoCLIConfig.pinSortMode` and can be changed via CLI Settings or the app Settings popup. CLI toggles: `--pin/--unpin` flags, plus `p` key in the interactive list and the project management screen. Menu bar uses `NSMenuItem.isAlternate = true` with the `.option` modifier so the toggle item appears when ⌥ is held. See `concepts/pin-feature`.

@@ -15,6 +15,64 @@ struct GotoCLIConfig: Codable {
     var parentSortDirection: GotoSortDirection = .descending
     var projectSortField: GotoProjectSortField = .name
     var projectSortDirection: GotoSortDirection = .descending
+    var pinSortMode: GotoPinSortMode = .insertion
+
+    enum CodingKeys: String, CodingKey {
+        case parentSortField, parentSortDirection
+        case projectSortField, projectSortDirection
+        case pinSortMode
+    }
+
+    init(
+        parentSortField: GotoProjectSortField = .name,
+        parentSortDirection: GotoSortDirection = .descending,
+        projectSortField: GotoProjectSortField = .name,
+        projectSortDirection: GotoSortDirection = .descending,
+        pinSortMode: GotoPinSortMode = .insertion
+    ) {
+        self.parentSortField = parentSortField
+        self.parentSortDirection = parentSortDirection
+        self.projectSortField = projectSortField
+        self.projectSortDirection = projectSortDirection
+        self.pinSortMode = pinSortMode
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        parentSortField = try c.decodeIfPresent(GotoProjectSortField.self, forKey: .parentSortField) ?? .name
+        parentSortDirection = try c.decodeIfPresent(GotoSortDirection.self, forKey: .parentSortDirection) ?? .descending
+        projectSortField = try c.decodeIfPresent(GotoProjectSortField.self, forKey: .projectSortField) ?? .name
+        projectSortDirection = try c.decodeIfPresent(GotoSortDirection.self, forKey: .projectSortDirection) ?? .descending
+        pinSortMode = try c.decodeIfPresent(GotoPinSortMode.self, forKey: .pinSortMode) ?? .insertion
+    }
+}
+
+enum GotoPinSortMode: String, Codable, CaseIterable {
+    case insertion
+    case nameAscending
+    case nameDescending
+    case createdAtAscending
+    case createdAtDescending
+
+    var title: String {
+        switch self {
+        case .insertion: return "추가순"
+        case .nameAscending: return "이름 오름차순"
+        case .nameDescending: return "이름 내림차순"
+        case .createdAtAscending: return "생성일 오름차순"
+        case .createdAtDescending: return "생성일 내림차순"
+        }
+    }
+
+    var next: GotoPinSortMode {
+        switch self {
+        case .insertion: return .nameAscending
+        case .nameAscending: return .nameDescending
+        case .nameDescending: return .createdAtAscending
+        case .createdAtAscending: return .createdAtDescending
+        case .createdAtDescending: return .insertion
+        }
+    }
 }
 
 enum GotoSortOption: CaseIterable {
@@ -143,20 +201,114 @@ enum GotoProjectList {
         try? content.write(to: GotoSettings.recentProjectsURL, atomically: true, encoding: .utf8)
     }
 
+    static func loadPinnedProjects(availableProjects: [String]) -> [String] {
+        guard let content = try? String(contentsOf: GotoSettings.pinnedProjectsURL, encoding: .utf8) else {
+            return []
+        }
+
+        let available = Set(availableProjects)
+        var seen = Set<String>()
+        var pins: [String] = []
+
+        for line in content.components(separatedBy: .newlines) {
+            let path = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !path.isEmpty, available.contains(path), !seen.contains(path) else {
+                continue
+            }
+            seen.insert(path)
+            pins.append(path)
+        }
+
+        return pins
+    }
+
+    static func isPinned(_ path: String, pinned: [String]? = nil) -> Bool {
+        let list = pinned ?? loadPinnedProjects(availableProjects: [path])
+        return list.contains(path)
+    }
+
+    @discardableResult
+    static func setPinned(_ path: String, pinned: Bool, availableProjects: [String]) -> Bool {
+        var current = loadPinnedProjects(availableProjects: availableProjects)
+        let wasPinned = current.contains(path)
+        if pinned {
+            guard !wasPinned else { return false }
+            current.insert(path, at: 0)
+        } else {
+            guard wasPinned else { return false }
+            current.removeAll { $0 == path }
+        }
+        writePinned(current)
+        return true
+    }
+
+    @discardableResult
+    static func togglePinned(_ path: String, availableProjects: [String]) -> Bool {
+        let current = loadPinnedProjects(availableProjects: availableProjects)
+        let nextPinned = !current.contains(path)
+        setPinned(path, pinned: nextPinned, availableProjects: availableProjects)
+        return nextPinned
+    }
+
+    private static func writePinned(_ pins: [String]) {
+        let content = pins.joined(separator: "\n") + (pins.isEmpty ? "" : "\n")
+        try? content.write(to: GotoSettings.pinnedProjectsURL, atomically: true, encoding: .utf8)
+    }
+
     static func sortedProjects(_ projects: [String], config: GotoCLIConfig) -> [String] {
         projects.sorted { compareProjects($0, $1, config: config) }
+    }
+
+    static func sortedPinned(_ pins: [String], mode: GotoPinSortMode) -> [String] {
+        switch mode {
+        case .insertion:
+            return pins
+        case .nameAscending, .nameDescending:
+            return pins.sorted {
+                comparePinByName($0, $1, ascending: mode == .nameAscending)
+            }
+        case .createdAtAscending, .createdAtDescending:
+            return pins.sorted {
+                comparePinByDate($0, $1, ascending: mode == .createdAtAscending)
+            }
+        }
+    }
+
+    private static func comparePinByName(_ lhs: String, _ rhs: String, ascending: Bool) -> Bool {
+        let a = displayItem(for: lhs).name
+        let b = displayItem(for: rhs).name
+        let result = a.localizedStandardCompare(b)
+        if result == .orderedSame {
+            return lhs.localizedStandardCompare(rhs) == .orderedAscending
+        }
+        return (result == .orderedAscending) == ascending
+    }
+
+    private static func comparePinByDate(_ lhs: String, _ rhs: String, ascending: Bool) -> Bool {
+        let a = creationDate(for: lhs)
+        let b = creationDate(for: rhs)
+        if a == b {
+            return lhs.localizedStandardCompare(rhs) == .orderedAscending
+        }
+        return (a < b) == ascending
     }
 
     static func orderedProjects(
         _ projects: [String],
         config: GotoCLIConfig
-    ) -> (displayProjects: [String], recentCount: Int) {
+    ) -> (displayProjects: [String], pinnedCount: Int, recentCount: Int) {
+        let pins = sortedPinned(
+            loadPinnedProjects(availableProjects: projects),
+            mode: config.pinSortMode
+        )
+        let pinSet = Set(pins)
         let recents = loadRecentProjects(availableProjects: projects)
+            .filter { !pinSet.contains($0) }
         let recentSet = Set(recents)
         let remaining = projects
-            .filter { !recentSet.contains($0) }
+            .filter { !pinSet.contains($0) && !recentSet.contains($0) }
             .sorted { compareProjects($0, $1, config: config) }
-        return (recents + remaining, recents.count)
+        return (pins + recents + remaining, pins.count, recents.count)
     }
 
     private static func compareProjects(_ lhs: String, _ rhs: String, config: GotoCLIConfig) -> Bool {
@@ -240,6 +392,7 @@ enum GotoProjectList {
 extension GotoSettings {
     nonisolated(unsafe) static var cliConfigURLOverride: URL?
     nonisolated(unsafe) static var recentProjectsURLOverride: URL?
+    nonisolated(unsafe) static var pinnedProjectsURLOverride: URL?
 
     static var cliConfigURL: URL {
         cliConfigURLOverride ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".goto_config")
@@ -247,6 +400,10 @@ extension GotoSettings {
 
     static var recentProjectsURL: URL {
         recentProjectsURLOverride ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".goto_recent")
+    }
+
+    static var pinnedProjectsURL: URL {
+        pinnedProjectsURLOverride ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".goto_pinned")
     }
 
     static func cliConfig() -> GotoCLIConfig {
