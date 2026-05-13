@@ -1,5 +1,9 @@
 # Goto Wiki Log
 
+## 2026-05-13 refine | CLI prefix palette + cleanup menu
+
+사용자 피드백을 반영해 prefix 배경색 알고리즘을 두 차례 다듬었다. (1) 초기 FNV-1a → HSL 무한 hue 매핑이 녹색 편중·탁한 인상을 줘서, (2) 16색 어두운 톤 큐레이트 → vivid Tailwind 600 → 최종 **8색 큐레이트** 로 정착했다. 8색은 hue family 당 1개씩만 두고, **linear-probed 슬롯 할당** 으로 현재 표시 중인 unique prefix 끼리 색이 겹치지 않도록 보장한다. 배경 휘도 기준으로 검은/흰 글자를 자동 선택해 옅은 색에서도 가독성을 유지한다. 같은 사이클에 프로젝트 관리 화면에 `정리 (N)` 메뉴를 추가했다. N 은 등록된 경로 중 디렉토리가 존재하지 않는 항목 수이며, Enter 시 일괄 제거된다. See `summaries/cli-prefix-features-2026-05-13`.
+
 ## 2026-05-13 feat | CLI prefix color, f filter, pattern prefix
 
 CLI 인터랙티브 모드에 prefix true-color 배경 배지(FNV-1a 64-bit → HSL with sat/light variants), `f` 키 필터(Claude Code 스타일), 동일 prefix 가 2개 이상 등록됐을 때만 적용되는 `xxx-` 패턴 prefix 매칭을 추가했다. 설정에 `prefixColorEnabled`, `prefixPatternEnabled` 두 토글을 노출해 영속 저장한다. 패턴 prefix 활성화 시 정렬 키도 패턴 prefix 로 통일되어 동일 prefix 항목이 인접 배치된다. 메뉴바 앱 동작은 변하지 않는다. See `summaries/cli-prefix-features-2026-05-13`.

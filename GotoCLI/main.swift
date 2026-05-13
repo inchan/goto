@@ -116,41 +116,65 @@ private func hashSeed(_ text: String) -> UInt64 {
     return hash
 }
 
+// One color per hue family. Every pair has a hue gap of at least ~80°
+// so neither hash collisions nor probing land on a visually similar color.
+// Indices are arranged so that linear probing (idx → idx+1) also crosses
+// a large hue distance.
 private let prefixPalette: [(Int, Int, Int)] = [
-    (0xc0, 0x39, 0x2b),  // red
-    (0xd9, 0x53, 0x4f),  // coral
-    (0xe6, 0x7e, 0x22),  // orange
-    (0xb9, 0x77, 0x0f),  // amber dark
-    (0x6b, 0x8e, 0x23),  // olive (only green)
-    (0x16, 0x82, 0x6f),  // teal
-    (0x0e, 0x74, 0x90),  // cyan dark
-    (0x1f, 0x6f, 0xeb),  // blue
-    (0x2e, 0x4f, 0xa6),  // indigo dark
-    (0x5b, 0x3f, 0xb8),  // violet
-    (0x82, 0x3c, 0xb8),  // purple
-    (0xa8, 0x33, 0x9a),  // magenta
-    (0xc0, 0x32, 0x6f),  // pink dark
-    (0x8b, 0x4a, 0x2b),  // brown
-    (0x55, 0x57, 0x6b),  // slate
-    (0x4a, 0x4a, 0x4a),  // neutral
+    (0xef, 0x44, 0x44),  // red       hue   0°
+    (0x10, 0xb9, 0x81),  // emerald   hue 160°
+    (0x8b, 0x5c, 0xf6),  // violet    hue 260°
+    (0xf5, 0x9e, 0x0b),  // amber     hue  38°
+    (0x06, 0xb6, 0xd4),  // cyan      hue 188°
+    (0xec, 0x48, 0x99),  // pink      hue 330°
+    (0x3b, 0x82, 0xf6),  // blue      hue 215°
+    (0x64, 0x74, 0x8b),  // slate     neutral
 ]
 
-private func parentBgRgb(for parent: String) -> (Int, Int, Int) {
-    let idx = Int(hashSeed(parent) % UInt64(prefixPalette.count))
-    return prefixPalette[idx]
+// Linear-probed assignment: same prefix always gets the same start slot,
+// but if a slot collides with an already-assigned prefix in the current
+// list, the next free slot is used. Guarantees zero color collisions
+// when the unique prefix count is <= palette size.
+private func assignPrefixColors(_ prefixes: [String]) -> [String: (Int, Int, Int)] {
+    let n = prefixPalette.count
+    var slots: [Int: String] = [:]
+    var assignment: [String: Int] = [:]
+    // deterministic order: hash-stable to keep colors stable across draws
+    for prefix in prefixes.sorted() {
+        let start = Int(hashSeed(prefix) % UInt64(n))
+        var idx = start
+        var placed = false
+        for _ in 0..<n {
+            if slots[idx] == nil {
+                slots[idx] = prefix
+                assignment[prefix] = idx
+                placed = true
+                break
+            }
+            idx = (idx + 1) % n
+        }
+        if !placed {
+            assignment[prefix] = start
+        }
+    }
+    return assignment.mapValues { prefixPalette[$0] }
 }
 
-private func parentBadge(_ parent: String, width: Int, colored: Bool) -> String {
+private func contrastFg(for rgb: (Int, Int, Int)) -> String {
+    let lum = 0.299 * Double(rgb.0) + 0.587 * Double(rgb.1) + 0.114 * Double(rgb.2)
+    return lum > 150 ? "\u{1B}[38;2;0;0;0m" : "\u{1B}[97m"
+}
+
+private func parentBadge(_ parent: String, width: Int, color: (Int, Int, Int)?) -> String {
     let padding = String(repeating: " ", count: max(0, width - parent.count))
     if parent.isEmpty {
         return String(repeating: " ", count: width + 2)
     }
-    if !colored {
+    guard let rgb = color else {
         return " \(parent)\(padding) "
     }
-    let (r, g, b) = parentBgRgb(for: parent)
-    let bg = "\u{1B}[48;2;\(r);\(g);\(b)m"
-    let fg = "\u{1B}[97m"
+    let bg = "\u{1B}[48;2;\(rgb.0);\(rgb.1);\(rgb.2)m"
+    let fg = contrastFg(for: rgb)
     return "\(bg)\(fg) \(parent)\(padding) \u{1B}[49m\u{1B}[39m"
 }
 
@@ -179,18 +203,32 @@ private enum SettingsRow: CaseIterable {
 
 private enum ProjectManagementRow {
     case back
+    case cleanup
     case removeSelected
     case separator
     case project(String)
 
     var isSelectable: Bool {
         switch self {
-        case .back, .removeSelected, .project:
+        case .back, .cleanup, .removeSelected, .project:
             return true
         case .separator:
             return false
         }
     }
+}
+
+private func missingProjectPaths(_ projects: [String]) -> [String] {
+    let fm = FileManager.default
+    var missing: [String] = []
+    for path in projects {
+        var isDir: ObjCBool = false
+        let exists = fm.fileExists(atPath: path, isDirectory: &isDir)
+        if !exists || !isDir.boolValue {
+            missing.append(path)
+        }
+    }
+    return missing
 }
 
 private enum InteractiveResult {
@@ -241,6 +279,9 @@ private func drawMainList(
     }
     let columns = projectColumns(for: projectPaths, displayItem: displayItem)
 
+    let uniqueParents = Array(Set(projectPaths.map { displayItem($0).parent }.filter { !$0.isEmpty }))
+    let colorMap: [String: (Int, Int, Int)] = colored ? assignPrefixColors(uniqueParents) : [:]
+
     if filterQuery != nil && projectPaths.isEmpty {
         fputs("  \(ansiGray)일치하는 프로젝트가 없습니다.\(ansiReset)\n", tty)
     }
@@ -250,15 +291,16 @@ private func drawMainList(
         case .separator:
             fputs("\n\(separatorLine(for: tty))\n\n", tty)
         case .project(let path):
+            let item = displayItem(path)
             fputs(
                 displayLine(
-                    item: displayItem(path),
+                    item: item,
                     path: path,
                     parentWidth: columns.parentWidth,
                     nameWidth: columns.nameWidth,
                     isPinned: pinnedSet.contains(path),
                     isSelected: i == selected,
-                    colored: colored
+                    color: colored ? colorMap[item.parent] : nil
                 ),
                 tty
             )
@@ -292,9 +334,9 @@ private func displayLine(
     nameWidth: Int,
     isPinned: Bool,
     isSelected: Bool,
-    colored: Bool
+    color: (Int, Int, Int)?
 ) -> String {
-    let badge = parentBadge(item.parent, width: parentWidth, colored: colored)
+    let badge = parentBadge(item.parent, width: parentWidth, color: color)
     let name = padded(item.name, to: nameWidth)
     let marker = isPinned ? "📌 " : "   "
     let text = "\(marker)\(badge)  \(ansiBold)\(name)\(ansiBoldOff)  \(ansiGray)\(GotoProjectList.displayPath(for: path))"
@@ -503,7 +545,7 @@ private func projectManagementRows(
         projectNameProvider: { displayItem($0).name }
     )
     let projectRows = sorted.map { ProjectManagementRow.project($0) }
-    return [.back] + projectRows + [.separator, .removeSelected]
+    return [.back, .cleanup] + projectRows + [.separator, .removeSelected]
 }
 
 private func drawProjectManagement(
@@ -524,11 +566,19 @@ private func drawProjectManagement(
     }
     let columns = projectColumns(for: projectPaths, displayItem: displayItem)
 
+    let uniqueParents = Array(Set(projectPaths.map { displayItem($0).parent }.filter { !$0.isEmpty }))
+    let colorMap: [String: (Int, Int, Int)] = colored ? assignPrefixColors(uniqueParents) : [:]
+
     for (index, row) in rows.enumerated() {
         let isSelected = index == selected
         switch row {
         case .back:
             fputs(menuLine("뒤로 가기", isSelected: isSelected), tty)
+        case .cleanup:
+            let missingCount = missingProjectPaths(rows.compactMap {
+                if case .project(let p) = $0 { return p } else { return nil }
+            }).count
+            fputs(menuLine("정리 (\(missingCount))", isSelected: isSelected), tty)
             fputs("\n\(separatorLine(for: tty))\n\n", tty)
         case .removeSelected:
             fputs(menuLine("선택한 프로젝트 제거 (\(marked.count))", isSelected: isSelected), tty)
@@ -538,7 +588,7 @@ private func drawProjectManagement(
             let mark = marked.contains(path) ? "[x]" : "[ ]"
             let pin = pinnedSet.contains(path) ? "📌" : "  "
             let item = displayItem(path)
-            let badge = parentBadge(item.parent, width: columns.parentWidth, colored: colored)
+            let badge = parentBadge(item.parent, width: columns.parentWidth, color: colored ? colorMap[item.parent] : nil)
             let name = padded(item.name, to: columns.nameWidth)
             let text = "\(mark) \(pin) \(badge)  \(ansiBold)\(name)\(ansiBoldOff)  \(ansiGray)\(GotoProjectList.displayPath(for: path))"
             if isSelected {
@@ -591,6 +641,18 @@ private func runProjectManagement(
             switch rows[selected] {
             case .back:
                 return
+            case .cleanup:
+                let missing = missingProjectPaths(projects)
+                for path in missing {
+                    _ = try? GotoProjectStore.remove(path)
+                    GotoProjectList.setPinned(path, pinned: false, availableProjects: GotoProjectStore.load())
+                    marked.remove(path)
+                }
+                projects = GotoProjectStore.load()
+                displayItem = makeDisplayItem()
+                rows = projectManagementRows(projects: projects, config: config, displayItem: displayItem)
+                pinnedSet = Set(GotoProjectList.loadPinnedProjects(availableProjects: projects))
+                selected = firstSelectableIndex(in: rows) { $0.isSelectable }
             case .removeSelected:
                 for path in marked {
                     _ = try? GotoProjectStore.remove(path)
