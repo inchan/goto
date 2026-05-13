@@ -33,6 +33,8 @@ gh auth status 2>&1 | head -3
 - 현재 브랜치가 `develop` 인지 확인. 아니라면 사용자에게 전환 여부 질문
 - 작업트리 dirty 여부 보고
 - `gh` 인증 상태 확인. 미인증 시 사용자에게 `gh auth login` 안내 후 중단
+- **gh 활성 계정 점검** — `inchan` 이 아니면 이전 계정명을 변수에 저장 후 `gh auth switch -u inchan`. Stage 4 종료 시 반드시 이전 계정으로 복원
+- `git config user.email` 가 `kangsazang@gmail.com` 인지 확인. 다르면 `git config user.email kangsazang@gmail.com` 로 로컬 설정
 
 ## Stage 1 — 정리
 
@@ -173,8 +175,18 @@ EOF
 ```
 
 - PR URL 을 사용자에게 출력
-- **머지는 사용자가 직접 수행한다** — 스킬은 머지하지 않음
+- main 보호 규칙은 `required_approving_review_count=0` 이므로 작성자(`inchan`) 가 직접 `gh pr merge <N> --squash --delete-branch=false` 로 머지 가능. 사용자에게 self-merge 진행 여부를 묻고 승인 시 수행
 - 머지 후 CI `release.yml` 이 자동으로 패치 버전 릴리즈 생성
+
+### 4-5 계정 복원 (필수)
+
+Stage 0 에서 `inchan` 외 다른 계정에서 전환했다면 즉시 복원한다.
+
+```bash
+gh auth switch -u <previous-account>
+```
+
+복원 누락 금지 — 사용자의 다른 작업이 잘못된 계정으로 진행될 수 있다.
 
 ### 4-4 후속 안내
 

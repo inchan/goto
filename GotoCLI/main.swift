@@ -116,32 +116,28 @@ private func hashSeed(_ text: String) -> UInt64 {
     return hash
 }
 
-private func hslToRgb(h: Double, s: Double, l: Double) -> (Int, Int, Int) {
-    let c = (1 - abs(2 * l - 1)) * s
-    let hp = h / 60.0
-    let x = c * (1 - abs(hp.truncatingRemainder(dividingBy: 2.0) - 1))
-    let r1: Double, g1: Double, b1: Double
-    switch Int(hp.rounded(.down)) {
-    case 0: (r1, g1, b1) = (c, x, 0)
-    case 1: (r1, g1, b1) = (x, c, 0)
-    case 2: (r1, g1, b1) = (0, c, x)
-    case 3: (r1, g1, b1) = (0, x, c)
-    case 4: (r1, g1, b1) = (x, 0, c)
-    default: (r1, g1, b1) = (c, 0, x)
-    }
-    let m = l - c / 2.0
-    let clamp: (Double) -> Int = { v in min(255, max(0, Int(((v + m) * 255).rounded()))) }
-    return (clamp(r1), clamp(g1), clamp(b1))
-}
+private let prefixPalette: [(Int, Int, Int)] = [
+    (0xc0, 0x39, 0x2b),  // red
+    (0xd9, 0x53, 0x4f),  // coral
+    (0xe6, 0x7e, 0x22),  // orange
+    (0xb9, 0x77, 0x0f),  // amber dark
+    (0x6b, 0x8e, 0x23),  // olive (only green)
+    (0x16, 0x82, 0x6f),  // teal
+    (0x0e, 0x74, 0x90),  // cyan dark
+    (0x1f, 0x6f, 0xeb),  // blue
+    (0x2e, 0x4f, 0xa6),  // indigo dark
+    (0x5b, 0x3f, 0xb8),  // violet
+    (0x82, 0x3c, 0xb8),  // purple
+    (0xa8, 0x33, 0x9a),  // magenta
+    (0xc0, 0x32, 0x6f),  // pink dark
+    (0x8b, 0x4a, 0x2b),  // brown
+    (0x55, 0x57, 0x6b),  // slate
+    (0x4a, 0x4a, 0x4a),  // neutral
+]
 
 private func parentBgRgb(for parent: String) -> (Int, Int, Int) {
-    let h = hashSeed(parent)
-    let hue = Double(h % 360)
-    let satTable: [Double] = [0.50, 0.62, 0.74]
-    let lightTable: [Double] = [0.26, 0.32, 0.38, 0.44]
-    let sat = satTable[Int((h >> 16) % UInt64(satTable.count))]
-    let light = lightTable[Int((h >> 24) % UInt64(lightTable.count))]
-    return hslToRgb(h: hue, s: sat, l: light)
+    let idx = Int(hashSeed(parent) % UInt64(prefixPalette.count))
+    return prefixPalette[idx]
 }
 
 private func parentBadge(_ parent: String, width: Int, colored: Bool) -> String {

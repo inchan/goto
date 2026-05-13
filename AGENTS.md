@@ -19,10 +19,15 @@ Never PR a feature branch directly into `main`. Never push to `main`.
 - Required approving review count is `0`, so the PR author can self-merge the release PR without an external reviewer.
 - `enforce_admins=false` — admin can bypass if absolutely needed; do not bypass unless the user asks.
 
-### gh CLI account
+### gh / git account
 
-- Repo lives under user account `inchan`.
-- `gh` may have multiple accounts configured; if push/PR returns 403, run `gh auth switch -u inchan` before retrying. Restore the previous account afterward if needed.
+- All commits, pushes, and PRs in this repo MUST be authored as `inchan <kangsazang@gmail.com>`.
+- If the currently active `gh` account is anything other than `inchan`, switch to it before any git/gh operation:
+  - `previous=$(gh auth status 2>&1 | awk '/Active account: true/{getline; print $NF}')` (or capture via `gh auth status`)
+  - `gh auth switch -u inchan`
+  - perform commit/push/PR work
+  - `gh auth switch -u <previous>` to restore — never leave the user on a different account.
+- Same rule applies to `git config user.email` — verify it is `kangsazang@gmail.com` for this repo. If not, set local config: `git config user.email kangsazang@gmail.com`.
 
 ## Product Name
 
