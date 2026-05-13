@@ -153,6 +153,20 @@ EOF
 git push origin develop
 ```
 
+### 4-2.5 develop ← main 동기화 (PR 충돌 사전 차단)
+
+squash 머지를 반복하면 main 의 squash 커밋 SHA 가 develop 에 없어 PR 생성 후 충돌(`mergeStateStatus=DIRTY`) 이 자주 난다. PR 만들기 직전에 main 을 develop 에 머지해 충돌을 미리 흡수한다.
+
+```bash
+git fetch origin main
+git merge origin/main --no-edit
+```
+
+- 충돌이 발생하면 일반적으로 develop 본(ours) 을 채택한다. 이번 사이클 변경은 모두 develop 최신본에 들어 있고 main 은 직전 squash 결과라 ours 가 진실에 가깝다. 단, **사용자가 main 에 직접 패치를 적용한 흔적이 있으면 그 부분만 손으로 검토** 한다.
+- 충돌 해결 후 머지 커밋: `git commit --no-edit`
+- merge 커밋 푸시: `git push origin develop`
+- 변경할 게 없으면(이미 fast-forward 가능) `git merge` 가 그대로 통과한다 — 그 경우도 push 한 번 더 해두면 안전
+
 ### 4-3 PR develop → main
 
 PR 본문은 변경 요약 + 테스트 플랜 형식.
