@@ -13,6 +13,12 @@
 
 Never PR a feature branch directly into `main`. Never push to `main`.
 
+### main branch protection
+
+- Direct push to `main` is blocked at the GitHub level (`Require a pull request before merging`).
+- Required approving review count is `0`, so the PR author can self-merge the release PR without an external reviewer.
+- `enforce_admins=false` — admin can bypass if absolutely needed; do not bypass unless the user asks.
+
 ### gh CLI account
 
 - Repo lives under user account `inchan`.
