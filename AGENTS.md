@@ -2,11 +2,21 @@
 
 ## Branch Policy
 
-- `develop` is the primary working branch.
+- `develop` is the primary working branch and the integration point.
+- `main` is the release branch. Pushing to `main` triggers `.github/workflows/release.yml` which cuts an automatic patch release.
 - Do not push work directly to `main`.
-- Changes that need to reach `main` must go through a pull request.
-- Local implementation work, commits, and normal pushes should target `develop` unless the user explicitly says otherwise.
-- If a task requires updating `main`, create or update a PR from `develop` to `main` instead of pushing to `main`.
+
+### Two-step PR flow
+
+1. **Feature/fix work** branches off `develop` (e.g. `feat/...`, `fix/...`) and is PR'd back into `develop`. Small day-to-day commits can land on `develop` directly if the user explicitly approves.
+2. **Release**: open a PR from `develop` → `main`. Merging this PR cuts the release.
+
+Never PR a feature branch directly into `main`. Never push to `main`.
+
+### gh CLI account
+
+- Repo lives under user account `inchan`.
+- `gh` may have multiple accounts configured; if push/PR returns 403, run `gh auth switch -u inchan` before retrying. Restore the previous account afterward if needed.
 
 ## Product Name
 
