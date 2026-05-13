@@ -11,9 +11,11 @@ CLI 인터랙티브 모드에 prefix 표현·검색 기능을 강화했다.
 
 ### 1. Prefix 배경색 (true color)
 
-- 상위 폴더 또는 패턴 prefix 문자열을 **FNV-1a 64-bit 해시 → HSL 색공간** 으로 매핑해 배경 배지로 렌더링한다.
-- hue 0~359 외에 채도 3 단계(0.50 / 0.62 / 0.74) · 명도 4 단계(0.26 / 0.32 / 0.38 / 0.44) 를 해시 상위 비트로 변주해 2160 톤 변형 공간을 확보. 인접 hue 충돌을 시각적으로 분리한다.
-- 동일 prefix 는 항상 동일 색, 빈 prefix(최상위 경로) 는 색상 없음.
+- 상위 폴더 또는 패턴 prefix 문자열을 **FNV-1a 64-bit 해시 → 8색 큐레이트 팔레트** 인덱스로 매핑해 배경 배지로 렌더링한다.
+- 팔레트는 hue family 당 1개씩만 두고 인접 인덱스가 시각적으로 멀어지도록 재배치: red / emerald / violet / amber / cyan / pink / blue / slate.
+- **충돌 회피(linear probing)**: 현재 표시 중인 unique prefix 들을 정렬해 슬롯 할당. 시작 슬롯이 차있으면 다음 빈 슬롯으로 이동 → unique prefix 수 ≤ 8 이면 충돌 0 보장.
+- **자동 글자색 대비**: bg 휘도(`0.299R + 0.587G + 0.114B`) > 150 이면 검은 글자, 아니면 흰 글자. amber·cyan 같은 옅은 색에서도 가독성 유지.
+- 동일 prefix 는 항상 동일 색(같은 표시 집합 안에서). 빈 prefix(최상위 경로) 는 색상 없음.
 - 메인 리스트와 프로젝트 관리 화면 양쪽에 적용.
 
 ### 2. `f` 필터 모드
@@ -44,6 +46,14 @@ CLI 인터랙티브 모드에 prefix 표현·검색 기능을 강화했다.
 - CLI Settings 화면에서 Enter/Space 로 토글. `prefix 색상`, `prefix 패턴 매칭` 행.
 - 메뉴바 앱은 영향 없음. `displayItem(for:)` 본체는 그대로 유지하고 CLI 전용 `cliDisplayItem(for:sharedPrefixes:patternEnabled:)` 신규 함수를 사용.
 
+### 5. 프로젝트 관리 "정리" 메뉴
+
+- 프로젝트 관리 화면(`runProjectManagement`) "뒤로 가기" 바로 아래에 `정리 (N)` 메뉴 추가.
+- N = 등록된 프로젝트 중 실제 디렉토리가 존재하지 않는(`FileManager.fileExists + isDirectory` 검사) 항목 개수.
+- Enter/Space 누르면 missing path 전체를 store 에서 제거하고 pinned 상태도 함께 해제.
+- 매 draw 마다 N 재계산 → 실시간 반영.
+- 헬퍼: `missingProjectPaths([String]) -> [String]`
+
 ## 구현 노트
 
 - `Shared/GotoCLISettings.swift`
@@ -52,6 +62,7 @@ CLI 인터랙티브 모드에 prefix 표현·검색 기능을 강화했다.
   - `GotoCLIConfig` 에 `prefixColorEnabled`, `prefixPatternEnabled` 코딩키·디코더 추가
 - `GotoCLI/main.swift`
   - `Key.filter`, `FilterEvent`, `readFilterEvent()` 추가
-  - `hashSeed`(FNV-1a), `hslToRgb`, `parentBgRgb`, `parentBadge(_:width:colored:)`
-  - `mainRows`/`projectManagementRows`/`drawMainList`/`drawProjectManagement` 가 `displayItem` 클로저와 `colored` 플래그 수신
+  - `hashSeed`(FNV-1a), `prefixPalette`(8색), `assignPrefixColors`, `contrastFg`, `parentBadge(_:width:color:)`
+  - `mainRows`/`projectManagementRows`/`drawMainList`/`drawProjectManagement` 가 `displayItem` 클로저와 `colored` 플래그 수신. draw 함수 내부에서 `assignPrefixColors` 호출해 colorMap 생성.
   - `SettingsRow.prefixColor`, `.prefixPattern` 케이스 추가
+  - `ProjectManagementRow.cleanup` 추가, `missingProjectPaths` 헬퍼 추가
