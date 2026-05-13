@@ -26,7 +26,11 @@ private func restoreMode(_ original: inout termios) {
 }
 
 private enum Key {
-    case up, down, left, right, enter, space, pin, esc, quit, other
+    case up, down, left, right, enter, space, pin, filter, esc, quit, other
+}
+
+private enum FilterEvent {
+    case up, down, enter, escape, backspace, append(UInt8), quit
 }
 
 private func readPendingByte() -> UInt8? {
@@ -55,6 +59,8 @@ private func readKey() -> Key {
         return .space
     case UInt8(ascii: "p"), UInt8(ascii: "P"):
         return .pin
+    case UInt8(ascii: "f"), UInt8(ascii: "F"):
+        return .filter
     case UInt8(ascii: "q"), UInt8(ascii: "Q"):
         return .quit
     case 3:
@@ -76,6 +82,82 @@ private func readKey() -> Key {
     }
 }
 
+private func readFilterEvent() -> FilterEvent {
+    var byte: UInt8 = 0
+    guard read(STDIN_FILENO, &byte, 1) == 1 else { return .escape }
+    switch byte {
+    case 0x1B:
+        guard let next = readPendingByte() else { return .escape }
+        guard next == UInt8(ascii: "[") else { return .escape }
+        guard let dir = readPendingByte() else { return .escape }
+        switch dir {
+        case UInt8(ascii: "A"): return .up
+        case UInt8(ascii: "B"): return .down
+        default: return .escape
+        }
+    case 0x0A, 0x0D:
+        return .enter
+    case 0x7F, 0x08:
+        return .backspace
+    case 3:
+        return .quit
+    default:
+        if byte >= 0x20 { return .append(byte) }
+        return .escape
+    }
+}
+
+private func hashSeed(_ text: String) -> UInt64 {
+    var hash: UInt64 = 0xcbf29ce484222325
+    for byte in text.utf8 {
+        hash ^= UInt64(byte)
+        hash = hash &* 0x100000001b3
+    }
+    return hash
+}
+
+private func hslToRgb(h: Double, s: Double, l: Double) -> (Int, Int, Int) {
+    let c = (1 - abs(2 * l - 1)) * s
+    let hp = h / 60.0
+    let x = c * (1 - abs(hp.truncatingRemainder(dividingBy: 2.0) - 1))
+    let r1: Double, g1: Double, b1: Double
+    switch Int(hp.rounded(.down)) {
+    case 0: (r1, g1, b1) = (c, x, 0)
+    case 1: (r1, g1, b1) = (x, c, 0)
+    case 2: (r1, g1, b1) = (0, c, x)
+    case 3: (r1, g1, b1) = (0, x, c)
+    case 4: (r1, g1, b1) = (x, 0, c)
+    default: (r1, g1, b1) = (c, 0, x)
+    }
+    let m = l - c / 2.0
+    let clamp: (Double) -> Int = { v in min(255, max(0, Int(((v + m) * 255).rounded()))) }
+    return (clamp(r1), clamp(g1), clamp(b1))
+}
+
+private func parentBgRgb(for parent: String) -> (Int, Int, Int) {
+    let h = hashSeed(parent)
+    let hue = Double(h % 360)
+    let satTable: [Double] = [0.50, 0.62, 0.74]
+    let lightTable: [Double] = [0.26, 0.32, 0.38, 0.44]
+    let sat = satTable[Int((h >> 16) % UInt64(satTable.count))]
+    let light = lightTable[Int((h >> 24) % UInt64(lightTable.count))]
+    return hslToRgb(h: hue, s: sat, l: light)
+}
+
+private func parentBadge(_ parent: String, width: Int, colored: Bool) -> String {
+    let padding = String(repeating: " ", count: max(0, width - parent.count))
+    if parent.isEmpty {
+        return String(repeating: " ", count: width + 2)
+    }
+    if !colored {
+        return " \(parent)\(padding) "
+    }
+    let (r, g, b) = parentBgRgb(for: parent)
+    let bg = "\u{1B}[48;2;\(r);\(g);\(b)m"
+    let fg = "\u{1B}[97m"
+    return "\(bg)\(fg) \(parent)\(padding) \u{1B}[49m\u{1B}[39m"
+}
+
 private enum MainRow {
     case project(String)
     case separator
@@ -94,6 +176,8 @@ private enum SettingsRow: CaseIterable {
     case pinSort
     case prefixSort
     case projectSort
+    case prefixColor
+    case prefixPattern
     case projectManagement
 }
 
@@ -123,8 +207,11 @@ private struct ProjectColumns {
     let nameWidth: Int
 }
 
-private func projectColumns(for paths: [String]) -> ProjectColumns {
-    let displayItems = paths.map { GotoProjectList.displayItem(for: $0) }
+private func projectColumns(
+    for paths: [String],
+    displayItem: (String) -> GotoProjectDisplayItem
+) -> ProjectColumns {
+    let displayItems = paths.map(displayItem)
     return ProjectColumns(
         parentWidth: displayItems.map(\.parent.count).max() ?? 0,
         nameWidth: displayItems.map(\.name.count).max() ?? 0
@@ -135,15 +222,32 @@ private func drawMainList(
     rows: [MainRow],
     pinnedSet: Set<String>,
     selected: Int,
+    filterQuery: String?,
+    displayItem: (String) -> GotoProjectDisplayItem,
+    colored: Bool,
     tty: UnsafeMutablePointer<FILE>
 ) {
     fputs(ansiClear, tty)
-    fputs("goto — 프로젝트 선택 (↑↓ 이동, Enter 선택, p 핀 토글, ESC/q 취소)\n\n", tty)
+    if let query = filterQuery {
+        fputs(
+            "goto — 필터: \(ansiBold)\(query)\(ansiBoldOff)\(ansiGray)▌\(ansiReset)  (↑↓ 이동, Enter 선택, ESC 필터 해제)\n\n",
+            tty
+        )
+    } else {
+        fputs(
+            "goto — 프로젝트 선택 (↑↓ 이동, Enter 선택, p 핀 토글, f 필터, ESC/q 취소)\n\n",
+            tty
+        )
+    }
     let projectPaths = rows.compactMap { row -> String? in
         if case .project(let path) = row { return path }
         return nil
     }
-    let columns = projectColumns(for: projectPaths)
+    let columns = projectColumns(for: projectPaths, displayItem: displayItem)
+
+    if filterQuery != nil && projectPaths.isEmpty {
+        fputs("  \(ansiGray)일치하는 프로젝트가 없습니다.\(ansiReset)\n", tty)
+    }
 
     for (i, row) in rows.enumerated() {
         switch row {
@@ -152,12 +256,13 @@ private func drawMainList(
         case .project(let path):
             fputs(
                 displayLine(
-                    item: GotoProjectList.displayItem(for: path),
+                    item: displayItem(path),
                     path: path,
                     parentWidth: columns.parentWidth,
                     nameWidth: columns.nameWidth,
                     isPinned: pinnedSet.contains(path),
-                    isSelected: i == selected
+                    isSelected: i == selected,
+                    colored: colored
                 ),
                 tty
             )
@@ -190,12 +295,13 @@ private func displayLine(
     parentWidth: Int,
     nameWidth: Int,
     isPinned: Bool,
-    isSelected: Bool
+    isSelected: Bool,
+    colored: Bool
 ) -> String {
-    let parent = padded(item.parent, to: parentWidth)
+    let badge = parentBadge(item.parent, width: parentWidth, colored: colored)
     let name = padded(item.name, to: nameWidth)
     let marker = isPinned ? "📌 " : "   "
-    let text = "\(marker)\(parent)  \(ansiBold)\(name)\(ansiBoldOff)  \(ansiGray)\(GotoProjectList.displayPath(for: path))"
+    let text = "\(marker)\(badge)  \(ansiBold)\(name)\(ansiBoldOff)  \(ansiGray)\(GotoProjectList.displayPath(for: path))"
     if isSelected {
         return "\(ansiInvertOn)  \(text)  \(ansiReset)\n"
     }
@@ -227,8 +333,17 @@ private func settingsOptionLine(
     optionLine(padded(title, to: titleWidth), value: value, isSelected: isSelected)
 }
 
-private func mainRows(projects: [String], config: GotoCLIConfig) -> [MainRow] {
-    let ordered = GotoProjectList.orderedProjects(projects, config: config)
+private func mainRows(
+    projects: [String],
+    config: GotoCLIConfig,
+    displayItem: @escaping (String) -> GotoProjectDisplayItem
+) -> [MainRow] {
+    let ordered = GotoProjectList.orderedProjects(
+        projects,
+        config: config,
+        parentNameProvider: { displayItem($0).parent },
+        projectNameProvider: { displayItem($0).name }
+    )
     var rows: [MainRow] = []
 
     let pinEnd = ordered.pinnedCount
@@ -291,7 +406,7 @@ private func drawSettings(config: GotoCLIConfig, selected: Int, tty: UnsafeMutab
     fputs(ansiClear, tty)
     fputs("goto — settings (↑↓ 이동, Enter/Space 변경, ESC 뒤로)\n\n", tty)
     let rows = SettingsRow.allCases
-    let titleWidth = "상위 폴더 정렬".count
+    let titleWidth = "prefix 패턴 매칭".count
     for (index, row) in rows.enumerated() {
         let isSelected = index == selected
         switch row {
@@ -306,6 +421,11 @@ private func drawSettings(config: GotoCLIConfig, selected: Int, tty: UnsafeMutab
         case .projectSort:
             let option = GotoSettings.sortOption(field: config.projectSortField, direction: config.projectSortDirection)
             fputs(settingsOptionLine("프로젝트 정렬", value: option.title, titleWidth: titleWidth, isSelected: isSelected), tty)
+            fputs("\n\(separatorLine(for: tty))\n\n", tty)
+        case .prefixColor:
+            fputs(settingsOptionLine("prefix 색상", value: config.prefixColorEnabled ? "켜짐" : "꺼짐", titleWidth: titleWidth, isSelected: isSelected), tty)
+        case .prefixPattern:
+            fputs(settingsOptionLine("prefix 패턴 매칭", value: config.prefixPatternEnabled ? "켜짐" : "꺼짐", titleWidth: titleWidth, isSelected: isSelected), tty)
             fputs("\n\(separatorLine(for: tty))\n\n", tty)
         case .projectManagement:
             fputs(menuLine("프로젝트 관리", isSelected: isSelected), tty)
@@ -353,10 +473,16 @@ private func runSettings(config: inout GotoCLIConfig, tty: UnsafeMutablePointer<
                 config.projectSortField = next.field
                 config.projectSortDirection = next.direction
                 GotoSettings.saveCLIConfig(config)
+            case .prefixColor:
+                config.prefixColorEnabled.toggle()
+                GotoSettings.saveCLIConfig(config)
+            case .prefixPattern:
+                config.prefixPatternEnabled.toggle()
+                GotoSettings.saveCLIConfig(config)
             case .projectManagement:
                 return .openProjectManagement
             }
-        case .pin:
+        case .pin, .filter:
             break
         case .esc:
             return .back
@@ -369,8 +495,18 @@ private func runSettings(config: inout GotoCLIConfig, tty: UnsafeMutablePointer<
     }
 }
 
-private func projectManagementRows(projects: [String], config: GotoCLIConfig) -> [ProjectManagementRow] {
-    let projectRows = GotoProjectList.sortedProjects(projects, config: config).map { ProjectManagementRow.project($0) }
+private func projectManagementRows(
+    projects: [String],
+    config: GotoCLIConfig,
+    displayItem: @escaping (String) -> GotoProjectDisplayItem
+) -> [ProjectManagementRow] {
+    let sorted = GotoProjectList.sortedProjects(
+        projects,
+        config: config,
+        parentNameProvider: { displayItem($0).parent },
+        projectNameProvider: { displayItem($0).name }
+    )
+    let projectRows = sorted.map { ProjectManagementRow.project($0) }
     return [.back] + projectRows + [.separator, .removeSelected]
 }
 
@@ -379,6 +515,8 @@ private func drawProjectManagement(
     marked: Set<String>,
     pinnedSet: Set<String>,
     selected: Int,
+    displayItem: (String) -> GotoProjectDisplayItem,
+    colored: Bool,
     tty: UnsafeMutablePointer<FILE>
 ) {
     fputs(ansiClear, tty)
@@ -388,7 +526,7 @@ private func drawProjectManagement(
         if case .project(let path) = row { return path }
         return nil
     }
-    let columns = projectColumns(for: projectPaths)
+    let columns = projectColumns(for: projectPaths, displayItem: displayItem)
 
     for (index, row) in rows.enumerated() {
         let isSelected = index == selected
@@ -403,10 +541,10 @@ private func drawProjectManagement(
         case .project(let path):
             let mark = marked.contains(path) ? "[x]" : "[ ]"
             let pin = pinnedSet.contains(path) ? "📌" : "  "
-            let item = GotoProjectList.displayItem(for: path)
-            let parent = padded(item.parent, to: columns.parentWidth)
+            let item = displayItem(path)
+            let badge = parentBadge(item.parent, width: columns.parentWidth, colored: colored)
             let name = padded(item.name, to: columns.nameWidth)
-            let text = "\(mark) \(pin) \(parent)  \(ansiBold)\(name)\(ansiBoldOff)  \(ansiGray)\(GotoProjectList.displayPath(for: path))"
+            let text = "\(mark) \(pin) \(badge)  \(ansiBold)\(name)\(ansiBoldOff)  \(ansiGray)\(GotoProjectList.displayPath(for: path))"
             if isSelected {
                 fputs("\(ansiInvertOn)  \(text)  \(ansiReset)\n", tty)
             } else {
@@ -421,11 +559,22 @@ private func runProjectManagement(
     config: GotoCLIConfig,
     tty: UnsafeMutablePointer<FILE>
 ) {
-    var rows = projectManagementRows(projects: projects, config: config)
+    func makeDisplayItem() -> (String) -> GotoProjectDisplayItem {
+        let set = config.prefixPatternEnabled ? GotoProjectList.patternPrefixSet(in: projects) : []
+        let enabled = config.prefixPatternEnabled
+        return { path in
+            GotoProjectList.cliDisplayItem(for: path, sharedPrefixes: set, patternEnabled: enabled)
+        }
+    }
+    var displayItem = makeDisplayItem()
+    let colored = config.prefixColorEnabled
+
+    var rows = projectManagementRows(projects: projects, config: config, displayItem: displayItem)
     var selected = firstSelectableIndex(in: rows) { $0.isSelectable }
     var marked = Set<String>()
     var pinnedSet = Set(GotoProjectList.loadPinnedProjects(availableProjects: projects))
-    drawProjectManagement(rows: rows, marked: marked, pinnedSet: pinnedSet, selected: selected, tty: tty)
+
+    drawProjectManagement(rows: rows, marked: marked, pinnedSet: pinnedSet, selected: selected, displayItem: displayItem, colored: colored, tty: tty)
 
     while true {
         switch readKey() {
@@ -452,7 +601,8 @@ private func runProjectManagement(
                     GotoProjectList.setPinned(path, pinned: false, availableProjects: GotoProjectStore.load())
                 }
                 projects = GotoProjectStore.load()
-                rows = projectManagementRows(projects: projects, config: config)
+                displayItem = makeDisplayItem()
+                rows = projectManagementRows(projects: projects, config: config, displayItem: displayItem)
                 marked.removeAll()
                 pinnedSet = Set(GotoProjectList.loadPinnedProjects(availableProjects: projects))
                 selected = lastSelectableIndex(in: rows) { $0.isSelectable }
@@ -467,10 +617,10 @@ private func runProjectManagement(
             }
         case .esc, .quit:
             return
-        case .other:
+        case .filter, .other:
             break
         }
-        drawProjectManagement(rows: rows, marked: marked, pinnedSet: pinnedSet, selected: selected, tty: tty)
+        drawProjectManagement(rows: rows, marked: marked, pinnedSet: pinnedSet, selected: selected, displayItem: displayItem, colored: colored, tty: tty)
     }
 }
 
@@ -489,12 +639,85 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
 
     var projects = initialProjects
     var config = GotoSettings.cliConfig()
-    var rows = mainRows(projects: projects, config: config)
     var pinnedSet = Set(GotoProjectList.loadPinnedProjects(availableProjects: projects))
+    var filterQuery: String? = nil
+
+    func makeDisplayItem() -> (String) -> GotoProjectDisplayItem {
+        let set = config.prefixPatternEnabled ? GotoProjectList.patternPrefixSet(in: projects) : []
+        let enabled = config.prefixPatternEnabled
+        return { path in
+            GotoProjectList.cliDisplayItem(for: path, sharedPrefixes: set, patternEnabled: enabled)
+        }
+    }
+    var displayItem = makeDisplayItem()
+
+    func makeRows() -> [MainRow] {
+        if let q = filterQuery {
+            let needle = q.lowercased()
+            let sorted = GotoProjectList.sortedProjects(
+                projects,
+                config: config,
+                parentNameProvider: { displayItem($0).parent },
+                projectNameProvider: { displayItem($0).name }
+            )
+            let filtered: [String]
+            if needle.isEmpty {
+                filtered = sorted
+            } else {
+                filtered = sorted.filter { path in
+                    let item = displayItem(path)
+                    return item.parent.lowercased().contains(needle)
+                        || item.name.lowercased().contains(needle)
+                        || path.lowercased().contains(needle)
+                }
+            }
+            return filtered.map { .project($0) }
+        }
+        return mainRows(projects: projects, config: config, displayItem: displayItem)
+    }
+
+    var rows = makeRows()
     var selected = firstSelectableIndex(in: rows) { $0.isSelectable }
-    drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, tty: tty)
+    drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, filterQuery: filterQuery, displayItem: displayItem, colored: config.prefixColorEnabled, tty: tty)
 
     while true {
+        if filterQuery != nil {
+            let evt = readFilterEvent()
+            switch evt {
+            case .append(let byte):
+                filterQuery = (filterQuery ?? "") + String(UnicodeScalar(byte))
+                rows = makeRows()
+                selected = firstSelectableIndex(in: rows) { $0.isSelectable }
+            case .backspace:
+                if var q = filterQuery, !q.isEmpty {
+                    q.removeLast()
+                    filterQuery = q
+                    rows = makeRows()
+                    selected = firstSelectableIndex(in: rows) { $0.isSelectable }
+                }
+            case .up:
+                selected = nextSelectableIndex(from: selected, delta: -1, rows: rows) { $0.isSelectable }
+            case .down:
+                selected = nextSelectableIndex(from: selected, delta: 1, rows: rows) { $0.isSelectable }
+            case .enter:
+                if !rows.isEmpty, rows.indices.contains(selected),
+                   case .project(let chosen) = rows[selected] {
+                    GotoProjectList.recordRecentProject(chosen, availableProjects: projects)
+                    fputs(ansiClear, tty)
+                    return .chosen(chosen)
+                }
+            case .escape:
+                filterQuery = nil
+                rows = makeRows()
+                selected = firstSelectableIndex(in: rows) { $0.isSelectable }
+            case .quit:
+                fputs(ansiClear, tty)
+                return .cancelled
+            }
+            drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, filterQuery: filterQuery, displayItem: displayItem, colored: config.prefixColorEnabled, tty: tty)
+            continue
+        }
+
         let key = readKey()
         switch key {
         case .up:
@@ -505,10 +728,14 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
             selected = firstSelectableIndex(in: rows) { $0.isSelectable }
         case .right:
             selected = lastSelectableIndex(in: rows) { $0.isSelectable }
+        case .filter:
+            filterQuery = ""
+            rows = makeRows()
+            selected = firstSelectableIndex(in: rows) { $0.isSelectable }
         case .pin:
             if case .project(let path) = rows[selected] {
                 GotoProjectList.togglePinned(path, availableProjects: projects)
-                rows = mainRows(projects: projects, config: config)
+                rows = makeRows()
                 pinnedSet = Set(GotoProjectList.loadPinnedProjects(availableProjects: projects))
                 if let idx = rows.firstIndex(where: { row in
                     if case .project(let p) = row { return p == path }
@@ -536,7 +763,8 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
                     return .cancelled
                 }
                 config = GotoSettings.cliConfig()
-                rows = mainRows(projects: projects, config: config)
+                displayItem = makeDisplayItem()
+                rows = makeRows()
                 pinnedSet = Set(GotoProjectList.loadPinnedProjects(availableProjects: projects))
                 selected = firstSelectableIndex(in: rows) { $0.isSelectable }
             case .separator:
@@ -548,7 +776,7 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
         case .other:
             break
         }
-        drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, tty: tty)
+        drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, filterQuery: filterQuery, displayItem: displayItem, colored: config.prefixColorEnabled, tty: tty)
     }
 }
 
