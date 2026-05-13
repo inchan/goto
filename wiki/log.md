@@ -1,5 +1,9 @@
 # Goto Wiki Log
 
+## 2026-05-13 feat | CLI prefix color, f filter, pattern prefix
+
+CLI 인터랙티브 모드에 prefix true-color 배경 배지(FNV-1a 64-bit → HSL with sat/light variants), `f` 키 필터(Claude Code 스타일), 동일 prefix 가 2개 이상 등록됐을 때만 적용되는 `xxx-` 패턴 prefix 매칭을 추가했다. 설정에 `prefixColorEnabled`, `prefixPatternEnabled` 두 토글을 노출해 영속 저장한다. 패턴 prefix 활성화 시 정렬 키도 패턴 prefix 로 통일되어 동일 prefix 항목이 인접 배치된다. 메뉴바 앱 동작은 변하지 않는다. See `summaries/cli-prefix-features-2026-05-13`.
+
 ## 2026-05-06 init | project wiki
 
 Initialized the llm-wiki structure for durable Goto project knowledge.

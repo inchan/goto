@@ -16,11 +16,14 @@ struct GotoCLIConfig: Codable {
     var projectSortField: GotoProjectSortField = .name
     var projectSortDirection: GotoSortDirection = .descending
     var pinSortMode: GotoPinSortMode = .insertion
+    var prefixColorEnabled: Bool = true
+    var prefixPatternEnabled: Bool = true
 
     enum CodingKeys: String, CodingKey {
         case parentSortField, parentSortDirection
         case projectSortField, projectSortDirection
         case pinSortMode
+        case prefixColorEnabled, prefixPatternEnabled
     }
 
     init(
@@ -28,13 +31,17 @@ struct GotoCLIConfig: Codable {
         parentSortDirection: GotoSortDirection = .descending,
         projectSortField: GotoProjectSortField = .name,
         projectSortDirection: GotoSortDirection = .descending,
-        pinSortMode: GotoPinSortMode = .insertion
+        pinSortMode: GotoPinSortMode = .insertion,
+        prefixColorEnabled: Bool = true,
+        prefixPatternEnabled: Bool = true
     ) {
         self.parentSortField = parentSortField
         self.parentSortDirection = parentSortDirection
         self.projectSortField = projectSortField
         self.projectSortDirection = projectSortDirection
         self.pinSortMode = pinSortMode
+        self.prefixColorEnabled = prefixColorEnabled
+        self.prefixPatternEnabled = prefixPatternEnabled
     }
 
     init(from decoder: Decoder) throws {
@@ -44,6 +51,8 @@ struct GotoCLIConfig: Codable {
         projectSortField = try c.decodeIfPresent(GotoProjectSortField.self, forKey: .projectSortField) ?? .name
         projectSortDirection = try c.decodeIfPresent(GotoSortDirection.self, forKey: .projectSortDirection) ?? .descending
         pinSortMode = try c.decodeIfPresent(GotoPinSortMode.self, forKey: .pinSortMode) ?? .insertion
+        prefixColorEnabled = try c.decodeIfPresent(Bool.self, forKey: .prefixColorEnabled) ?? true
+        prefixPatternEnabled = try c.decodeIfPresent(Bool.self, forKey: .prefixPatternEnabled) ?? true
     }
 }
 
@@ -158,6 +167,46 @@ enum GotoProjectList {
         )
     }
 
+    static func namePatternPrefix(for name: String) -> (prefix: String, rest: String)? {
+        guard let dashIdx = name.firstIndex(of: "-") else { return nil }
+        let prefix = String(name[..<dashIdx])
+        let rest = String(name[name.index(after: dashIdx)...])
+        guard !prefix.isEmpty, !rest.isEmpty else { return nil }
+        return (prefix, rest)
+    }
+
+    static func patternPrefixSet(in projects: [String]) -> Set<String> {
+        var counts: [String: Int] = [:]
+        for path in projects {
+            let name = URL(fileURLWithPath: path).lastPathComponent
+            if let parsed = namePatternPrefix(for: name) {
+                counts[parsed.prefix, default: 0] += 1
+            }
+        }
+        return Set(counts.filter { $0.value >= 2 }.keys)
+    }
+
+    static func cliDisplayItem(
+        for path: String,
+        sharedPrefixes: Set<String>,
+        patternEnabled: Bool
+    ) -> GotoProjectDisplayItem {
+        let url = URL(fileURLWithPath: path)
+        let name = url.lastPathComponent
+        guard !name.isEmpty else {
+            return GotoProjectDisplayItem(parent: "", name: path)
+        }
+        if patternEnabled,
+           let parsed = namePatternPrefix(for: name),
+           sharedPrefixes.contains(parsed.prefix) {
+            return GotoProjectDisplayItem(parent: parsed.prefix, name: parsed.rest)
+        }
+        return GotoProjectDisplayItem(
+            parent: url.deletingLastPathComponent().lastPathComponent,
+            name: name
+        )
+    }
+
     static func displayPath(for path: String) -> String {
         let homePath = FileManager.default.homeDirectoryForCurrentUser.path
         if path == homePath {
@@ -256,7 +305,22 @@ enum GotoProjectList {
     }
 
     static func sortedProjects(_ projects: [String], config: GotoCLIConfig) -> [String] {
-        projects.sorted { compareProjects($0, $1, config: config) }
+        projects.sorted { compareProjects($0, $1, config: config, parentNameProvider: nil, projectNameProvider: nil) }
+    }
+
+    static func sortedProjects(
+        _ projects: [String],
+        config: GotoCLIConfig,
+        parentNameProvider: @escaping (String) -> String,
+        projectNameProvider: @escaping (String) -> String
+    ) -> [String] {
+        projects.sorted {
+            compareProjects(
+                $0, $1, config: config,
+                parentNameProvider: parentNameProvider,
+                projectNameProvider: projectNameProvider
+            )
+        }
     }
 
     static func sortedPinned(_ pins: [String], mode: GotoPinSortMode) -> [String] {
@@ -297,6 +361,15 @@ enum GotoProjectList {
         _ projects: [String],
         config: GotoCLIConfig
     ) -> (displayProjects: [String], pinnedCount: Int, recentCount: Int) {
+        return orderedProjects(projects, config: config, parentNameProvider: nil, projectNameProvider: nil)
+    }
+
+    static func orderedProjects(
+        _ projects: [String],
+        config: GotoCLIConfig,
+        parentNameProvider: ((String) -> String)?,
+        projectNameProvider: ((String) -> String)?
+    ) -> (displayProjects: [String], pinnedCount: Int, recentCount: Int) {
         let pins = sortedPinned(
             loadPinnedProjects(availableProjects: projects),
             mode: config.pinSortMode
@@ -307,17 +380,29 @@ enum GotoProjectList {
         let recentSet = Set(recents)
         let remaining = projects
             .filter { !pinSet.contains($0) && !recentSet.contains($0) }
-            .sorted { compareProjects($0, $1, config: config) }
+            .sorted {
+                compareProjects(
+                    $0, $1, config: config,
+                    parentNameProvider: parentNameProvider,
+                    projectNameProvider: projectNameProvider
+                )
+            }
         return (pins + recents + remaining, pins.count, recents.count)
     }
 
-    private static func compareProjects(_ lhs: String, _ rhs: String, config: GotoCLIConfig) -> Bool {
-        let parent = parentComparison(lhs, rhs, config: config)
+    private static func compareProjects(
+        _ lhs: String,
+        _ rhs: String,
+        config: GotoCLIConfig,
+        parentNameProvider: ((String) -> String)?,
+        projectNameProvider: ((String) -> String)?
+    ) -> Bool {
+        let parent = parentComparison(lhs, rhs, config: config, parentNameProvider: parentNameProvider)
         if parent != .orderedSame {
             return parent == .orderedAscending
         }
 
-        let project = projectComparison(lhs, rhs, config: config)
+        let project = projectComparison(lhs, rhs, config: config, projectNameProvider: projectNameProvider)
         if project != .orderedSame {
             return project == .orderedAscending
         }
@@ -325,14 +410,17 @@ enum GotoProjectList {
         return lhs.localizedStandardCompare(rhs) == .orderedAscending
     }
 
-    private static func parentComparison(_ lhs: String, _ rhs: String, config: GotoCLIConfig) -> ComparisonResult {
+    private static func parentComparison(
+        _ lhs: String,
+        _ rhs: String,
+        config: GotoCLIConfig,
+        parentNameProvider: ((String) -> String)?
+    ) -> ComparisonResult {
         switch config.parentSortField {
         case .name:
-            return compareStrings(
-                displayItem(for: lhs).parent,
-                displayItem(for: rhs).parent,
-                direction: config.parentSortDirection
-            )
+            let leftName = parentNameProvider?(lhs) ?? displayItem(for: lhs).parent
+            let rightName = parentNameProvider?(rhs) ?? displayItem(for: rhs).parent
+            return compareStrings(leftName, rightName, direction: config.parentSortDirection)
         case .createdAt:
             return compareDates(
                 creationDate(for: parentPath(for: lhs)),
@@ -342,14 +430,17 @@ enum GotoProjectList {
         }
     }
 
-    private static func projectComparison(_ lhs: String, _ rhs: String, config: GotoCLIConfig) -> ComparisonResult {
+    private static func projectComparison(
+        _ lhs: String,
+        _ rhs: String,
+        config: GotoCLIConfig,
+        projectNameProvider: ((String) -> String)?
+    ) -> ComparisonResult {
         switch config.projectSortField {
         case .name:
-            return compareStrings(
-                displayItem(for: lhs).name,
-                displayItem(for: rhs).name,
-                direction: config.projectSortDirection
-            )
+            let leftName = projectNameProvider?(lhs) ?? displayItem(for: lhs).name
+            let rightName = projectNameProvider?(rhs) ?? displayItem(for: rhs).name
+            return compareStrings(leftName, rightName, direction: config.projectSortDirection)
         case .createdAt:
             return compareDates(creationDate(for: lhs), creationDate(for: rhs), direction: config.projectSortDirection)
         }
