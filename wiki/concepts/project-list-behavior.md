@@ -10,7 +10,7 @@ Goto stores registered projects in `~/.goto`, one absolute path per line. `GotoP
 
 Project display behavior is centralized in `GotoProjectList` in `Shared/GotoCLISettings.swift`. Both the CLI and menu bar use this shared model for recents, sorting, display names, and home path shortening. This avoids the CLI and app drifting apart.
 
-Recent projects are stored in `~/.goto_recent`. The most recently selected valid project appears first, with a maximum of three entries. Recents are filtered against the current project store, so deleted or unregistered paths do not appear.
+Recent projects are stored in `~/.goto_recent`. The most recently selected valid project appears first. The displayed count is user-configurable via `GotoCLIConfig.recentLimit` (CLI settings → `최근 항목 개수`, or the macOS app settings window → `최근 개수`). Allowed values are `0, 1, 3, 5, 10`; the default is `5`. A value of `0` disables the recents block entirely. The file itself stores up to `max(recentLimit, defaultRecentLimit)` entries so that raising the limit recovers previous history. Recents are filtered against the current project store, so deleted or unregistered paths do not appear.
 
 Sorting is controlled by `GotoCLIConfig`. The parent folder and project name each have an independent sort field and direction. Supported fields are name and creation date. Supported directions are ascending and descending. The default is name descending for both parent and project sorting.
 

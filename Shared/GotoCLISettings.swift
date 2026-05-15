@@ -18,12 +18,17 @@ struct GotoCLIConfig: Codable {
     var pinSortMode: GotoPinSortMode = .insertion
     var prefixColorEnabled: Bool = true
     var prefixPatternEnabled: Bool = true
+    var recentLimit: Int = GotoCLIConfig.defaultRecentLimit
+
+    static let defaultRecentLimit = 5
+    static let recentLimitOptions: [Int] = [0, 1, 3, 5, 10]
 
     enum CodingKeys: String, CodingKey {
         case parentSortField, parentSortDirection
         case projectSortField, projectSortDirection
         case pinSortMode
         case prefixColorEnabled, prefixPatternEnabled
+        case recentLimit
     }
 
     init(
@@ -33,7 +38,8 @@ struct GotoCLIConfig: Codable {
         projectSortDirection: GotoSortDirection = .descending,
         pinSortMode: GotoPinSortMode = .insertion,
         prefixColorEnabled: Bool = true,
-        prefixPatternEnabled: Bool = true
+        prefixPatternEnabled: Bool = true,
+        recentLimit: Int = GotoCLIConfig.defaultRecentLimit
     ) {
         self.parentSortField = parentSortField
         self.parentSortDirection = parentSortDirection
@@ -42,6 +48,7 @@ struct GotoCLIConfig: Codable {
         self.pinSortMode = pinSortMode
         self.prefixColorEnabled = prefixColorEnabled
         self.prefixPatternEnabled = prefixPatternEnabled
+        self.recentLimit = GotoCLIConfig.sanitizedRecentLimit(recentLimit)
     }
 
     init(from decoder: Decoder) throws {
@@ -53,6 +60,20 @@ struct GotoCLIConfig: Codable {
         pinSortMode = try c.decodeIfPresent(GotoPinSortMode.self, forKey: .pinSortMode) ?? .insertion
         prefixColorEnabled = try c.decodeIfPresent(Bool.self, forKey: .prefixColorEnabled) ?? true
         prefixPatternEnabled = try c.decodeIfPresent(Bool.self, forKey: .prefixPatternEnabled) ?? true
+        let rawLimit = try c.decodeIfPresent(Int.self, forKey: .recentLimit) ?? GotoCLIConfig.defaultRecentLimit
+        recentLimit = GotoCLIConfig.sanitizedRecentLimit(rawLimit)
+    }
+
+    static func sanitizedRecentLimit(_ value: Int) -> Int {
+        max(0, min(value, 50))
+    }
+
+    static func nextRecentLimit(after current: Int) -> Int {
+        let opts = recentLimitOptions
+        if let idx = opts.firstIndex(of: current) {
+            return opts[(idx + 1) % opts.count]
+        }
+        return opts.first ?? defaultRecentLimit
     }
 }
 
@@ -152,8 +173,6 @@ struct GotoProjectDisplayItem {
 }
 
 enum GotoProjectList {
-    static let recentLimit = 3
-
     static func displayItem(for path: String) -> GotoProjectDisplayItem {
         let url = URL(fileURLWithPath: path)
         let name = url.lastPathComponent
@@ -218,8 +237,13 @@ enum GotoProjectList {
         return path
     }
 
-    static func loadRecentProjects(availableProjects: [String]) -> [String] {
+    static func loadRecentProjects(availableProjects: [String], limit: Int? = nil) -> [String] {
         guard let content = try? String(contentsOf: GotoSettings.recentProjectsURL, encoding: .utf8) else {
+            return []
+        }
+
+        let effectiveLimit = limit ?? GotoSettings.cliConfig().recentLimit
+        if effectiveLimit <= 0 {
             return []
         }
 
@@ -234,7 +258,7 @@ enum GotoProjectList {
             }
             seen.insert(path)
             recents.append(path)
-            if recents.count == recentLimit {
+            if recents.count == effectiveLimit {
                 break
             }
         }
@@ -242,11 +266,14 @@ enum GotoProjectList {
         return recents
     }
 
-    static func recordRecentProject(_ path: String, availableProjects: [String]) {
-        var recents = loadRecentProjects(availableProjects: availableProjects)
+    static func recordRecentProject(_ path: String, availableProjects: [String], limit: Int? = nil) {
+        let effectiveLimit = limit ?? GotoSettings.cliConfig().recentLimit
+        // 저장 한도는 사용자 설정과 무관하게 일정 분량을 유지해 두면, 한도를 다시 늘렸을 때 과거 기록이 살아난다.
+        let storageLimit = max(effectiveLimit, GotoCLIConfig.defaultRecentLimit)
+        var recents = loadRecentProjects(availableProjects: availableProjects, limit: storageLimit)
         recents.removeAll { $0 == path }
         recents.insert(path, at: 0)
-        let content = recents.prefix(recentLimit).joined(separator: "\n") + "\n"
+        let content = recents.prefix(storageLimit).joined(separator: "\n") + "\n"
         try? content.write(to: GotoSettings.recentProjectsURL, atomically: true, encoding: .utf8)
     }
 
@@ -375,7 +402,7 @@ enum GotoProjectList {
             mode: config.pinSortMode
         )
         let pinSet = Set(pins)
-        let recents = loadRecentProjects(availableProjects: projects)
+        let recents = loadRecentProjects(availableProjects: projects, limit: config.recentLimit)
             .filter { !pinSet.contains($0) }
         let recentSet = Set(recents)
         let remaining = projects

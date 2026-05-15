@@ -196,6 +196,7 @@ private enum SettingsRow: CaseIterable {
     case pinSort
     case prefixSort
     case projectSort
+    case recentLimit
     case prefixColor
     case prefixPattern
     case projectManagement
@@ -460,6 +461,9 @@ private func drawSettings(config: GotoCLIConfig, selected: Int, tty: UnsafeMutab
             let option = GotoSettings.sortOption(field: config.projectSortField, direction: config.projectSortDirection)
             fputs(settingsOptionLine("프로젝트 정렬", value: option.title, titleWidth: titleWidth, isSelected: isSelected), tty)
             fputs("\n\(separatorLine(for: tty))\n\n", tty)
+        case .recentLimit:
+            let value = config.recentLimit == 0 ? "꺼짐" : "\(config.recentLimit)개"
+            fputs(settingsOptionLine("최근 항목 개수", value: value, titleWidth: titleWidth, isSelected: isSelected), tty)
         case .prefixColor:
             fputs(settingsOptionLine("prefix 색상", value: config.prefixColorEnabled ? "켜짐" : "꺼짐", titleWidth: titleWidth, isSelected: isSelected), tty)
         case .prefixPattern:
@@ -510,6 +514,9 @@ private func runSettings(config: inout GotoCLIConfig, tty: UnsafeMutablePointer<
                 let next = current.next
                 config.projectSortField = next.field
                 config.projectSortDirection = next.direction
+                GotoSettings.saveCLIConfig(config)
+            case .recentLimit:
+                config.recentLimit = GotoCLIConfig.nextRecentLimit(after: config.recentLimit)
                 GotoSettings.saveCLIConfig(config)
             case .prefixColor:
                 config.prefixColorEnabled.toggle()
