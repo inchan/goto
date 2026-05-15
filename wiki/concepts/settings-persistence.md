@@ -8,7 +8,7 @@ tags: [settings, cli, menubar]
 
 Goto uses a small number of local preference files and user defaults keys.
 
-Project registration lives in `~/.goto`. It is intentionally plain text so users can inspect and edit it directly. Recent project state lives in `~/.goto_recent`; the displayed cap is `GotoCLIConfig.recentLimit` (default `5`, options `0/1/3/5/10`) and the stored cap is `max(recentLimit, defaultRecentLimit)` so that lowering and raising the limit does not lose history. CLI sorting state lives in `~/.goto_config` as JSON encoded `GotoCLIConfig`.
+Project registration lives in `~/.goto`. It is intentionally plain text so users can inspect and edit it directly. Recent project state lives in `~/.goto_recent`; the displayed cap is `GotoCLIConfig.recentLimit` (default `5`, presets `0/1/3/5/10`, or any integer `0...50` entered directly) and the stored cap is `max(recentLimit, defaultRecentLimit)` so that lowering and raising the limit does not lose history. CLI sorting state lives in `~/.goto_config` as JSON encoded `GotoCLIConfig`.
 
 Menu bar enablement is stored in standard `UserDefaults` with `Goto.menuBarEnabled`. Menu bar project grouping is stored with `Goto.menuBarProjectGroupingEnabled`. The grouping default is false because `UserDefaults.bool(forKey:)` returns false for unset keys.
 
