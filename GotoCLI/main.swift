@@ -441,9 +441,54 @@ private func nextSelectableIndex<T>(
     }
 }
 
+private func promptIntegerValue(
+    title: String,
+    initial: Int,
+    range: ClosedRange<Int>,
+    tty: UnsafeMutablePointer<FILE>
+) -> Int? {
+    var buffer = "\(initial)"
+    func draw(error: String? = nil) {
+        fputs(ansiClear, tty)
+        fputs("goto — \(title)\n\n", tty)
+        fputs("값: \(ansiBold)\(buffer)\(ansiBoldOff)\(ansiGray)▌\(ansiReset)\n\n", tty)
+        fputs("\(ansiGray)(숫자 \(range.lowerBound)~\(range.upperBound) 입력, Enter 저장, ESC 취소)\(ansiReset)\n", tty)
+        if let error {
+            fputs("\n\(ansiBold)\(error)\(ansiBoldOff)\n", tty)
+        }
+    }
+    draw()
+    while true {
+        let evt = readFilterEvent()
+        switch evt {
+        case .append(let b):
+            let scalar = UnicodeScalar(b)
+            if scalar >= "0" && scalar <= "9", buffer.count < 3 {
+                if buffer == "0" { buffer.removeAll() }
+                buffer.append(Character(scalar))
+                draw()
+            }
+        case .backspace:
+            if !buffer.isEmpty {
+                buffer.removeLast()
+                draw()
+            }
+        case .enter:
+            if let n = Int(buffer), range.contains(n) {
+                return n
+            }
+            draw(error: "범위를 벗어났습니다: \(range.lowerBound)~\(range.upperBound)")
+        case .escape, .quit:
+            return nil
+        case .up, .down:
+            break
+        }
+    }
+}
+
 private func drawSettings(config: GotoCLIConfig, selected: Int, tty: UnsafeMutablePointer<FILE>) {
     fputs(ansiClear, tty)
-    fputs("goto — settings (↑↓ 이동, Enter/Space 변경, ESC 뒤로)\n\n", tty)
+    fputs("goto — settings (↑↓ 이동, Space 순환/토글, Enter 변경, ESC 뒤로)\n\n", tty)
     let rows = SettingsRow.allCases
     let titleWidth = "prefix 패턴 매칭".count
     for (index, row) in rows.enumerated() {
@@ -462,7 +507,8 @@ private func drawSettings(config: GotoCLIConfig, selected: Int, tty: UnsafeMutab
             fputs(settingsOptionLine("프로젝트 정렬", value: option.title, titleWidth: titleWidth, isSelected: isSelected), tty)
             fputs("\n\(separatorLine(for: tty))\n\n", tty)
         case .recentLimit:
-            let value = config.recentLimit == 0 ? "꺼짐" : "\(config.recentLimit)개"
+            let base = config.recentLimit == 0 ? "꺼짐" : "\(config.recentLimit)개"
+            let value = "\(base)  (Enter: 직접 입력, Space: 순환)"
             fputs(settingsOptionLine("최근 항목 개수", value: value, titleWidth: titleWidth, isSelected: isSelected), tty)
         case .prefixColor:
             fputs(settingsOptionLine("prefix 색상", value: config.prefixColorEnabled ? "켜짐" : "꺼짐", titleWidth: titleWidth, isSelected: isSelected), tty)
@@ -487,7 +533,8 @@ private func runSettings(config: inout GotoCLIConfig, tty: UnsafeMutablePointer<
     drawSettings(config: config, selected: selected, tty: tty)
 
     while true {
-        switch readKey() {
+        let key = readKey()
+        switch key {
         case .up:
             selected = previousIndex(selected)
         case .down:
@@ -516,8 +563,20 @@ private func runSettings(config: inout GotoCLIConfig, tty: UnsafeMutablePointer<
                 config.projectSortDirection = next.direction
                 GotoSettings.saveCLIConfig(config)
             case .recentLimit:
-                config.recentLimit = GotoCLIConfig.nextRecentLimit(after: config.recentLimit)
-                GotoSettings.saveCLIConfig(config)
+                if key == .enter {
+                    if let v = promptIntegerValue(
+                        title: "최근 항목 개수 직접 입력",
+                        initial: config.recentLimit,
+                        range: 0...50,
+                        tty: tty
+                    ) {
+                        config.recentLimit = GotoCLIConfig.sanitizedRecentLimit(v)
+                        GotoSettings.saveCLIConfig(config)
+                    }
+                } else {
+                    config.recentLimit = GotoCLIConfig.nextRecentLimit(after: config.recentLimit)
+                    GotoSettings.saveCLIConfig(config)
+                }
             case .prefixColor:
                 config.prefixColorEnabled.toggle()
                 GotoSettings.saveCLIConfig(config)

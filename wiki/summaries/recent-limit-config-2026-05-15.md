@@ -49,3 +49,26 @@ date: 2026-05-15
 
 - recent가 3개로 고정돼 있어 자주 쓰는 5~10개 워크플로우에서 부족하다는 피드백.
 - CLI/메뉴바 양쪽 진입점에서 동일 설정을 변경 가능해야 도구를 어떤 경로로 켜든 일관된 경험.
+
+## 보강 — 직접 입력
+
+프리셋 5개로 부족한 사용자를 위해 양쪽 진입점에 자유 입력을 추가.
+
+### CLI
+
+- 신규 `promptIntegerValue(title:initial:range:tty:)` 함수. 숫자 키 누적, Backspace 삭제, Enter 저장, ESC 취소. 범위(`0...50`) 벗어나면 에러 표시 후 재입력.
+- `최근 항목 개수` 행에서 `Enter` 키 → prompt 진입(직접 입력), `Space` 키 → 기존 프리셋 순환. 동일 행에 두 액션 분리.
+- settings 화면 헤더 안내문이 `(Space 순환/토글, Enter 변경)` 으로 갱신.
+- 행 옆에 `(Enter: 직접 입력, Space: 순환)` 힌트를 회색 텍스트로 표시 → 발견성 보강.
+
+### macOS 앱
+
+- `NSPopUpButton` → `NSComboBox(isEditable=true, completes=false)` 교체. 프리셋 5개를 드롭다운에 두고 텍스트 박스도 편집 가능.
+- placeholder: `"0~50 직접 입력 또는 선택"`.
+- 신규 `applyRecentLimit(from:)` 헬퍼: `stringValue`에서 `"개"`, `"표시 안 함"` 정규화 후 `Int` 파싱, `sanitizedRecentLimit`(0~50 clamp)로 저장. 파싱 실패 시 현재 저장값으로 시각적 복원.
+- 입력 후 즉시 `menuBarController?.update()` 호출 → 메뉴바 드롭다운 반영.
+
+### 범위/검증
+
+- `GotoCLIConfig.sanitizedRecentLimit(_:)` 가 단일 진입점. `max(0, min(value, 50))`.
+- 50 초과 값을 직접 입력해도 50으로 클램프되어 저장된다. 100, 999 같은 값을 막을 별도 UI 검증은 두지 않음 — 저장 시 정규화 한 번으로 충분.

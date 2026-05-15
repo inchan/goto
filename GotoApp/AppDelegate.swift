@@ -154,11 +154,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         configureProjectSortPopup(projectSortPopup)
 
         let recentLimitLabel = label("최근 개수", font: .systemFont(ofSize: 12))
-        let recentLimitPopup = NSPopUpButton(frame: .zero, pullsDown: false)
-        recentLimitPopup.target = self
-        recentLimitPopup.action = #selector(recentLimitDidChange(_:))
-        recentLimitPopup.translatesAutoresizingMaskIntoConstraints = false
-        configureRecentLimitPopup(recentLimitPopup)
+        let recentLimitCombo = NSComboBox(frame: .zero)
+        recentLimitCombo.isEditable = true
+        recentLimitCombo.completes = false
+        recentLimitCombo.usesDataSource = false
+        recentLimitCombo.target = self
+        recentLimitCombo.action = #selector(recentLimitDidChange(_:))
+        recentLimitCombo.translatesAutoresizingMaskIntoConstraints = false
+        configureRecentLimitCombo(recentLimitCombo)
 
         let pinSortRow = NSStackView(views: [pinSortLabel, pinSortPopup])
         pinSortRow.orientation = .horizontal
@@ -178,7 +181,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         projectSortRow.spacing = 12
         projectSortRow.translatesAutoresizingMaskIntoConstraints = false
 
-        let recentLimitRow = NSStackView(views: [recentLimitLabel, recentLimitPopup])
+        let recentLimitRow = NSStackView(views: [recentLimitLabel, recentLimitCombo])
         recentLimitRow.orientation = .horizontal
         recentLimitRow.alignment = .centerY
         recentLimitRow.spacing = 12
@@ -229,7 +232,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             pinSortPopup.widthAnchor.constraint(equalToConstant: 180),
             parentSortPopup.widthAnchor.constraint(equalToConstant: 180),
             projectSortPopup.widthAnchor.constraint(equalToConstant: 180),
-            recentLimitPopup.widthAnchor.constraint(equalToConstant: 180)
+            recentLimitCombo.widthAnchor.constraint(equalToConstant: 180)
         ])
 
         let window = NSWindow(
@@ -322,11 +325,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menuBarController?.update()
     }
 
-    @objc private func recentLimitDidChange(_ sender: NSPopUpButton) {
-        guard let raw = sender.selectedItem?.representedObject as? Int else { return }
+    @objc private func recentLimitDidChange(_ sender: NSComboBox) {
+        applyRecentLimit(from: sender)
+    }
+
+    private func applyRecentLimit(from combo: NSComboBox) {
+        let rawString = combo.stringValue
+        let normalized = rawString.trimmingCharacters(in: .whitespaces)
+            .replacingOccurrences(of: "개", with: "")
+            .replacingOccurrences(of: "표시 안 함", with: "0")
+            .trimmingCharacters(in: .whitespaces)
+        guard let parsed = Int(normalized) else {
+            // 파싱 실패 시 현재 저장된 값을 다시 표시해 시각적으로 복원
+            let current = GotoSettings.cliConfig().recentLimit
+            combo.stringValue = current == 0 ? "표시 안 함" : "\(current)개"
+            return
+        }
         var config = GotoSettings.cliConfig()
-        config.recentLimit = GotoCLIConfig.sanitizedRecentLimit(raw)
+        let sanitized = GotoCLIConfig.sanitizedRecentLimit(parsed)
+        config.recentLimit = sanitized
         GotoSettings.saveCLIConfig(config)
+        combo.stringValue = sanitized == 0 ? "표시 안 함" : "\(sanitized)개"
         menuBarController?.update()
     }
 
@@ -392,17 +411,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
-    private func configureRecentLimitPopup(_ popup: NSPopUpButton) {
-        popup.removeAllItems()
+    private func configureRecentLimitCombo(_ combo: NSComboBox) {
+        combo.removeAllItems()
         for value in GotoCLIConfig.recentLimitOptions {
             let title = value == 0 ? "표시 안 함" : "\(value)개"
-            popup.addItem(withTitle: title)
-            popup.lastItem?.representedObject = value
+            combo.addItem(withObjectValue: title)
         }
         let current = GotoSettings.cliConfig().recentLimit
-        if let item = popup.itemArray.first(where: { ($0.representedObject as? Int) == current }) {
-            popup.select(item)
-        }
+        combo.stringValue = current == 0 ? "표시 안 함" : "\(current)개"
+        combo.placeholderString = "0~50 직접 입력 또는 선택"
     }
 
     private func configureSortPopup(_ popup: NSPopUpButton, selected: GotoSortOption) {
