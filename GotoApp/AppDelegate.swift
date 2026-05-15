@@ -153,6 +153,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         projectSortPopup.translatesAutoresizingMaskIntoConstraints = false
         configureProjectSortPopup(projectSortPopup)
 
+        let recentLimitLabel = label("최근 개수", font: .systemFont(ofSize: 12))
+        let recentLimitPopup = NSPopUpButton(frame: .zero, pullsDown: false)
+        recentLimitPopup.target = self
+        recentLimitPopup.action = #selector(recentLimitDidChange(_:))
+        recentLimitPopup.translatesAutoresizingMaskIntoConstraints = false
+        configureRecentLimitPopup(recentLimitPopup)
+
         let pinSortRow = NSStackView(views: [pinSortLabel, pinSortPopup])
         pinSortRow.orientation = .horizontal
         pinSortRow.alignment = .centerY
@@ -171,7 +178,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         projectSortRow.spacing = 12
         projectSortRow.translatesAutoresizingMaskIntoConstraints = false
 
-        let cliSortStack = NSStackView(views: [cliSortLabel, pinSortRow, parentSortRow, projectSortRow])
+        let recentLimitRow = NSStackView(views: [recentLimitLabel, recentLimitPopup])
+        recentLimitRow.orientation = .horizontal
+        recentLimitRow.alignment = .centerY
+        recentLimitRow.spacing = 12
+        recentLimitRow.translatesAutoresizingMaskIntoConstraints = false
+
+        let cliSortStack = NSStackView(views: [cliSortLabel, pinSortRow, parentSortRow, projectSortRow, recentLimitRow])
         cliSortStack.orientation = .vertical
         cliSortStack.alignment = .leading
         cliSortStack.spacing = 6
@@ -212,9 +225,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             pinSortLabel.widthAnchor.constraint(equalToConstant: 90),
             parentSortLabel.widthAnchor.constraint(equalToConstant: 90),
             projectSortLabel.widthAnchor.constraint(equalToConstant: 90),
+            recentLimitLabel.widthAnchor.constraint(equalToConstant: 90),
             pinSortPopup.widthAnchor.constraint(equalToConstant: 180),
             parentSortPopup.widthAnchor.constraint(equalToConstant: 180),
-            projectSortPopup.widthAnchor.constraint(equalToConstant: 180)
+            projectSortPopup.widthAnchor.constraint(equalToConstant: 180),
+            recentLimitPopup.widthAnchor.constraint(equalToConstant: 180)
         ])
 
         let window = NSWindow(
@@ -307,6 +322,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menuBarController?.update()
     }
 
+    @objc private func recentLimitDidChange(_ sender: NSPopUpButton) {
+        guard let raw = sender.selectedItem?.representedObject as? Int else { return }
+        var config = GotoSettings.cliConfig()
+        config.recentLimit = GotoCLIConfig.sanitizedRecentLimit(raw)
+        GotoSettings.saveCLIConfig(config)
+        menuBarController?.update()
+    }
+
     private func configureTerminalPopup(_ popup: NSPopUpButton) {
         popup.removeAllItems()
 
@@ -367,6 +390,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 direction: config.projectSortDirection
             )
         )
+    }
+
+    private func configureRecentLimitPopup(_ popup: NSPopUpButton) {
+        popup.removeAllItems()
+        for value in GotoCLIConfig.recentLimitOptions {
+            let title = value == 0 ? "표시 안 함" : "\(value)개"
+            popup.addItem(withTitle: title)
+            popup.lastItem?.representedObject = value
+        }
+        let current = GotoSettings.cliConfig().recentLimit
+        if let item = popup.itemArray.first(where: { ($0.representedObject as? Int) == current }) {
+            popup.select(item)
+        }
     }
 
     private func configureSortPopup(_ popup: NSPopUpButton, selected: GotoSortOption) {
