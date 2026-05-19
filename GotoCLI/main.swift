@@ -26,7 +26,7 @@ private func restoreMode(_ original: inout termios) {
 }
 
 private enum Key {
-    case up, down, left, right, enter, space, pin, filter, esc, quit, other
+    case up, down, left, right, enter, space, pin, esc, quit, printable(UInt8), other
 }
 
 private enum FilterEvent {
@@ -57,13 +57,9 @@ private func readKey() -> Key {
         return .enter
     case 0x20:
         return .space
-    case UInt8(ascii: "p"), UInt8(ascii: "P"):
+    case 0x10:
         return .pin
-    case UInt8(ascii: "f"), UInt8(ascii: "F"):
-        return .filter
-    case UInt8(ascii: "q"), UInt8(ascii: "Q"):
-        return .quit
-    case 3:
+    case 0x11, 3:
         return .quit
     case 0x1B:
         guard let next = readPendingByte() else { return .esc }
@@ -78,6 +74,9 @@ private func readKey() -> Key {
         default: return .other
         }
     default:
+        if byte >= 0x20 && byte < 0x7F {
+            return .printable(byte)
+        }
         return .other
     }
 }
@@ -270,7 +269,7 @@ private func drawMainList(
         )
     } else {
         fputs(
-            "goto — 프로젝트 선택 (↑↓ 이동, Enter 선택, p 핀 토글, f 필터, ESC/q 취소)\n\n",
+            "goto — 프로젝트 선택 (↑↓ 이동, Enter 선택, Ctrl+P 핀 토글, 입력 시 필터, ESC/Ctrl+Q 취소)\n\n",
             tty
         )
     }
@@ -563,7 +562,7 @@ private func runSettings(config: inout GotoCLIConfig, tty: UnsafeMutablePointer<
                 config.projectSortDirection = next.direction
                 GotoSettings.saveCLIConfig(config)
             case .recentLimit:
-                if key == .enter {
+                if case .enter = key {
                     if let v = promptIntegerValue(
                         title: "최근 항목 개수 직접 입력",
                         initial: config.recentLimit,
@@ -586,7 +585,7 @@ private func runSettings(config: inout GotoCLIConfig, tty: UnsafeMutablePointer<
             case .projectManagement:
                 return .openProjectManagement
             }
-        case .pin, .filter:
+        case .pin, .printable:
             break
         case .esc:
             return .back
@@ -624,7 +623,7 @@ private func drawProjectManagement(
     tty: UnsafeMutablePointer<FILE>
 ) {
     fputs(ansiClear, tty)
-    fputs("goto — 프로젝트 관리 (↑↓ 이동, Space/Enter 체크, p 핀, ESC 뒤로)\n\n", tty)
+    fputs("goto — 프로젝트 관리 (↑↓ 이동, Space/Enter 체크, Ctrl+P 핀, ESC 뒤로)\n\n", tty)
 
     let projectPaths = rows.compactMap { row -> String? in
         if case .project(let path) = row { return path }
@@ -741,7 +740,7 @@ private func runProjectManagement(
             }
         case .esc, .quit:
             return
-        case .filter, .other:
+        case .printable, .other:
             break
         }
         drawProjectManagement(rows: rows, marked: marked, pinnedSet: pinnedSet, selected: selected, displayItem: displayItem, colored: colored, tty: tty)
@@ -852,8 +851,8 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
             selected = firstSelectableIndex(in: rows) { $0.isSelectable }
         case .right:
             selected = lastSelectableIndex(in: rows) { $0.isSelectable }
-        case .filter:
-            filterQuery = ""
+        case .printable(let b):
+            filterQuery = String(UnicodeScalar(b))
             rows = makeRows()
             selected = firstSelectableIndex(in: rows) { $0.isSelectable }
         case .pin:
