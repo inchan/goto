@@ -1,5 +1,9 @@
 # Goto Wiki Log
 
+## 2026-05-19 refine | CLI 키 정책 + 스킬 리네이밍
+
+CLI 인터랙티브 리스트의 단축키 정책을 **"입력 시 자동 필터"** 로 단순화했다. 단일 알파벳 단축키(`f`/`p`/`q`)를 모두 제거하고, 사용자가 임의의 printable 글자를 누르면 즉시 필터 모드로 진입하면서 그 글자가 첫 쿼리 문자로 주입된다. 핀 토글은 `Ctrl+P` (0x10), 종료는 `Ctrl+Q` (0x11) 로 옮겼으며 `ESC` / `Ctrl+C` 종료는 유지된다. macOS 터미널 raw 모드가 `Cmd+키`를 키스트로크로 전달하지 않기 때문에 `Ctrl+` 채택. `Key` enum 에 `.printable(UInt8)` associated value 케이스를 추가하면서 settings 화면의 `key == .enter` 비교를 `if case .enter = key` 패턴으로 교체했다. 같은 사이클에 출하 파이프라인 스킬 `ship-goto` 를 `release` 로 리네이밍 (`/release`, 부분 실행은 `/release {cleanup,docs,build,publish}`). README CLI 사용법 한 줄과 핀 설명을 새 정책에 맞춰 갱신. See `summaries/cli-keybindings-2026-05-19`.
+
 ## 2026-05-13 refine | CLI prefix palette + cleanup menu
 
 사용자 피드백을 반영해 prefix 배경색 알고리즘을 두 차례 다듬었다. (1) 초기 FNV-1a → HSL 무한 hue 매핑이 녹색 편중·탁한 인상을 줘서, (2) 16색 어두운 톤 큐레이트 → vivid Tailwind 600 → 최종 **8색 큐레이트** 로 정착했다. 8색은 hue family 당 1개씩만 두고, **linear-probed 슬롯 할당** 으로 현재 표시 중인 unique prefix 끼리 색이 겹치지 않도록 보장한다. 배경 휘도 기준으로 검은/흰 글자를 자동 선택해 옅은 색에서도 가독성을 유지한다. 같은 사이클에 프로젝트 관리 화면에 `정리 (N)` 메뉴를 추가했다. N 은 등록된 경로 중 디렉토리가 존재하지 않는 항목 수이며, Enter 시 일괄 제거된다. See `summaries/cli-prefix-features-2026-05-13`.
