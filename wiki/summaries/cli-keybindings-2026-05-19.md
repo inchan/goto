@@ -32,7 +32,8 @@ CLI 인터랙티브 리스트의 키 매핑을 단순화했다. 핵심은 **"검
 
 ## 관련 변경
 
-- `.claude/skills/ship-goto` → `.claude/skills/release` 리네이밍. 슬래시 호출은 `/release`, 부분 실행은 `/release {cleanup,docs,build,publish}`. SKILL.md 본문/headers 동기화 완료.
+- `.claude/skills/ship-goto` → `.claude/skills/deploy` 리네이밍 (중간에 `release`를 거쳐 최종 `deploy`로 정착). 슬래시 호출은 `/deploy`, 부분 실행은 `/deploy {cleanup,docs,build,publish}`. SKILL.md 본문/headers 동기화 완료.
+- Stage 0에서 `AskUserQuestion`으로 **자동/수동 모드**를 1회 선택받는다. 자동모드는 단계별 확인 없이 끝까지 진행하되 destructive 동작(`rm`, force push, hard reset)은 두 모드 모두 명시 승인 필수.
 - `README.md` CLI 사용법 한 줄과 핀 설명을 새 정책에 맞춰 갱신.
 
 ## 회귀 점검

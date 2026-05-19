@@ -1,9 +1,9 @@
 ---
-name: release
-description: Goto 프로젝트의 출하 파이프라인. 사용자가 "/release", "출시", "릴리즈 해줘", "정리하고 배포", "ship it" 같은 표현으로 정리→문서→로컬 배포→커밋·PR 전체 흐름을 요청할 때 자동 로드한다. 단계별로 사용자 승인을 받으며 진행하고, 절대 사용자 승인 없이 destructive 동작(파일 삭제, push, PR 생성)을 수행하지 않는다.
+name: deploy
+description: Goto 프로젝트의 출하 파이프라인. 사용자가 "/deploy", "출시", "릴리즈 해줘", "배포", "정리하고 배포", "ship it" 같은 표현으로 정리→문서→로컬 배포→커밋·PR 전체 흐름을 요청할 때 자동 로드한다. Stage 0에서 자동/수동 모드를 1회 선택받고, destructive 동작은 모드와 무관하게 항상 사용자 명시 승인 후에만 수행한다.
 ---
 
-# /release — Goto 출하 파이프라인
+# /deploy — Goto 출하 파이프라인
 
 이 스킬은 Goto 프로젝트(`~/workspace/inchan/goto`)에 한정한 출하 절차를 안내한다.
 브랜치 정책상 `develop` 이 작업 브랜치이며 `main` 푸시는 PR을 통해서만 일어난다.
@@ -36,7 +36,7 @@ description: Goto 프로젝트의 출하 파이프라인. 사용자가 "/release
 **가장 먼저** `AskUserQuestion` 으로 실행 모드(자동/수동)를 선택받고 결과를 세션 내내 유지한다.
 
 ```text
-Question: 이번 /release 실행 모드?
+Question: 이번 /deploy 실행 모드?
 Options:
   - 자동모드: 단계마다 묻지 않고 끝까지 진행. destructive 동작만 확인.
   - 수동모드: 이전 세션처럼 단계마다 보고 + Y/N.
@@ -247,7 +247,7 @@ gh auth switch -u <previous-account>
 ## 부분 실행
 
 사용자가 특정 단계만 원하면 그 단계만 수행한다:
-- `/release cleanup` → Stage 1 만
-- `/release docs` → Stage 2 만
-- `/release build` → Stage 3 만
-- `/release publish` → Stage 4 만
+- `/deploy cleanup` → Stage 1 만
+- `/deploy docs` → Stage 2 만
+- `/deploy build` → Stage 3 만
+- `/deploy publish` → Stage 4 만
