@@ -1,9 +1,9 @@
 ---
-name: ship-goto
-description: Goto 프로젝트의 출하 파이프라인. 사용자가 "/ship-goto", "출시", "릴리즈 해줘", "정리하고 배포", "ship it" 같은 표현으로 정리→문서→로컬 배포→커밋·PR 전체 흐름을 요청할 때 자동 로드한다. 단계별로 사용자 승인을 받으며 진행하고, 절대 사용자 승인 없이 destructive 동작(파일 삭제, push, PR 생성)을 수행하지 않는다.
+name: release
+description: Goto 프로젝트의 출하 파이프라인. 사용자가 "/release", "출시", "릴리즈 해줘", "정리하고 배포", "ship it" 같은 표현으로 정리→문서→로컬 배포→커밋·PR 전체 흐름을 요청할 때 자동 로드한다. 단계별로 사용자 승인을 받으며 진행하고, 절대 사용자 승인 없이 destructive 동작(파일 삭제, push, PR 생성)을 수행하지 않는다.
 ---
 
-# /ship-goto — Goto 출하 파이프라인
+# /release — Goto 출하 파이프라인
 
 이 스킬은 Goto 프로젝트(`~/workspace/inchan/goto`)에 한정한 출하 절차를 안내한다.
 브랜치 정책상 `develop` 이 작업 브랜치이며 `main` 푸시는 PR을 통해서만 일어난다.
@@ -223,7 +223,7 @@ gh auth switch -u <previous-account>
 ## 부분 실행
 
 사용자가 특정 단계만 원하면 그 단계만 수행한다:
-- `/ship-goto cleanup` → Stage 1 만
-- `/ship-goto docs` → Stage 2 만
-- `/ship-goto build` → Stage 3 만
-- `/ship-goto release` → Stage 4 만
+- `/release cleanup` → Stage 1 만
+- `/release docs` → Stage 2 만
+- `/release build` → Stage 3 만
+- `/release publish` → Stage 4 만
