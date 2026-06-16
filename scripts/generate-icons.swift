@@ -1,5 +1,5 @@
 #!/usr/bin/env swift
-// Goto P03 mint-prompt icon generator.
+// Goto terminal-frame-stack icon generator.
 // Renders the canonical artwork at any size, emits:
 //   - tmp/AppIcon.iconset/* (PNG)
 //   - Resources/applet.icns (via iconutil)
@@ -21,6 +21,17 @@ enum Style { case color, mono }
 func draw(in rect: CGRect, style: Style, ctx: CGContext) {
     let s = rect.width / 1024.0
     func sx(_ v: CGFloat) -> CGFloat { v * s }
+    func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+        CGPoint(x: rect.minX + sx(x), y: rect.minY + sx(1024 - y))
+    }
+    func svgRect(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) -> CGRect {
+        CGRect(
+            x: rect.minX + sx(x),
+            y: rect.minY + sx(1024 - y - height),
+            width: sx(width),
+            height: sx(height)
+        )
+    }
 
     if style == .color {
         ctx.setFillColor(NSColor(red: 0x0b/255.0, green: 0x12/255.0, blue: 0x20/255.0, alpha: 1).cgColor)
@@ -32,71 +43,58 @@ func draw(in rect: CGRect, style: Style, ctx: CGContext) {
     // CGPDFContext renders clear() as a filled rectangle in the current color,
     // which makes the entire glyph a solid black square (template => white square).
 
-    let inkBlack = NSColor.black.cgColor
-    let inkSlate = NSColor(red: 0x33/255.0, green: 0x41/255.0, blue: 0x55/255.0, alpha: 1).cgColor
-    let inkMint  = NSColor(red: 0x9e/255.0, green: 1.0, blue: 0x8a/255.0, alpha: 1).cgColor
-    let inkPromptOnMint = NSColor(red: 0x0b/255.0, green: 0x12/255.0, blue: 0x20/255.0, alpha: 1).cgColor
+    let inkBlack = NSColor.black
+    let inkSlate = NSColor(red: 0x33/255.0, green: 0x41/255.0, blue: 0x55/255.0, alpha: 1)
+    let inkMint = NSColor(red: 0x9e/255.0, green: 1.0, blue: 0x8a/255.0, alpha: 1)
+    let inkText = NSColor(red: 0xf8/255.0, green: 0xfa/255.0, blue: 0xfc/255.0, alpha: 1)
 
-    let leftStroke  = (style == .color) ? inkSlate : inkBlack
-    let rightStroke = (style == .color) ? inkMint  : inkBlack
-    let arrowStroke = (style == .color) ? inkMint  : inkBlack
-    let promptFill  = (style == .color) ? inkPromptOnMint : inkBlack
+    let frameColor = (style == .color) ? inkSlate.cgColor : inkBlack.cgColor
+    let markColor = (style == .color) ? inkMint.cgColor : inkBlack.cgColor
+    let textColor = (style == .color) ? inkText : inkBlack
 
-    let portalLineW = sx(40)
-    let arrowLineW  = sx(60)
-
-    func ellipsePath(cx: CGFloat, cy: CGFloat, rx: CGFloat, ry: CGFloat) -> CGPath {
-        let r = CGRect(x: rect.minX + sx(cx) - sx(rx), y: rect.minY + sx(cy) - sx(ry), width: sx(rx)*2, height: sx(ry)*2)
-        return CGPath(ellipseIn: r, transform: nil)
-    }
-
-    // Left portal
-    ctx.setLineWidth(portalLineW)
-    ctx.setStrokeColor(leftStroke)
-    ctx.addPath(ellipsePath(cx: 320, cy: 512, rx: 140, ry: 220))
+    // Terminal frame from the selected "Terminal Frame Stack" concept.
+    let frame = CGPath(
+        roundedRect: svgRect(x: 156, y: 144, width: 712, height: 736),
+        cornerWidth: sx(64),
+        cornerHeight: sx(64),
+        transform: nil
+    )
+    ctx.setStrokeColor(frameColor)
+    ctx.setLineWidth(sx(72))
+    ctx.addPath(frame)
     ctx.strokePath()
 
-    // Right portal — for mono, use a hairline-friendly identical stroke; in color, mint
-    ctx.setLineWidth(portalLineW)
-    ctx.setStrokeColor(rightStroke)
-    ctx.addPath(ellipsePath(cx: 704, cy: 512, rx: 140, ry: 220))
-    ctx.strokePath()
+    // Prompt chevron, converted from the SVG prototype.
+    let prompt = CGMutablePath()
+    prompt.move(to: point(284, 234))
+    prompt.addLine(to: point(516, 384))
+    prompt.addLine(to: point(284, 534))
+    prompt.addLine(to: point(284, 418))
+    prompt.addLine(to: point(370, 384))
+    prompt.addLine(to: point(284, 350))
+    prompt.closeSubpath()
+    ctx.setFillColor(markColor)
+    ctx.addPath(prompt)
+    ctx.fillPath()
 
-    // Arrow shaft + chevron head (matches P03 SVG verbatim)
-    ctx.setLineCap(.round)
-    ctx.setLineJoin(.round)
-    ctx.setLineWidth(arrowLineW)
-    ctx.setStrokeColor(arrowStroke)
-    let shaft = CGMutablePath()
-    shaft.move(to: CGPoint(x: rect.minX + sx(380), y: rect.minY + sx(512)))
-    shaft.addLine(to: CGPoint(x: rect.minX + sx(660), y: rect.minY + sx(512)))
-    ctx.addPath(shaft); ctx.strokePath()
+    // Cursor block.
+    ctx.setFillColor(markColor)
+    ctx.fill(svgRect(x: 552, y: 450, width: 184, height: 76))
 
-    let head = CGMutablePath()
-    head.move(to: CGPoint(x: rect.minX + sx(600), y: rect.minY + sx(512 - 80)))
-    head.addLine(to: CGPoint(x: rect.minX + sx(700), y: rect.minY + sx(512)))
-    head.addLine(to: CGPoint(x: rect.minX + sx(600), y: rect.minY + sx(512 + 80)))
-    ctx.addPath(head); ctx.strokePath()
-
-    // Prompt glyph "❯" centered in the right portal — color only.
-    // Per P03: dark (#0b1220) on dark portal interior, intentionally subtle.
-    if style == .color {
-        let str = "❯" as NSString
-        let fontSize = sx(180)
-        let font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .black)
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .foregroundColor: NSColor(cgColor: promptFill) ?? .black
-        ]
-        let size = str.size(withAttributes: attrs)
-        let x = rect.minX + sx(704) - size.width/2
-        let y = rect.minY + sx(512) - size.height/2 + sx(8)
-        let nsCtx = NSGraphicsContext(cgContext: ctx, flipped: false)
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = nsCtx
-        str.draw(at: NSPoint(x: x, y: y), withAttributes: attrs)
-        NSGraphicsContext.restoreGraphicsState()
-    }
+    // "goto" wordmark. The PDF glyph remains vector text; if this ever needs
+    // distribution as a standalone SVG, convert the wordmark to outlines first.
+    let str = "goto" as NSString
+    let fontSize = sx(192)
+    let font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .black)
+    let attrs: [NSAttributedString.Key: Any] = [
+        .font: font,
+        .foregroundColor: textColor
+    ]
+    let nsCtx = NSGraphicsContext(cgContext: ctx, flipped: false)
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = nsCtx
+    str.draw(at: NSPoint(x: rect.minX + sx(228), y: rect.minY + sx(1024 - 756)), withAttributes: attrs)
+    NSGraphicsContext.restoreGraphicsState()
 }
 
 func renderPNG(size: Int, to path: String) {
