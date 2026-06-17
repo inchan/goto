@@ -28,6 +28,17 @@ log() {
   /bin/echo "goto installer: $*" >&2
 }
 
+refresh_app_registration() {
+  local lsregister="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
+  local app="/Applications/Goto.app"
+  local launcher="/Applications/Goto Launcher.app"
+
+  /usr/bin/touch "$app" "$launcher" 2>/dev/null || true
+  if [ -x "$lsregister" ]; then
+    "$lsregister" -f "$app" "$launcher" 2>/dev/null || true
+  fi
+}
+
 remove_marker_block() {
   local rc="$1"
   local begin="$2"
@@ -76,6 +87,8 @@ install_to_rc() {
   /usr/sbin/chown "$user:$group" "$rc" 2>/dev/null || true
   /bin/chmod 0644 "$rc" 2>/dev/null || true
 }
+
+refresh_app_registration
 
 console_user=$(/usr/bin/stat -f "%Su" /dev/console 2>/dev/null || true)
 case "$console_user" in

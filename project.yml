@@ -9,6 +9,8 @@ settings:
     CODE_SIGN_STYLE: Manual
     CODE_SIGN_IDENTITY: "-"
     ENABLE_USER_SCRIPT_SANDBOXING: "NO"
+    MARKETING_VERSION: "0.0.0"
+    CURRENT_PROJECT_VERSION: "0"
 targets:
   Goto:
     type: application
@@ -28,8 +30,8 @@ targets:
         CFBundleIconName: applet
         CFBundleIdentifier: com.inchan.goto
         CFBundleName: Goto
-        CFBundleShortVersionString: 1.0.0
-        CFBundleVersion: "1"
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleURLTypes:
           - CFBundleURLName: com.inchan.goto.worktree
             CFBundleURLSchemes:
@@ -61,8 +63,8 @@ targets:
         CFBundleIconName: applet
         CFBundleIdentifier: com.inchan.goto.launcher
         CFBundleName: GotoLauncher
-        CFBundleShortVersionString: 1.0.0
-        CFBundleVersion: "1"
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleURLTypes:
           - CFBundleURLName: com.inchan.goto.launcher
             CFBundleURLSchemes:
@@ -87,8 +89,8 @@ targets:
       properties:
         CFBundleIdentifier: com.inchan.goto.cli
         CFBundleName: goto
-        CFBundleShortVersionString: 1.0.0
-        CFBundleVersion: "1"
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.inchan.goto.cli
@@ -115,8 +117,8 @@ targets:
         CFBundleDisplayName: Goto Finder Extension
         CFBundleIdentifier: com.inchan.goto.findersync
         CFBundleName: GotoFinderSync
-        CFBundleShortVersionString: 1.0.0
-        CFBundleVersion: "1"
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSAppleEventsUsageDescription: Goto needs to control Finder and Ghostty to open the current folder in a terminal.
         NSExtension:
           NSExtensionPointIdentifier: com.apple.FinderSync
