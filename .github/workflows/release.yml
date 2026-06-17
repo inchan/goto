@@ -89,13 +89,23 @@ jobs:
           xcodebuild "${common[@]}" -scheme GotoLauncher build
           xcodebuild "${common[@]}" -scheme GotoCLI build
 
-      - name: Stage DMG contents
+      - name: Build installer package
+        env:
+          NEXT: ${{ steps.ver.outputs.next }}
         run: |
           set -euo pipefail
-          rm -rf dist
+          ./scripts/build-installer.sh "$NEXT"
+
+      - name: Stage DMG contents
+        env:
+          NEXT: ${{ steps.ver.outputs.next }}
+        run: |
+          set -euo pipefail
+          rm -rf dist/dmg
           mkdir -p dist/dmg
-          cp -R "./build/Build/Products/Release/Goto.app" "./dist/dmg/Goto.app"
-          cp -R "./build/Build/Products/Release/GotoLauncher.app" "./dist/dmg/Goto Launcher.app"
+          cp "./dist/Goto-$NEXT.pkg" "./dist/dmg/Install Goto.pkg"
+          cp scripts/uninstall.sh "./dist/dmg/Uninstall Goto.command"
+          chmod +x "./dist/dmg/Uninstall Goto.command"
           cp README.md ./dist/dmg/README.md
 
       - name: Build DMG
@@ -103,27 +113,12 @@ jobs:
           NEXT: ${{ steps.ver.outputs.next }}
         run: |
           set -euo pipefail
+          rm -f "./dist/Goto-$NEXT.dmg"
           create-dmg \
+            --skip-jenkins \
             --volname "Goto $NEXT" \
-            --window-pos 200 120 \
-            --window-size 720 420 \
-            --icon-size 100 \
-            --icon "Goto.app" 175 180 \
-            --icon "Goto Launcher.app" 360 180 \
-            --app-drop-link 545 180 \
             "./dist/Goto-$NEXT.dmg" \
             ./dist/dmg/
-
-      - name: Stage CLI zip
-        env:
-          NEXT: ${{ steps.ver.outputs.next }}
-        run: |
-          set -euo pipefail
-          mkdir -p "./dist/goto-cli"
-          cp "./build/Build/Products/Release/goto" "./dist/goto-cli/goto"
-          cp scripts/install-cli.sh "./dist/goto-cli/install-cli.sh"
-          chmod +x "./dist/goto-cli/install-cli.sh"
-          (cd ./dist && zip -r "goto-cli-$NEXT.zip" goto-cli/)
 
       - name: Create GitHub Release
         env:
@@ -136,5 +131,4 @@ jobs:
           gh release create "$NEXT" \
             --generate-notes \
             --title "$NEXT" \
-            "./dist/Goto-$NEXT.dmg" \
-            "./dist/goto-cli-$NEXT.zip"
+            "./dist/Goto-$NEXT.dmg"

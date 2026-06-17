@@ -1,0 +1,11 @@
+#!/bin/bash
+set -u
+
+# Legacy cleanup only. Current payload installs Goto.app and Goto Launcher.app.
+/bin/rm -rf \
+  "/Applications/Goto3.app" \
+  "/Applications/Goto3 Launcher.app" \
+  "/Applications/Goto3Launcher.app" \
+  "/Applications/GotoLauncher.app"
+
+exit 0

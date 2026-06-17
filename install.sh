@@ -108,10 +108,9 @@ install_to_rc() {
 echo "[4/4] 셸 함수 install"
 
 ZSH_OK=1
-BASH_OK=1
 [ -e "$HOME/.zshrc" ]  && install_to_rc "$HOME/.zshrc"  || ZSH_OK=$?
 [ "$ZSH_OK" -eq 0 ] || install_to_rc "$HOME/.zprofile" || true
-[ -e "$HOME/.bashrc" ] && install_to_rc "$HOME/.bashrc" || BASH_OK=$?
+[ -e "$HOME/.bashrc" ] && install_to_rc "$HOME/.bashrc" || true
 
 cat <<'MSG'
 

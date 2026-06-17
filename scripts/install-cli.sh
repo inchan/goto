@@ -1,5 +1,6 @@
 #!/bin/bash
-# Goto CLI installer (binary-only, used by GitHub Release zip).
+# Optional Goto CLI installer for manual binary-only installs.
+# GitHub Releases use Install Goto.pkg, which installs apps and CLI together.
 # Installs ./goto into ~/.local/bin and registers a shell function.
 set -euo pipefail
 
