@@ -78,12 +78,16 @@ jobs:
         run: xcodegen generate
 
       - name: Build Release artifacts
+        env:
+          NEXT_NO_V: ${{ steps.ver.outputs.next_no_v }}
         run: |
           set -euo pipefail
           common=(
             -project Goto.xcodeproj
             -configuration Release
             -derivedDataPath ./build
+            MARKETING_VERSION="$NEXT_NO_V"
+            CURRENT_PROJECT_VERSION="$NEXT_NO_V"
           )
           xcodebuild "${common[@]}" -scheme Goto build
           xcodebuild "${common[@]}" -scheme GotoLauncher build

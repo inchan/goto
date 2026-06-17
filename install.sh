@@ -16,12 +16,18 @@ fi
 
 echo "[1/4] xcodegen + xcodebuild..."
 xcodegen generate > /dev/null
-xcodebuild -project Goto.xcodeproj -scheme Goto -configuration Release \
-    -derivedDataPath ./build build > /dev/null
-xcodebuild -project Goto.xcodeproj -scheme GotoLauncher -configuration Release \
-    -derivedDataPath ./build build > /dev/null
-xcodebuild -project Goto.xcodeproj -scheme GotoCLI -configuration Release \
-    -derivedDataPath ./build build > /dev/null
+LOCAL_MARKETING_VERSION="${GOTO_VERSION:-0.0.0}"
+LOCAL_BUILD_VERSION="${GOTO_BUILD:-$(date +%Y%m%d%H%M%S)}"
+COMMON_BUILD_ARGS=(
+    -project Goto.xcodeproj
+    -configuration Release
+    -derivedDataPath ./build
+    MARKETING_VERSION="$LOCAL_MARKETING_VERSION"
+    CURRENT_PROJECT_VERSION="$LOCAL_BUILD_VERSION"
+)
+xcodebuild "${COMMON_BUILD_ARGS[@]}" -scheme Goto build > /dev/null
+xcodebuild "${COMMON_BUILD_ARGS[@]}" -scheme GotoLauncher build > /dev/null
+xcodebuild "${COMMON_BUILD_ARGS[@]}" -scheme GotoCLI build > /dev/null
 
 APP_SRC="./build/Build/Products/Release/Goto.app"
 LAUNCHER_SRC="./build/Build/Products/Release/GotoLauncher.app"
@@ -42,6 +48,12 @@ rm -rf \
     "$LAUNCHER_DST"
 cp -R "$APP_SRC" "$APP_DST"
 cp -R "$LAUNCHER_SRC" "$LAUNCHER_DST"
+
+LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
+touch "$APP_DST" "$LAUNCHER_DST" 2>/dev/null || true
+if [ -x "$LSREGISTER" ]; then
+    "$LSREGISTER" -f "$APP_DST" "$LAUNCHER_DST" 2>/dev/null || true
+fi
 
 echo "[3/4] binary 복사: $BIN_DST"
 rm -f "$BIN_DST"
