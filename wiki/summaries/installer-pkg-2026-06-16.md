@@ -25,10 +25,11 @@ The shell wrapper calls `/usr/local/bin/goto` by absolute path so it is not affe
 - `scripts/build-installer.sh` stages a package root from Release build products and creates `dist/Goto-vX.Y.Z.pkg`.
 - `installer/components.plist` marks both app bundles as non-relocatable and uses `upgrade` overwrite behavior.
 - `installer/scripts/preinstall` removes legacy app bundle names before install.
-- `installer/scripts/postinstall` removes old/new marker blocks from common zsh/bash startup files and appends the current wrapper to the active user's shell profile.
+- `installer/scripts/postinstall` refreshes LaunchServices app registration, enables `com.inchan.goto.findersync` for the active console user, refreshes Finder, removes old/new marker blocks from common zsh/bash startup files, and appends the current wrapper to the active user's shell profile.
 - `scripts/uninstall.sh` removes current app/CLI installs, old app names, old user-local CLI binaries, shell marker blocks, and package receipts. `--purge` also removes user data and preferences.
 - `.github/workflows/release.yml` builds the package, stages it into the DMG as `Install Goto.pkg`, and stops producing the separate CLI zip.
 - DMG creation uses `create-dmg --skip-jenkins` so CI does not depend on Finder AppleEvents for icon positioning.
+- `Resources/goto-glyph.pdf` uses an 18pt media box for menu bar and Finder Sync toolbar usage, avoiding the previous 64pt canvas being treated as wide toolbar content by Finder.
 
 ## Follow-up
 

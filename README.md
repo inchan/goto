@@ -150,10 +150,11 @@ Release 인스톨러 패키지는 빌드 후 다음 명령으로 생성합니다
 2. `Goto.app`을 실행합니다.
 3. 기본 터미널을 선택합니다. Ghostty가 설치되어 있으면 선택지에 표시됩니다.
 4. 터미널이 이미 실행 중일 때 `New Tab` 또는 `New Window` 중 하나를 선택합니다.
-5. `Open Extension Settings`를 누르고 `Goto Finder Extension`을 활성화합니다.
-6. Finder에서 `View > Customize Toolbar...`를 엽니다.
-7. `Goto` 항목을 도구막대로 끌어다 놓습니다.
+5. Finder에서 `View > Customize Toolbar...`를 엽니다.
+6. `Goto` 항목을 도구막대로 끌어다 놓습니다.
 
 한 번 클릭으로 바로 실행하려면 `/Applications/Goto Launcher.app`을 Finder 도구막대로 직접 끌어다 놓습니다.
+
+Installer는 `Goto Finder Extension`을 자동으로 활성화하고 Finder를 새로고침합니다. macOS 설정이 이를 막아 `Goto` 항목이 보이지 않으면 `Goto.app`의 `Open Extension Settings`에서 수동으로 활성화하세요.
 
 macOS가 Terminal, Ghostty 제어 권한이나 Accessibility 권한을 물어보면 허용해야 현재 경로에서 탭을 열 수 있습니다.
