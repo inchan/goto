@@ -1,5 +1,9 @@
 # Goto Wiki Log
 
+## 2026-06-17 fix | Finder Sync 자동 활성화
+
+Installer postinstall과 로컬 `install.sh`가 설치 직후 `com.inchan.goto.findersync`를 `pluginkit -e use`로 활성화하고 Finder를 새로고침하도록 변경했다. 기존 uninstall이 확장을 `ignore`로 둔 뒤 재설치해도 Finder 도구막대 사용자화에 `Goto`가 나타나도록 하기 위함이다. Finder toolbar item이 64pt glyph canvas를 기준으로 넓게 잡히는 문제를 줄이기 위해 `goto-glyph.pdf` media box를 18pt로 낮추고 Finder Sync에서 18x18 template image로 반환한다. See `summaries/installer-pkg-2026-06-16`.
+
 ## 2026-06-16 feat | pkg 기반 일괄 설치
 
 Release DMG의 설치 단위를 두 앱 드래그 방식에서 `Install Goto.pkg` 하나로 바꿨다. pkg payload는 `/Applications/Goto.app`, `/Applications/Goto Launcher.app`, `/usr/local/bin/goto`, `/usr/local/bin/goto-uninstall`을 함께 설치하며, postinstall에서 현재 콘솔 사용자의 zsh/bash 시작 파일에 marker 기반 `goto()` wrapper를 등록한다. 별도 `goto-cli-vX.Y.Z.zip` 릴리스 자산은 제거했다. 제거 스크립트는 현재 설치물과 legacy 앱 이름, old shell marker, 예전 `~/.local/bin/goto`까지 정리하고 `--purge` 시 사용자 데이터도 제거한다. See `summaries/installer-pkg-2026-06-16`.

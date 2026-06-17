@@ -33,6 +33,8 @@ APP_SRC="./build/Build/Products/Release/Goto.app"
 LAUNCHER_SRC="./build/Build/Products/Release/GotoLauncher.app"
 APP_DST="/Applications/Goto.app"
 LAUNCHER_DST="/Applications/Goto Launcher.app"
+FINDER_EXTENSION_ID="com.inchan.goto.findersync"
+FINDER_EXTENSION_PATH="$APP_DST/Contents/PlugIns/GotoFinderSync.appex"
 BIN_SRC="./build/Build/Products/Release/goto"
 BIN_DST_DIR="$HOME/.local/bin"
 BIN_DST="$BIN_DST_DIR/goto"
@@ -53,6 +55,16 @@ LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchS
 touch "$APP_DST" "$LAUNCHER_DST" 2>/dev/null || true
 if [ -x "$LSREGISTER" ]; then
     "$LSREGISTER" -f "$APP_DST" "$LAUNCHER_DST" 2>/dev/null || true
+fi
+if [ -d "$FINDER_EXTENSION_PATH" ]; then
+    /usr/bin/pluginkit -a "$FINDER_EXTENSION_PATH" >/dev/null 2>&1 || true
+    if /usr/bin/pluginkit -e use -i "$FINDER_EXTENSION_ID" >/dev/null 2>&1; then
+        /usr/bin/pkill -x GotoFinderSync >/dev/null 2>&1 || true
+        /usr/bin/killall Finder >/dev/null 2>&1 || true
+        echo "  → Finder 확장 활성화"
+    else
+        echo "  ! Finder 확장을 자동 활성화하지 못했습니다. Goto 앱의 Open Extension Settings에서 수동으로 켜세요."
+    fi
 fi
 
 echo "[3/4] binary 복사: $BIN_DST"
