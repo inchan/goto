@@ -2,6 +2,7 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
+REPO_ROOT="$(pwd -P)"
 
 export COPYFILE_DISABLE=1
 export COPY_EXTENDED_ATTRIBUTES_DISABLE=1
@@ -18,8 +19,15 @@ if ! [[ "$PKG_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   exit 64
 fi
 
-BUILD_PRODUCTS_DIR="${BUILD_PRODUCTS_DIR:-./build/Build/Products/Release}"
-DIST_DIR="${DIST_DIR:-./dist}"
+absolute_path() {
+  case "$1" in
+    /*) printf '%s\n' "$1" ;;
+    *) printf '%s/%s\n' "$REPO_ROOT" "$1" ;;
+  esac
+}
+
+BUILD_PRODUCTS_DIR="$(absolute_path "${BUILD_PRODUCTS_DIR:-./build/Build/Products/Release}")"
+DIST_DIR="$(absolute_path "${DIST_DIR:-./dist}")"
 PKG_ROOT="$DIST_DIR/pkg-root"
 PKG_WORK="$DIST_DIR/pkg-work"
 PKG_SCRIPTS="$PKG_WORK/scripts"
