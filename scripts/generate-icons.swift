@@ -147,8 +147,10 @@ for (px, name) in specs {
     renderPNG(size: px, to: tmp + "/" + name)
 }
 
-// Glyph PDF for menu bar / Finder Sync (template image, monochrome black)
-renderPDF(side: 64, style: .mono, to: resources + "/goto-glyph.pdf")
+// Glyph PDF for menu bar / Finder Sync (template image, monochrome black).
+// Keep the media box at toolbar size so Finder does not reserve the old 64pt
+// canvas around the visible glyph.
+renderPDF(side: 18, style: .mono, to: resources + "/goto-glyph.pdf")
 
 // Compile iconset -> applet.icns via iconutil so the Finder app-bundle icon
 // stays in sync with the PNGs we just wrote.

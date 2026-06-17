@@ -4,6 +4,7 @@ import Foundation
 
 final class FinderSyncExtension: FIFinderSync {
     private let extensionBundle = Bundle(for: FinderSyncExtension.self)
+    private static let toolbarIconSize = NSSize(width: 18, height: 18)
 
     // Finder Sync ↔ Finder process 경계에서 representedObject가 보존되지 않으므로
     // tag(보존됨) + 로컬 dictionary로 path 전달.
@@ -27,10 +28,14 @@ final class FinderSyncExtension: FIFinderSync {
 
     override var toolbarItemImage: NSImage {
         guard let glyphURL = extensionBundle.url(forResource: "goto-glyph", withExtension: "pdf"),
-              let image = NSImage(contentsOf: glyphURL) else {
+              let sourceImage = NSImage(contentsOf: glyphURL) else {
             return NSImage()
         }
-        image.size = NSSize(width: 18, height: 18)
+        let image = NSImage(size: Self.toolbarIconSize, flipped: false) { rect in
+            sourceImage.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1)
+            return true
+        }
+        image.size = Self.toolbarIconSize
         image.isTemplate = true
         return image
     }
