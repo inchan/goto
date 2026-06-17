@@ -8,6 +8,7 @@
 - [[summaries/cli-prefix-features-2026-05-13]] — CLI prefix true-color badge, `f` filter mode, and shared `xxx-` pattern prefix with two new config toggles.
 - [[summaries/recent-limit-config-2026-05-15]] — make `recent` display count user-configurable (CLI + macOS app settings), bump default 3 → 5.
 - [[summaries/cli-keybindings-2026-05-19]] — CLI 키 정책 개편: 단일 문자 단축키 제거, 입력 시 자동 필터 + `Ctrl+P` 핀 / `Ctrl+Q` 종료; `ship-goto` 스킬을 `release`로 리네이밍.
+- [[summaries/installer-pkg-2026-06-16]] — Release DMG now contains one installer package that installs both apps and the CLI together.
 
 ## Concepts
 

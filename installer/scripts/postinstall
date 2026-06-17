@@ -1,0 +1,128 @@
+#!/bin/bash
+set -u
+
+MARKER_BEGIN="# >>> goto cli >>>"
+MARKER_END="# <<< goto cli <<<"
+OLD_MARKER_BEGIN="# >>> goto3 cli >>>"
+OLD_MARKER_END="# <<< goto3 cli <<<"
+
+SHELL_FUNC=$(cat <<'EOF'
+# >>> goto cli >>>
+goto() {
+  if [ "$#" -gt 0 ]; then
+    /usr/local/bin/goto "$@"
+    return
+  fi
+
+  local target
+  target=$(/usr/local/bin/goto) || return
+  if [ -n "$target" ] && [ -d "$target" ]; then
+    cd "$target"
+  fi
+}
+# <<< goto cli <<<
+EOF
+)
+
+log() {
+  /bin/echo "goto installer: $*" >&2
+}
+
+remove_marker_block() {
+  local rc="$1"
+  local begin="$2"
+  local end="$3"
+
+  [ -e "$rc" ] || return 0
+  /usr/bin/grep -qF "$begin" "$rc" || return 0
+
+  local tmp
+  tmp=$(/usr/bin/mktemp "/tmp/goto-rc.XXXXXX") || return 1
+  /usr/bin/awk -v b="$begin" -v e="$end" '
+    $0 == b {skip=1; next}
+    $0 == e {skip=0; next}
+    !skip {print}
+  ' "$rc" > "$tmp" || {
+    /bin/rm -f "$tmp"
+    return 1
+  }
+  /bin/cat "$tmp" > "$rc" || {
+    /bin/rm -f "$tmp"
+    return 1
+  }
+  /bin/rm -f "$tmp"
+}
+
+clean_rc() {
+  local rc="$1"
+  [ -e "$rc" ] || return 0
+  remove_marker_block "$rc" "$OLD_MARKER_BEGIN" "$OLD_MARKER_END" || return 1
+  remove_marker_block "$rc" "$MARKER_BEGIN" "$MARKER_END" || return 1
+}
+
+install_to_rc() {
+  local rc="$1"
+  local user="$2"
+  local group="$3"
+
+  if [ ! -e "$rc" ]; then
+    /usr/bin/touch "$rc" || return 1
+    /usr/sbin/chown "$user:$group" "$rc" 2>/dev/null || true
+    /bin/chmod 0644 "$rc" 2>/dev/null || true
+  fi
+
+  clean_rc "$rc" || return 1
+  /usr/bin/printf "\n%s\n" "$SHELL_FUNC" >> "$rc" || return 1
+  /usr/sbin/chown "$user:$group" "$rc" 2>/dev/null || true
+  /bin/chmod 0644 "$rc" 2>/dev/null || true
+}
+
+console_user=$(/usr/bin/stat -f "%Su" /dev/console 2>/dev/null || true)
+case "$console_user" in
+  ""|root|loginwindow|_mbsetupuser)
+    log "no active console user; installed apps and binary only"
+    exit 0
+    ;;
+esac
+
+user_home=$(/usr/bin/dscl . -read "/Users/$console_user" NFSHomeDirectory 2>/dev/null | /usr/bin/awk '{print $2; exit}')
+if [ -z "$user_home" ] || [ ! -d "$user_home" ]; then
+  log "cannot resolve home directory for $console_user; installed apps and binary only"
+  exit 0
+fi
+
+user_group=$(/usr/bin/id -gn "$console_user" 2>/dev/null || /bin/echo "staff")
+user_shell=$(/usr/bin/dscl . -read "/Users/$console_user" UserShell 2>/dev/null | /usr/bin/awk '{print $2; exit}')
+shell_name=$(/usr/bin/basename "${user_shell:-zsh}")
+
+for rc in "$user_home/.zshrc" "$user_home/.zprofile" "$user_home/.bashrc" "$user_home/.bash_profile"; do
+  clean_rc "$rc" || log "could not clean existing goto marker in $rc"
+done
+
+case "$shell_name" in
+  zsh)
+    target_rc="$user_home/.zshrc"
+    ;;
+  bash)
+    target_rc="$user_home/.bash_profile"
+    ;;
+  *)
+    if [ -e "$user_home/.zshrc" ]; then
+      target_rc="$user_home/.zshrc"
+    elif [ -e "$user_home/.bash_profile" ]; then
+      target_rc="$user_home/.bash_profile"
+    elif [ -e "$user_home/.bashrc" ]; then
+      target_rc="$user_home/.bashrc"
+    else
+      target_rc="$user_home/.zshrc"
+    fi
+    ;;
+esac
+
+if install_to_rc "$target_rc" "$console_user" "$user_group"; then
+  log "registered shell function in $target_rc"
+else
+  log "warning: could not register shell function in $target_rc"
+fi
+
+exit 0
