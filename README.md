@@ -44,15 +44,18 @@ Finder Sync는 도구막대 버튼 클릭 시 메뉴만 요청하므로, 진짜 
 
 ```sh
 goto                              # 등록된 프로젝트 리스트 → ↑↓ 이동, Enter 선택, 키 입력 시 자동 필터, Ctrl+P 핀 토글, ESC/Ctrl+Q 취소
-goto --add <path>                 # 경로 등록
-goto --remove <path>              # 경로 제거
-goto --add-subdirs <path>         # 1단계 하위 git 디렉터리 모두 등록
-goto --remove-subdirs <path>      # 1단계 하위 디렉터리 모두 제거
-goto --pin <path>                 # 프로젝트 핀 고정 (최상단)
-goto --unpin <path>               # 프로젝트 핀 해제
-goto --help                       # 도움말
+goto --add, -a <path>             # 경로 등록
+goto --remove, -r <path>          # 경로 제거
+goto --add-subdirs, -A <path>     # 1단계 하위 git 디렉터리 모두 등록 (이후 자동 동기화 대상으로 감시)
+goto --remove-subdirs, -R <path>  # 1단계 하위 디렉터리 모두 제거
+goto --unwatch, -U <path>         # 감시 해제 (등록된 프로젝트는 유지)
+goto --sync, -S                   # 감시 중인 폴더 동기화
+goto --pin, -p <path>             # 프로젝트 핀 고정 (최상단)
+goto --unpin, -u <path>           # 프로젝트 핀 해제
+goto --help, -h                   # 도움말
 ```
 
+- `--add-subdirs`로 등록한 상위 폴더는 감시 대상으로 기억되어(`~/.goto_watched`) 이후 자동 동기화됩니다. 인터랙티브 모드 진입 시 감시 폴더를 백그라운드로 동기화하며(반영은 다음 실행 때), `--sync`로 직접 실행할 수도 있습니다. 추가 기준은 직속 하위 git 루트, 제거 기준은 폴더가 물리적으로 삭제된 경우입니다.
 - 등록 데이터: `~/.goto` (한 줄 한 path, 사용자가 직접 편집 가능)
 - 핀 고정한 프로젝트는 `~/.goto_pinned`에 저장되며 인터랙티브 리스트와 메뉴바의 **최상단**에 📌 마커와 함께 표시됩니다. 인터랙티브 리스트에서 `Ctrl+P`로 토글, 메뉴바에서는 ⌥ 키를 누른 채 항목 위에 마우스를 올리면 "핀 고정/해제" 항목이 alternate로 표시됩니다.
 - 최근 선택한 프로젝트는 `~/.goto_recent`에 저장되고, 핀 고정 영역 바로 아래에 표시됩니다(핀과 중복 시 핀 영역에서만 표시). 표시 개수는 기본 **5개**이며 CLI settings의 `최근 항목 개수`(Space: 0/1/3/5/10 순환, Enter: 직접 입력) 또는 macOS 앱 환경설정창의 `최근 개수` 콤보박스(선택 또는 직접 입력)에서 `0~50` 범위로 지정할 수 있습니다.

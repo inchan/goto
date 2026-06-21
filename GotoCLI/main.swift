@@ -905,14 +905,16 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
 
 private let usageText = """
 사용법:
-  goto                           인터랙티브 프로젝트 선택
-  goto --add <path>              경로 등록
-  goto --remove <path>           경로 제거
-  goto --add-subdirs <path>      1단계 하위 git 디렉터리 모두 등록
-  goto --remove-subdirs <path>   1단계 하위 디렉터리 모두 제거
-  goto --pin <path>              프로젝트 핀 고정 (최상단)
-  goto --unpin <path>            프로젝트 핀 해제
-  goto --help                    이 도움말 출력
+  goto                              인터랙티브 프로젝트 선택
+  goto --add, -a <path>             경로 등록
+  goto --remove, -r <path>          경로 제거
+  goto --add-subdirs, -A <path>     1단계 하위 git 디렉터리 모두 등록
+  goto --remove-subdirs, -R <path>  1단계 하위 디렉터리 모두 제거
+  goto --pin, -p <path>             프로젝트 핀 고정 (최상단)
+  goto --unpin, -u <path>           프로젝트 핀 해제
+  goto --unwatch, -U <path>         감시 해제 (등록된 프로젝트는 유지)
+  goto --sync, -S                   감시 중인 폴더 동기화
+  goto --help, -h                   이 도움말 출력
 """
 
 private func handleStoreError(_ error: Error, path: String) -> Never {
@@ -927,14 +929,25 @@ private func handleStoreError(_ error: Error, path: String) -> Never {
     exit(2)
 }
 
-let args = CommandLine.arguments.dropFirst()
+let flagAliases: [String: String] = [
+    "-a": "--add",
+    "-r": "--remove",
+    "-A": "--add-subdirs",
+    "-R": "--remove-subdirs",
+    "-p": "--pin",
+    "-u": "--unpin",
+    "-U": "--unwatch",
+    "-S": "--sync",
+    "-h": "--help",
+]
+let args = CommandLine.arguments.dropFirst().map { flagAliases[$0] ?? $0 }
 
 if args.contains("--help") {
     print(usageText)
     exit(0)
 }
 
-let knownFlags: Set<String> = ["--add", "--remove", "--add-subdirs", "--remove-subdirs", "--pin", "--unpin", "--help"]
+let knownFlags: Set<String> = ["--add", "--remove", "--add-subdirs", "--remove-subdirs", "--pin", "--unpin", "--unwatch", "--sync", "--help"]
 for arg in args where arg.hasPrefix("-") {
     if !knownFlags.contains(arg) {
         fputs("error: 알 수 없는 인자: \(arg)\n\(usageText)\n", stderr)
@@ -1032,9 +1045,39 @@ if let idx = argArray.firstIndex(of: "--unpin") {
     exit(0)
 }
 
+if let idx = argArray.firstIndex(of: "--unwatch") {
+    guard idx + 1 < argArray.count else {
+        fputs("error: --unwatch 에 경로가 필요합니다\n\(usageText)\n", stderr)
+        exit(2)
+    }
+    let path = argArray[idx + 1]
+    let removed = GotoProjectStore.removeWatched(path)
+    fputs(removed ? "감시 해제: \(path)\n" : "감시 중이 아님: \(path)\n", stderr)
+    exit(0)
+}
+
+if argArray.firstIndex(of: "--sync") != nil {
+    let r = GotoProjectStore.syncWatched()
+    fputs("동기화 완료: 추가 \(r.added), 제거 \(r.removed)\n", stderr)
+    exit(0)
+}
+
 if !argArray.isEmpty {
     fputs("error: 알 수 없는 인자: \(argArray.joined(separator: " "))\n\(usageText)\n", stderr)
     exit(2)
+}
+
+func spawnBackgroundSync() {
+    guard !GotoProjectStore.loadWatched().isEmpty else { return }
+    let executable = CommandLine.arguments[0]
+    guard !executable.isEmpty else { return }
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: executable)
+    process.arguments = ["--sync"]
+    process.standardInput = FileHandle.nullDevice
+    process.standardOutput = FileHandle.nullDevice
+    process.standardError = FileHandle.nullDevice
+    try? process.run()
 }
 
 let projects = GotoProjectStore.load()
@@ -1045,6 +1088,8 @@ if isatty(STDIN_FILENO) == 0 {
     }
     exit(0)
 }
+
+spawnBackgroundSync()
 
 switch runInteractive(projects: projects) {
 case .chosen(let chosen):
