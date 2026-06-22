@@ -259,6 +259,7 @@ private func drawMainList(
     filterQuery: String?,
     displayItem: (String) -> GotoProjectDisplayItem,
     colored: Bool,
+    updateNotice: String?,
     tty: UnsafeMutablePointer<FILE>
 ) {
     fputs(ansiClear, tty)
@@ -272,6 +273,9 @@ private func drawMainList(
             "goto — 프로젝트 선택 (↑↓ 이동, Enter 선택, Ctrl+P 핀 토글, 입력 시 필터, ESC/Ctrl+Q 취소)\n\n",
             tty
         )
+    }
+    if let updateNotice {
+        fputs("\(ansiGray)\(updateNotice)\(ansiReset)\n\n", tty)
     }
     let projectPaths = rows.compactMap { row -> String? in
         if case .project(let path) = row { return path }
@@ -773,6 +777,7 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
         }
     }
     var displayItem = makeDisplayItem()
+    let updateNotice = GotoUpdateService.pendingNotice()
 
     func makeRows() -> [MainRow] {
         if let q = filterQuery {
@@ -801,7 +806,7 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
 
     var rows = makeRows()
     var selected = firstSelectableIndex(in: rows) { $0.isSelectable }
-    drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, filterQuery: filterQuery, displayItem: displayItem, colored: config.prefixColorEnabled, tty: tty)
+    drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, filterQuery: filterQuery, displayItem: displayItem, colored: config.prefixColorEnabled, updateNotice: updateNotice, tty: tty)
 
     while true {
         if filterQuery != nil {
@@ -837,7 +842,7 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
                 fputs(ansiClear, tty)
                 return .cancelled
             }
-            drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, filterQuery: filterQuery, displayItem: displayItem, colored: config.prefixColorEnabled, tty: tty)
+            drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, filterQuery: filterQuery, displayItem: displayItem, colored: config.prefixColorEnabled, updateNotice: updateNotice, tty: tty)
             continue
         }
 
@@ -899,7 +904,7 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
         case .other:
             break
         }
-        drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, filterQuery: filterQuery, displayItem: displayItem, colored: config.prefixColorEnabled, tty: tty)
+        drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, filterQuery: filterQuery, displayItem: displayItem, colored: config.prefixColorEnabled, updateNotice: updateNotice, tty: tty)
     }
 }
 
