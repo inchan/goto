@@ -1085,8 +1085,10 @@ if !argArray.isEmpty {
     exit(2)
 }
 
+// 백그라운드로 `goto --sync`를 분리 실행한다. `--sync` 핸들러가 watched 폴더
+// 동기화와 업데이트 체크를 모두 수행하므로, watched가 비어 있어도(= 동기화할 게
+// 없어도) 업데이트 체크를 위해 항상 spawn한다. 반영은 다음 실행 때.
 func spawnBackgroundSync() {
-    guard !GotoProjectStore.loadWatched().isEmpty else { return }
     let executable = CommandLine.arguments[0]
     guard !executable.isEmpty else { return }
     let process = Process()
