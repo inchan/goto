@@ -7,7 +7,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var terminalStatusLabel: NSTextField?
 
     private var menuBarController: MenuBarController?
-    private var openWorktreeWindows: [WorktreeWindowController] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
@@ -18,72 +17,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return !GotoSettings.isMenuBarEnabled()
-    }
-
-    func application(_ application: NSApplication, open urls: [URL]) {
-        for url in urls {
-            handleURL(url)
-        }
-    }
-
-    private func handleURL(_ url: URL) {
-        guard let action = GotoLaunchRequest.parse(url: url) else { return }
-
-        switch action {
-        case .openTerminal(let path):
-            _ = TerminalLauncher.open(
-                preference: GotoSettings.defaultTerminalPreference(),
-                path: path
-            )
-        case .showWorktrees(let repoPath):
-            showWorktreesWindow(for: repoPath)
-        }
-    }
-
-    private func showWorktreesWindow(for repoPath: String) {
-        let gitURL = WorktreeService.defaultGitExecutableURL
-
-        DispatchQueue.global(qos: .userInitiated).async {
-            let result = WorktreeService.worktrees(at: repoPath, gitExecutable: gitURL)
-
-            DispatchQueue.main.async { [weak self] in
-                MainActor.assumeIsolated {
-                    guard let self else { return }
-                    switch result {
-                    case .success(let entries):
-                        self.presentWorktreeWindow(repoPath: repoPath, entries: entries, errorMessage: nil)
-                    case .failure(let error):
-                        self.presentWorktreeWindow(repoPath: repoPath, entries: [], errorMessage: Self.localizedMessage(for: error))
-                    }
-                }
-            }
-        }
-    }
-
-    private func presentWorktreeWindow(repoPath: String, entries: [GotoWorktreeEntry], errorMessage: String?) {
-        let controller = WorktreeWindowController(
-            repoPath: repoPath,
-            entries: entries,
-            gitErrorMessage: errorMessage
-        )
-        controller.onWindowWillClose = { [weak self] wc in
-            self?.openWorktreeWindows.removeAll { $0 === wc }
-        }
-        openWorktreeWindows.append(controller)
-        controller.showWindow(nil)
-        controller.window?.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-    }
-
-    private static func localizedMessage(for error: WorktreeServiceError) -> String {
-        switch error {
-        case .notARepository:
-            return "이 폴더는 git 저장소가 아닙니다."
-        case .gitFailed(let stderr, let status):
-            return stderr.isEmpty ? "git 명령 실패 (코드 \(status))" : "git 오류 (코드 \(status)): \(stderr)"
-        case .parseFailed(let detail):
-            return "워크트리 정보를 파싱할 수 없습니다: \(detail)"
-        }
     }
 
     func showSetupWindow() {

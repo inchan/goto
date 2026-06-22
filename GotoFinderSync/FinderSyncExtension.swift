@@ -9,7 +9,6 @@ final class FinderSyncExtension: FIFinderSync {
     // Finder Sync ↔ Finder process 경계에서 representedObject가 보존되지 않으므로
     // tag(보존됨) + 로컬 dictionary로 path 전달.
     private static let openTerminalTag = 1
-    private static let worktreesTag = 2
     private let menuPayloadsLock = NSLock()
     private var menuPayloads: [Int: String] = [:]
 
@@ -49,7 +48,6 @@ final class FinderSyncExtension: FIFinderSync {
         menuPayloads.removeAll()
         if let path, !path.isEmpty {
             menuPayloads[Self.openTerminalTag] = path
-            menuPayloads[Self.worktreesTag] = path
         }
         menuPayloadsLock.unlock()
 
@@ -58,12 +56,6 @@ final class FinderSyncExtension: FIFinderSync {
         openItem.tag = Self.openTerminalTag
         openItem.isEnabled = true
         menu.addItem(openItem)
-
-        let worktreeItem = NSMenuItem(title: "Worktrees…", action: #selector(openWorktreesWindow(_:)), keyEquivalent: "")
-        worktreeItem.target = self
-        worktreeItem.tag = Self.worktreesTag
-        worktreeItem.isEnabled = (path != nil)
-        menu.addItem(worktreeItem)
 
         return menu
     }
@@ -81,14 +73,6 @@ final class FinderSyncExtension: FIFinderSync {
     @objc private func openTerminal(_ sender: NSMenuItem) {
         let path = resolveClickedPath(from: sender)
         guard let url = GotoLaunchRequest.url(path: path) else { return }
-        _ = NSWorkspace.shared.open(url)
-    }
-
-    @objc private func openWorktreesWindow(_ sender: NSMenuItem) {
-        guard let path = resolveClickedPath(from: sender), !path.isEmpty,
-              let url = GotoLaunchRequest.worktreesURL(path: path) else {
-            return
-        }
         _ = NSWorkspace.shared.open(url)
     }
 

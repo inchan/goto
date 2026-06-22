@@ -15,18 +15,6 @@ final class GotoLaunchRequestTests: XCTestCase {
         )
     }
 
-    func testParseWorktreesShowURLRequiresNonEmptyPath() throws {
-        let valid = try XCTUnwrap(GotoLaunchRequest.worktreesURL(path: "/tmp/repo"))
-        XCTAssertEqual(
-            GotoLaunchRequest.parse(url: valid),
-            .showWorktrees(path: "/tmp/repo")
-        )
-
-        XCTAssertNil(GotoLaunchRequest.worktreesURL(path: ""))
-        XCTAssertNil(GotoLaunchRequest.parse(url: URL(string: "gotoworktree://show")!))
-        XCTAssertNil(GotoLaunchRequest.parse(url: URL(string: "gotoworktree://show?path=")!))
-    }
-
     func testParseRejectsWrongSchemeAndHost() {
         XCTAssertNil(GotoLaunchRequest.parse(url: URL(string: "gotolauncher://close?path=/tmp")!))
         XCTAssertNil(GotoLaunchRequest.parse(url: URL(string: "file:///tmp/project")!))

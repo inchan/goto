@@ -27,7 +27,6 @@ Allowed tags:
 - `refactor`
 - `settings`
 - `testing`
-- `worktree`
 
 New tags require updating this file first.
 
