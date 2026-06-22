@@ -914,6 +914,7 @@ private let usageText = """
   goto --unpin, -u <path>           프로젝트 핀 해제
   goto --unwatch, -U <path>         감시 해제 (등록된 프로젝트는 유지)
   goto --sync, -S                   감시 중인 폴더 동기화
+  goto --upgrade                    최신 버전으로 업데이트 (앱+CLI)
   goto --help, -h                   이 도움말 출력
 """
 
@@ -947,7 +948,7 @@ if args.contains("--help") {
     exit(0)
 }
 
-let knownFlags: Set<String> = ["--add", "--remove", "--add-subdirs", "--remove-subdirs", "--pin", "--unpin", "--unwatch", "--sync", "--help"]
+let knownFlags: Set<String> = ["--add", "--remove", "--add-subdirs", "--remove-subdirs", "--pin", "--unpin", "--unwatch", "--sync", "--upgrade", "--help"]
 for arg in args where arg.hasPrefix("-") {
     if !knownFlags.contains(arg) {
         fputs("error: 알 수 없는 인자: \(arg)\n\(usageText)\n", stderr)
@@ -1058,8 +1059,20 @@ if let idx = argArray.firstIndex(of: "--unwatch") {
 
 if argArray.firstIndex(of: "--sync") != nil {
     let r = GotoProjectStore.syncWatched()
+    GotoUpdateService.refreshCache()
     fputs("동기화 완료: 추가 \(r.added), 제거 \(r.removed)\n", stderr)
     exit(0)
+}
+
+if argArray.firstIndex(of: "--upgrade") != nil {
+    switch GotoUpdateService.performUpgrade(log: { fputs("\($0)\n", stderr) }) {
+    case .success(let tag):
+        fputs("업데이트 완료: \(tag). 새 셸을 열거나 'source ~/.zshrc' 후 사용하세요.\n", stderr)
+        exit(0)
+    case .failure(let error):
+        fputs("error: 업데이트 실패 (\(error))\n", stderr)
+        exit(2)
+    }
 }
 
 if !argArray.isEmpty {
