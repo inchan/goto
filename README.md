@@ -24,16 +24,13 @@ sudo xattr -dr com.apple.quarantine /Applications/Goto.app "/Applications/Goto L
 
 ## 동작
 
-- Finder Sync 도구막대의 `Goto` 버튼을 클릭하면 두 항목 메뉴가 열립니다.
+- Finder Sync 도구막대의 `Goto` 버튼을 클릭하면 `Open in Terminal` 메뉴가 열립니다.
   - `Open in Terminal` — 현재 Finder 위치를 설정한 기본 터미널로 엽니다.
-  - `Worktrees…` — 현재 위치가 git 저장소면 worktree 선택 윈도우를 띄웁니다.
-- Worktree 윈도우에서 행을 더블클릭하거나 Enter를 누르면 해당 worktree 경로를 터미널로 엽니다. ESC로 닫습니다.
-- 윈도우는 `Goto.app` 메인 앱이 띄웁니다 (Finder Sync 확장은 sandbox로 git 실행이 막혀 있어 메인 앱에 위임).
 - Finder 도구막대에 `Goto Launcher.app`을 직접 끌어다 놓고 클릭하면 메뉴 없이 기본 터미널이 바로 열립니다.
 - 설정 화면에서 기본 터미널과 "이미 실행 중일 때 새 탭/창" 동작을 선택합니다. Ghostty가 설치되어 있으면 선택지에 표시됩니다.
 - 터미널 앱이 이미 열려 있으면 설정값에 따라 새 탭 또는 새 창으로 엽니다. 열려 있지 않으면 항상 새 창을 엽니다.
 - Terminal.app의 새 탭 열기는 macOS Accessibility 권한이 필요합니다. 권한이 없으면 새 창으로 엽니다.
-- Finder에서 파일/폴더를 우클릭했을 때도 같은 두 메뉴 항목을 제공합니다.
+- Finder에서 파일/폴더를 우클릭했을 때도 같은 메뉴 항목을 제공합니다.
 
 Finder Sync 도구막대 버튼은 공개 API에서 왼쪽 클릭, 오른쪽 클릭, 롱클릭을 구분하지 않습니다.
 Finder Sync는 도구막대 버튼 클릭 시 메뉴만 요청하므로, 진짜 한 번 클릭 실행은 `Goto Launcher.app`을 Finder 도구막대에 직접 추가해서 사용합니다.
@@ -44,15 +41,18 @@ Finder Sync는 도구막대 버튼 클릭 시 메뉴만 요청하므로, 진짜 
 
 ```sh
 goto                              # 등록된 프로젝트 리스트 → ↑↓ 이동, Enter 선택, 키 입력 시 자동 필터, Ctrl+P 핀 토글, ESC/Ctrl+Q 취소
-goto --add <path>                 # 경로 등록
-goto --remove <path>              # 경로 제거
-goto --add-subdirs <path>         # 1단계 하위 git 디렉터리 모두 등록
-goto --remove-subdirs <path>      # 1단계 하위 디렉터리 모두 제거
-goto --pin <path>                 # 프로젝트 핀 고정 (최상단)
-goto --unpin <path>               # 프로젝트 핀 해제
-goto --help                       # 도움말
+goto --add, -a <path>             # 경로 등록
+goto --remove, -r <path>          # 경로 제거
+goto --add-subdirs, -A <path>     # 1단계 하위 git 디렉터리 모두 등록 (이후 자동 동기화 대상으로 감시)
+goto --remove-subdirs, -R <path>  # 1단계 하위 디렉터리 모두 제거
+goto --unwatch, -U <path>         # 감시 해제 (등록된 프로젝트는 유지)
+goto --sync, -S                   # 감시 중인 폴더 동기화
+goto --pin, -p <path>             # 프로젝트 핀 고정 (최상단)
+goto --unpin, -u <path>           # 프로젝트 핀 해제
+goto --help, -h                   # 도움말
 ```
 
+- `--add-subdirs`로 등록한 상위 폴더는 감시 대상으로 기억되어(`~/.goto_watched`) 이후 자동 동기화됩니다. 인터랙티브 모드 진입 시 감시 폴더를 백그라운드로 동기화하며(반영은 다음 실행 때), `--sync`로 직접 실행할 수도 있습니다. 추가 기준은 직속 하위 git 루트, 제거 기준은 폴더가 물리적으로 삭제된 경우입니다.
 - 등록 데이터: `~/.goto` (한 줄 한 path, 사용자가 직접 편집 가능)
 - 핀 고정한 프로젝트는 `~/.goto_pinned`에 저장되며 인터랙티브 리스트와 메뉴바의 **최상단**에 📌 마커와 함께 표시됩니다. 인터랙티브 리스트에서 `Ctrl+P`로 토글, 메뉴바에서는 ⌥ 키를 누른 채 항목 위에 마우스를 올리면 "핀 고정/해제" 항목이 alternate로 표시됩니다.
 - 최근 선택한 프로젝트는 `~/.goto_recent`에 저장되고, 핀 고정 영역 바로 아래에 표시됩니다(핀과 중복 시 핀 영역에서만 표시). 표시 개수는 기본 **5개**이며 CLI settings의 `최근 항목 개수`(Space: 0/1/3/5/10 순환, Enter: 직접 입력) 또는 macOS 앱 환경설정창의 `최근 개수` 콤보박스(선택 또는 직접 입력)에서 `0~50` 범위로 지정할 수 있습니다.
@@ -121,12 +121,10 @@ Goto.app Settings에서 **"메뉴바에서 빠르게 열기"** 체크 시 메뉴
 ## URL Scheme
 
 - `gotolauncher://open?path=…` — Goto Launcher가 받아 터미널을 엽니다.
-- `gotoworktree://show?path=…` — Goto 메인 앱이 받아 worktree 선택 윈도우를 띄웁니다.
 
 ## 아키텍처 메모
 
-- Finder Sync 확장(`GotoFinderSync.appex`)은 macOS 정책상 sandbox 필수입니다. sandbox는 컨테이너 외부 경로의 파일 read와 외부 바이너리 실행을 차단해, 확장 내부에서 임의 git 저장소의 `git worktree list` 또는 `.git` 직접 read 모두 EPERM이 발생합니다.
-- 따라서 worktree 조회는 sandbox가 꺼진 메인 앱(`Goto.app`)이 담당합니다. 확장은 path만 URL scheme으로 메인 앱에 던지고, 메인 앱이 git을 실행해 윈도우에 결과를 표시합니다.
+- Finder Sync 확장(`GotoFinderSync.appex`)은 macOS 정책상 sandbox 필수입니다. sandbox는 컨테이너 외부 경로의 파일 read와 외부 바이너리 실행을 차단합니다.
 - 확장의 `NSMenuItem`은 Finder 프로세스로 직렬화되며, 보존되는 속성은 `title/action/image/enabled/tag/state/indentationLevel/submenu`로 한정됩니다. `representedObject`/`toolTip`은 보존되지 않으므로 메뉴에서 클릭 핸들러로 데이터를 전달할 때는 `tag` + 로컬 dictionary 패턴을 사용합니다 (`FinderSyncExtension.swift`의 `menuPayloads`).
 
 ## 빌드

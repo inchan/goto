@@ -32,10 +32,6 @@ targets:
         CFBundleName: Goto
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        CFBundleURLTypes:
-          - CFBundleURLName: com.inchan.goto.worktree
-            CFBundleURLSchemes:
-              - gotoworktree
         LSMinimumSystemVersion: "13.0"
         NSAccessibilityUsageDescription: Goto needs Accessibility access to open Terminal.app tabs from Finder.
         NSAppleEventsUsageDescription: Goto needs to control Finder, Terminal, and Ghostty to open the current folder in a terminal.

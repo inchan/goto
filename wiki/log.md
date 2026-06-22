@@ -1,5 +1,13 @@
 # Goto Wiki Log
 
+## 2026-06-22 refactor | worktree 기능 제거
+
+Finder Sync "Worktrees…" 메뉴와 worktree 선택 윈도우, `gotoworktree://` URL scheme을 모두 제거했다. `Shared/WorktreeService.swift`, `GotoApp/WorktreeWindow.swift`, `GotoTests/WorktreeServiceTests.swift`를 삭제하고 `GotoLaunchRequest`에서 worktree scheme/action/url을, `FinderSyncExtension`에서 메뉴 항목·tag·핸들러를, `AppDelegate`에서 URL 핸들러(worktree 제거로 dead가 된 `application(_:open:)`/`handleURL` 포함)를, `Info.plist`/`project.yml`에서 URL scheme 등록을 제거했다. Finder Sync 메뉴는 `Open in Terminal` 단일 항목으로 단순화됐고, 남은 git 실행 코드는 프로젝트 등록용 `GotoProjectStore.isGitManagedDirectory`뿐이다.
+
+## 2026-06-22 feat | watched-subdirs 자동 동기화 + CLI 단축 플래그
+
+`--add-subdirs`로 등록한 상위 폴더를 `~/.goto_watched`에 감시 대상으로 기억하고, 인터랙티브 모드 진입 시 백그라운드(`goto --sync` detached 프로세스)로 하위 git 프로젝트를 재동기화한다. 추가 기준은 직속 하위 git 루트, 제거 기준은 폴더가 물리적으로 삭제된 경우다. 수동 실행용 `--sync`/`-S`, 감시 해제용 `--unwatch`/`-U`를 추가했고 모든 CLI 명령에 단축 플래그(`-a/-r/-A/-R/-p/-u/-U/-S/-h`)를 부여했다. watched parent가 디렉터리로 사라지면 하위 등록과 watch 항목을 함께 정리하며, 외장/네트워크 볼륨 언마운트도 동일 경로로 처리됨에 유의(로컬 폴더 사용 권장).
+
 ## 2026-06-17 fix | Finder Sync 자동 활성화
 
 Installer postinstall과 로컬 `install.sh`가 설치 직후 `com.inchan.goto.findersync`를 `pluginkit -e use`로 활성화하고 Finder를 새로고침하도록 변경했다. 기존 uninstall이 확장을 `ignore`로 둔 뒤 재설치해도 Finder 도구막대 사용자화에 `Goto`가 나타나도록 하기 위함이다. Finder toolbar item이 64pt glyph canvas를 기준으로 넓게 잡히는 문제를 줄이기 위해 `goto-glyph.pdf` media box를 18pt로 낮추고 Finder Sync에서 18x18 template image로 반환한다. See `summaries/installer-pkg-2026-06-16`.
