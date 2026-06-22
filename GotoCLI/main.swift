@@ -259,6 +259,7 @@ private func drawMainList(
     filterQuery: String?,
     displayItem: (String) -> GotoProjectDisplayItem,
     colored: Bool,
+    updateNotice: String?,
     tty: UnsafeMutablePointer<FILE>
 ) {
     fputs(ansiClear, tty)
@@ -272,6 +273,9 @@ private func drawMainList(
             "goto — 프로젝트 선택 (↑↓ 이동, Enter 선택, Ctrl+P 핀 토글, 입력 시 필터, ESC/Ctrl+Q 취소)\n\n",
             tty
         )
+    }
+    if let updateNotice {
+        fputs("\(ansiGray)\(updateNotice)\(ansiReset)\n\n", tty)
     }
     let projectPaths = rows.compactMap { row -> String? in
         if case .project(let path) = row { return path }
@@ -773,6 +777,7 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
         }
     }
     var displayItem = makeDisplayItem()
+    let updateNotice = GotoUpdateService.pendingNotice()
 
     func makeRows() -> [MainRow] {
         if let q = filterQuery {
@@ -801,7 +806,7 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
 
     var rows = makeRows()
     var selected = firstSelectableIndex(in: rows) { $0.isSelectable }
-    drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, filterQuery: filterQuery, displayItem: displayItem, colored: config.prefixColorEnabled, tty: tty)
+    drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, filterQuery: filterQuery, displayItem: displayItem, colored: config.prefixColorEnabled, updateNotice: updateNotice, tty: tty)
 
     while true {
         if filterQuery != nil {
@@ -837,7 +842,7 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
                 fputs(ansiClear, tty)
                 return .cancelled
             }
-            drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, filterQuery: filterQuery, displayItem: displayItem, colored: config.prefixColorEnabled, tty: tty)
+            drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, filterQuery: filterQuery, displayItem: displayItem, colored: config.prefixColorEnabled, updateNotice: updateNotice, tty: tty)
             continue
         }
 
@@ -899,7 +904,7 @@ private func runInteractive(projects initialProjects: [String]) -> InteractiveRe
         case .other:
             break
         }
-        drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, filterQuery: filterQuery, displayItem: displayItem, colored: config.prefixColorEnabled, tty: tty)
+        drawMainList(rows: rows, pinnedSet: pinnedSet, selected: selected, filterQuery: filterQuery, displayItem: displayItem, colored: config.prefixColorEnabled, updateNotice: updateNotice, tty: tty)
     }
 }
 
@@ -914,6 +919,7 @@ private let usageText = """
   goto --unpin, -u <path>           프로젝트 핀 해제
   goto --unwatch, -U <path>         감시 해제 (등록된 프로젝트는 유지)
   goto --sync, -S                   감시 중인 폴더 동기화
+  goto --upgrade                    최신 버전으로 업데이트 (앱+CLI)
   goto --help, -h                   이 도움말 출력
 """
 
@@ -947,7 +953,7 @@ if args.contains("--help") {
     exit(0)
 }
 
-let knownFlags: Set<String> = ["--add", "--remove", "--add-subdirs", "--remove-subdirs", "--pin", "--unpin", "--unwatch", "--sync", "--help"]
+let knownFlags: Set<String> = ["--add", "--remove", "--add-subdirs", "--remove-subdirs", "--pin", "--unpin", "--unwatch", "--sync", "--upgrade", "--help"]
 for arg in args where arg.hasPrefix("-") {
     if !knownFlags.contains(arg) {
         fputs("error: 알 수 없는 인자: \(arg)\n\(usageText)\n", stderr)
@@ -1058,8 +1064,20 @@ if let idx = argArray.firstIndex(of: "--unwatch") {
 
 if argArray.firstIndex(of: "--sync") != nil {
     let r = GotoProjectStore.syncWatched()
+    GotoUpdateService.refreshCache()
     fputs("동기화 완료: 추가 \(r.added), 제거 \(r.removed)\n", stderr)
     exit(0)
+}
+
+if argArray.firstIndex(of: "--upgrade") != nil {
+    switch GotoUpdateService.performUpgrade(log: { fputs("\($0)\n", stderr) }) {
+    case .success(let tag):
+        fputs("업데이트 완료: \(tag). 새 셸을 열거나 'source ~/.zshrc' 후 사용하세요.\n", stderr)
+        exit(0)
+    case .failure(let error):
+        fputs("error: 업데이트 실패 (\(error))\n", stderr)
+        exit(2)
+    }
 }
 
 if !argArray.isEmpty {
@@ -1067,8 +1085,10 @@ if !argArray.isEmpty {
     exit(2)
 }
 
+// 백그라운드로 `goto --sync`를 분리 실행한다. `--sync` 핸들러가 watched 폴더
+// 동기화와 업데이트 체크를 모두 수행하므로, watched가 비어 있어도(= 동기화할 게
+// 없어도) 업데이트 체크를 위해 항상 spawn한다. 반영은 다음 실행 때.
 func spawnBackgroundSync() {
-    guard !GotoProjectStore.loadWatched().isEmpty else { return }
     let executable = CommandLine.arguments[0]
     guard !executable.isEmpty else { return }
     let process = Process()

@@ -1,5 +1,9 @@
 # Goto Wiki Log
 
+## 2026-06-22 feat | CLI 자동 업데이트 (알림 + self-update)
+
+`GotoUpdateService`를 추가해 GitHub Releases `latest`의 tag를 비교한다. 인터랙티브 진입 시 기존 백그라운드 `goto --sync` 프로세스가 24h TTL로 `~/.goto_update_check` 캐시를 갱신하고, 메인 리스트는 캐시를 읽어 새 버전이면 상단에 `⬆ 새 버전 … — goto --upgrade` 한 줄을 표시한다(반영은 다음 실행). `goto --upgrade`는 최신 DMG를 받아 `hdiutil`로 마운트하고 `sudo installer`로 `Install Goto.pkg`를 전체 설치한다. dev 빌드(0.0.0)는 체크를 건너뛴다. 버전은 빌드 시 주입된 `CFBundleShortVersionString`을 사용. See `docs/superpowers/specs/2026-06-22-cli-auto-update-design.md`.
+
 ## 2026-06-22 refactor | worktree 기능 제거
 
 Finder Sync "Worktrees…" 메뉴와 worktree 선택 윈도우, `gotoworktree://` URL scheme을 모두 제거했다. `Shared/WorktreeService.swift`, `GotoApp/WorktreeWindow.swift`, `GotoTests/WorktreeServiceTests.swift`를 삭제하고 `GotoLaunchRequest`에서 worktree scheme/action/url을, `FinderSyncExtension`에서 메뉴 항목·tag·핸들러를, `AppDelegate`에서 URL 핸들러(worktree 제거로 dead가 된 `application(_:open:)`/`handleURL` 포함)를, `Info.plist`/`project.yml`에서 URL scheme 등록을 제거했다. Finder Sync 메뉴는 `Open in Terminal` 단일 항목으로 단순화됐고, 남은 git 실행 코드는 프로젝트 등록용 `GotoProjectStore.isGitManagedDirectory`뿐이다.
